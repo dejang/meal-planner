@@ -10,5 +10,5 @@ cargo test --locked --workspace --doc
 cargo check --locked -p meal_planner --all-features --lib --target wasm32-unknown-unknown
 pnpm --dir ui run typecheck
 pnpm --dir ui test
-pnpm --dir ui run tauri build --no-bundle --debug
+pnpm tauri build --no-bundle --debug
 (cd legacy && trunk build)
