@@ -1,0 +1,20 @@
+id: listen-in-constructor-ts
+language: ts
+severity: error
+message: "No `listen`, `subscribe`, `subscribeWithSelector` or `connect` call in a constructor. A store subscribes in `connect()`, which its scope's effect calls, so StrictMode's second construction never subscribes (L8)."
+files:
+  - "ui/src/stores/**"
+rule:
+  kind: call_expression
+  has:
+    field: function
+    kind: member_expression
+    has:
+      field: property
+      regex: '^(listen|subscribe|subscribeWithSelector|connect)$'
+  inside:
+    kind: method_definition
+    has:
+      field: name
+      regex: '^constructor$'
+    stopBy: end

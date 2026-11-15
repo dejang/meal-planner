@@ -1,0 +1,17 @@
+id: router-imports-tsx
+valid:
+  - |
+    import { useState } from "react";
+  - |
+    import { thing } from "react-routerish";
+invalid:
+  - |
+    import { useNavigate } from "react-router";
+  - |
+    import { HydratedRouter } from "react-router/dom";
+  - |
+    import type { Location } from "react-router";
+  - |
+    export { Link } from "react-router";
+  - |
+    const router = import("react-router");

@@ -1,0 +1,35 @@
+id: live-imports-organisms-tsx
+language: tsx
+severity: error
+message: "Only stores/** imports the socket (`@/lib/live`) and the store internals (`@/stores/core`). An organism may only `import type` from stores/core/draft, for the Draft interface (L2)."
+files:
+  - "ui/src/organisms/**"
+# live-imports for organisms/**: the same check, plus type-only imports of stores/core/draft.
+utils:
+  banned:
+    kind: string
+    regex: '^["''](@/lib/live|@/stores/core|(\.|\.\.(/\.\.)*)/stores/core)(/[^"'']*)?["'']$'
+  draft-types:
+    regex: '^(import|export)\s+type\b'
+    has:
+      field: source
+      regex: '/stores/core/draft["'']$'
+rule:
+  any:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+      has:
+        field: source
+        matches: banned
+      not:
+        matches: draft-types
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: import
+        - has:
+            field: arguments
+            has:
+              matches: banned

@@ -1,0 +1,32 @@
+id: live-imports-ts
+language: ts
+severity: error
+message: "Only stores/** imports the socket (`@/lib/live`) and the store internals (`@/stores/core`) (L2)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/pages/**"
+  - "ui/src/theme/**"
+  - "ui/src/lib/live.ts"
+# Covers imports, `export … from` and `import(…)`. organisms/** has its own rule,
+# live-imports-organisms, which also allows `import type` from stores/core/draft.
+utils:
+  banned:
+    kind: string
+    regex: '^["''](@/lib/live|@/stores/core|(\.|\.\.(/\.\.)*)/stores/core)(/[^"'']*)?["'']$'
+rule:
+  any:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+      has:
+        field: source
+        matches: banned
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: import
+        - has:
+            field: arguments
+            has:
+              matches: banned

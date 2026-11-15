@@ -1,0 +1,391 @@
+id: selector-fresh-value-ts
+snapshots:
+  "createHook(store, (s: BoardState) => s.ids.filter((id) => id > 0), (ids: Ids) => ({ ids }));\n":
+    labels:
+    - source: "(s: BoardState) => s.ids.filter((id) => id > 0)"
+      style: primary
+      start: 18
+      end: 65
+    - source: createHook
+      style: secondary
+      start: 0
+      end: 10
+    - source: "createHook(store, (s: BoardState) => s.ids.filter((id) => id > 0), (ids: Ids) => ({ ids }))"
+      style: secondary
+      start: 0
+      end: 91
+    - source: "(store, (s: BoardState) => s.ids.filter((id) => id > 0), (ids: Ids) => ({ ids }))"
+      style: secondary
+      start: 10
+      end: 91
+    - source: filter
+      style: secondary
+      start: 43
+      end: 49
+    - source: s.ids.filter
+      style: secondary
+      start: 37
+      end: 49
+    - source: s.ids.filter((id) => id > 0)
+      style: secondary
+      start: 37
+      end: 65
+  "createKeyedHook(\n  store,\n  (issueId: number) => {\n    return (s: BoardState) => ({ issue: s.issues[issueId] });\n  },\n  (issueId: number) => (next: Issue) => store.moveIssue(issueId, next),\n);\n":
+    labels:
+    - source: "(s: BoardState) => ({ issue: s.issues[issueId] })"
+      style: primary
+      start: 62
+      end: 111
+    - source: createKeyedHook
+      style: secondary
+      start: 0
+      end: 15
+    - source: |-
+        createKeyedHook(
+          store,
+          (issueId: number) => {
+            return (s: BoardState) => ({ issue: s.issues[issueId] });
+          },
+          (issueId: number) => (next: Issue) => store.moveIssue(issueId, next),
+        )
+      style: secondary
+      start: 0
+      end: 191
+    - source: |-
+        (
+          store,
+          (issueId: number) => {
+            return (s: BoardState) => ({ issue: s.issues[issueId] });
+          },
+          (issueId: number) => (next: Issue) => store.moveIssue(issueId, next),
+        )
+      style: secondary
+      start: 15
+      end: 191
+    - source: |-
+        (issueId: number) => {
+            return (s: BoardState) => ({ issue: s.issues[issueId] });
+          }
+      style: secondary
+      start: 28
+      end: 116
+    - source: "return (s: BoardState) => ({ issue: s.issues[issueId] });"
+      style: secondary
+      start: 55
+      end: 112
+    - source: "{ issue: s.issues[issueId] }"
+      style: secondary
+      start: 82
+      end: 110
+    - source: "({ issue: s.issues[issueId] })"
+      style: secondary
+      start: 81
+      end: 111
+  "createKeyedSelectorHook(store, (lane: BoardColumn) => (s: BoardState) => s.visible[lane] ?? []);\n":
+    labels:
+    - source: "(s: BoardState) => s.visible[lane] ?? []"
+      style: primary
+      start: 54
+      end: 94
+    - source: createKeyedSelectorHook
+      style: secondary
+      start: 0
+      end: 23
+    - source: "createKeyedSelectorHook(store, (lane: BoardColumn) => (s: BoardState) => s.visible[lane] ?? [])"
+      style: secondary
+      start: 0
+      end: 95
+    - source: "(store, (lane: BoardColumn) => (s: BoardState) => s.visible[lane] ?? [])"
+      style: secondary
+      start: 23
+      end: 95
+    - source: "(lane: BoardColumn) => (s: BoardState) => s.visible[lane] ?? []"
+      style: secondary
+      start: 31
+      end: 94
+    - source: ??
+      style: secondary
+      start: 89
+      end: 91
+    - source: "[]"
+      style: secondary
+      start: 92
+      end: 94
+    - source: s.visible[lane] ?? []
+      style: secondary
+      start: 73
+      end: 94
+  "createSelectorHook(store, (s: BoardState) => (s.open ? [s.openId] : s.ids));\n":
+    labels:
+    - source: "(s: BoardState) => (s.open ? [s.openId] : s.ids)"
+      style: primary
+      start: 26
+      end: 74
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => (s.open ? [s.openId] : s.ids))"
+      style: secondary
+      start: 0
+      end: 75
+    - source: "(store, (s: BoardState) => (s.open ? [s.openId] : s.ids))"
+      style: secondary
+      start: 18
+      end: 75
+    - source: "[s.openId]"
+      style: secondary
+      start: 55
+      end: 65
+    - source: "s.open ? [s.openId] : s.ids"
+      style: secondary
+      start: 46
+      end: 73
+    - source: "(s.open ? [s.openId] : s.ids)"
+      style: secondary
+      start: 45
+      end: 74
+  "createSelectorHook(store, (s: BoardState) => ({ ...s.issues }));\n":
+    labels:
+    - source: "(s: BoardState) => ({ ...s.issues })"
+      style: primary
+      start: 26
+      end: 62
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => ({ ...s.issues }))"
+      style: secondary
+      start: 0
+      end: 63
+    - source: "(store, (s: BoardState) => ({ ...s.issues }))"
+      style: secondary
+      start: 18
+      end: 63
+    - source: "{ ...s.issues }"
+      style: secondary
+      start: 46
+      end: 61
+    - source: ({ ...s.issues })
+      style: secondary
+      start: 45
+      end: 62
+  "createSelectorHook(store, (s: BoardState) => ({ lanes: s.lanes }));\n":
+    labels:
+    - source: "(s: BoardState) => ({ lanes: s.lanes })"
+      style: primary
+      start: 26
+      end: 65
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => ({ lanes: s.lanes }))"
+      style: secondary
+      start: 0
+      end: 66
+    - source: "(store, (s: BoardState) => ({ lanes: s.lanes }))"
+      style: secondary
+      start: 18
+      end: 66
+    - source: "{ lanes: s.lanes }"
+      style: secondary
+      start: 46
+      end: 64
+    - source: "({ lanes: s.lanes })"
+      style: secondary
+      start: 45
+      end: 65
+  "createSelectorHook(store, (s: BoardState) => [...s.ids] as Ids);\n":
+    labels:
+    - source: "(s: BoardState) => [...s.ids] as Ids"
+      style: primary
+      start: 26
+      end: 62
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => [...s.ids] as Ids)"
+      style: secondary
+      start: 0
+      end: 63
+    - source: "(store, (s: BoardState) => [...s.ids] as Ids)"
+      style: secondary
+      start: 18
+      end: 63
+    - source: "[...s.ids]"
+      style: secondary
+      start: 45
+      end: 55
+    - source: "[...s.ids] as Ids"
+      style: secondary
+      start: 45
+      end: 62
+  "createSelectorHook(store, (s: BoardState) => [s.first, s.second]);\n":
+    labels:
+    - source: "(s: BoardState) => [s.first, s.second]"
+      style: primary
+      start: 26
+      end: 64
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => [s.first, s.second])"
+      style: secondary
+      start: 0
+      end: 65
+    - source: "(store, (s: BoardState) => [s.first, s.second])"
+      style: secondary
+      start: 18
+      end: 65
+    - source: "[s.first, s.second]"
+      style: secondary
+      start: 45
+      end: 64
+  "createSelectorHook(store, (s: BoardState) => s.ids.map((id) => s.issues[id]));\n":
+    labels:
+    - source: "(s: BoardState) => s.ids.map((id) => s.issues[id])"
+      style: primary
+      start: 26
+      end: 76
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => s.ids.map((id) => s.issues[id]))"
+      style: secondary
+      start: 0
+      end: 77
+    - source: "(store, (s: BoardState) => s.ids.map((id) => s.issues[id]))"
+      style: secondary
+      start: 18
+      end: 77
+    - source: map
+      style: secondary
+      start: 51
+      end: 54
+    - source: s.ids.map
+      style: secondary
+      start: 45
+      end: 54
+    - source: s.ids.map((id) => s.issues[id])
+      style: secondary
+      start: 45
+      end: 76
+  "createSelectorHook(store, (s: BoardState) => s.ids.slice(0, 10));\n":
+    labels:
+    - source: "(s: BoardState) => s.ids.slice(0, 10)"
+      style: primary
+      start: 26
+      end: 63
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => s.ids.slice(0, 10))"
+      style: secondary
+      start: 0
+      end: 64
+    - source: "(store, (s: BoardState) => s.ids.slice(0, 10))"
+      style: secondary
+      start: 18
+      end: 64
+    - source: slice
+      style: secondary
+      start: 51
+      end: 56
+    - source: s.ids.slice
+      style: secondary
+      start: 45
+      end: 56
+    - source: s.ids.slice(0, 10)
+      style: secondary
+      start: 45
+      end: 63
+  "createSelectorHook(store, (s: BoardState) => s.visible.todo ?? []);\n":
+    labels:
+    - source: "(s: BoardState) => s.visible.todo ?? []"
+      style: primary
+      start: 26
+      end: 65
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: "createSelectorHook(store, (s: BoardState) => s.visible.todo ?? [])"
+      style: secondary
+      start: 0
+      end: 66
+    - source: "(store, (s: BoardState) => s.visible.todo ?? [])"
+      style: secondary
+      start: 18
+      end: 66
+    - source: ??
+      style: secondary
+      start: 60
+      end: 62
+    - source: "[]"
+      style: secondary
+      start: 63
+      end: 65
+    - source: s.visible.todo ?? []
+      style: secondary
+      start: 45
+      end: 65
+  "createSelectorHook(store, function (s: BoardState) {\n  if (s.empty) {\n    return [];\n  }\n  return s.ids;\n});\n":
+    labels:
+    - source: |-
+        function (s: BoardState) {
+          if (s.empty) {
+            return [];
+          }
+          return s.ids;
+        }
+      style: primary
+      start: 26
+      end: 106
+    - source: createSelectorHook
+      style: secondary
+      start: 0
+      end: 18
+    - source: |-
+        createSelectorHook(store, function (s: BoardState) {
+          if (s.empty) {
+            return [];
+          }
+          return s.ids;
+        })
+      style: secondary
+      start: 0
+      end: 107
+    - source: |-
+        (store, function (s: BoardState) {
+          if (s.empty) {
+            return [];
+          }
+          return s.ids;
+        })
+      style: secondary
+      start: 18
+      end: 107
+    - source: "[]"
+      style: secondary
+      start: 81
+      end: 83
+    - source: return [];
+      style: secondary
+      start: 74
+      end: 84
+    - source: |-
+        {
+          if (s.empty) {
+            return [];
+          }
+          return s.ids;
+        }
+      style: secondary
+      start: 51
+      end: 106

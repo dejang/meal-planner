@@ -1,0 +1,50 @@
+id: object-type-alias-tsx
+snapshots:
+  "export type Point = {\n  x: number;\n  y: number;\n};\n":
+    labels:
+    - source: |-
+        type Point = {
+          x: number;
+          y: number;
+        };
+      style: primary
+      start: 7
+      end: 50
+    - source: |-
+        {
+          x: number;
+          y: number;
+        }
+      style: secondary
+      start: 20
+      end: 49
+  "type Box<T> = { value: T };\n":
+    labels:
+    - source: "type Box<T> = { value: T };"
+      style: primary
+      start: 0
+      end: 27
+    - source: "{ value: T }"
+      style: secondary
+      start: 14
+      end: 26
+  "type Empty = {};\n":
+    labels:
+    - source: type Empty = {};
+      style: primary
+      start: 0
+      end: 16
+    - source: "{}"
+      style: secondary
+      start: 13
+      end: 15
+  "type IssueCardProps = { issueId: number };\n":
+    labels:
+    - source: "type IssueCardProps = { issueId: number };"
+      style: primary
+      start: 0
+      end: 42
+    - source: "{ issueId: number }"
+      style: secondary
+      start: 22
+      end: 41

@@ -1,0 +1,45 @@
+id: no-comments-ts
+valid:
+  - |
+    let url: string = "https://example.com";
+    let markers = "// /* */";
+    let template = `/* not a comment */`;
+    let pattern = /\/\/|\/\*/;
+  - |
+    function probe(value: number): number {
+      return value / 2;
+    }
+invalid:
+  - |
+    // comment
+    let value = 1;
+  - |
+    //
+  - |
+    let value = 1; // trailing comment
+  - |
+    let value = /* inline comment */ 1;
+  - |
+    /**/
+  - |
+    /* multiple
+       lines */
+  - |
+    /** API documentation */
+    function probe(): void {}
+  - |
+    /// <reference types="node" />
+  - |
+    // eslint-disable-next-line no-console
+    console.log("probe");
+  - |
+    /* oxlint-disable no-console */
+    console.log("probe");
+  - |
+    /* eslint no-console: off */
+    console.log("probe");
+  - |
+    // @ts-ignore
+    probe();
+  - |
+    let template = `${/* expression comment */ value}`;

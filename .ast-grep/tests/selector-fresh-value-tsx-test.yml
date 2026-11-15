@@ -1,0 +1,68 @@
+id: selector-fresh-value-tsx
+valid:
+  - |
+    export function useOffline(): boolean {
+      const store = useUi();
+      const useStoreOffline = useMemo(() => createSelectorHook(store, (s: UiState) => s.offline), [store]);
+      return useStoreOffline();
+    }
+  - |
+    createHook(store, (s: UiState) => s.theme, (theme: Theme) => ({ theme }));
+  - |
+    createKeyedSelectorHook(store, (lane: BoardColumn) => (s: BoardState) => s.visible[lane]);
+  - |
+    createKeyedHook(
+      store,
+      (issueId: number) => (s: BoardState) => s.issues[issueId],
+      (issueId: number) => (next: Issue) => ({ issues: { [issueId]: next } }),
+    );
+  - |
+    createSelectorHook(store, (s: BoardState) => {
+      const ids = s.visible.todo;
+      return ids;
+    });
+  - |
+    createSelectorHook(store, (s: BoardState) => s.ids.filter((id) => id > 0).length);
+  - |
+    createSelectorHook(store, (s: BoardState) => {
+      const make = () => [];
+      return s.count;
+    });
+  - |
+    register(store, (s: BoardState) => ({ lanes: s.lanes }));
+invalid:
+  - |
+    createSelectorHook(store, (s: BoardState) => ({ lanes: s.lanes }));
+  - |
+    createSelectorHook(store, (s: BoardState) => [s.first, s.second]);
+  - |
+    createSelectorHook(store, (s: BoardState) => ({ ...s.issues }));
+  - |
+    createSelectorHook(store, (s: BoardState) => s.ids.map((id) => s.issues[id]));
+  - |
+    createHook(store, (s: BoardState) => s.ids.filter((id) => id > 0), (ids: Ids) => ({ ids }));
+  - |
+    createSelectorHook(store, (s: BoardState) => s.ids.slice(0, 10));
+  - |
+    createSelectorHook(store, (s: BoardState) => s.visible.todo ?? []);
+  - |
+    createSelectorHook(store, (s: BoardState) => (s.open ? [s.openId] : s.ids));
+  - |
+    createSelectorHook(store, (s: BoardState) => [...s.ids] as Ids);
+  - |
+    createSelectorHook(store, function (s: BoardState) {
+      if (s.empty) {
+        return [];
+      }
+      return s.ids;
+    });
+  - |
+    createKeyedSelectorHook(store, (lane: BoardColumn) => (s: BoardState) => s.visible[lane] ?? []);
+  - |
+    createKeyedHook(
+      store,
+      (issueId: number) => {
+        return (s: BoardState) => ({ issue: s.issues[issueId] });
+      },
+      (issueId: number) => (next: Issue) => store.moveIssue(issueId, next),
+    );

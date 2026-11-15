@@ -1,0 +1,253 @@
+id: single-use-private-helper
+valid:
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { helper(); helper(); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) {
+            if ready() { helper(); }
+            else { helper(); }
+        }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn first(&self) { helper(); }
+        fn second(&self) { helper(); }
+    }
+  - |
+    fn helper() {}
+    fn first() { helper(); }
+    fn second() { helper(); }
+  - |
+    pub fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    pub(crate) fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    pub(super) fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    fn unused() {}
+  - |
+    fn recursive() { recursive(); }
+  - |
+    fn recursive() { recursive(); }
+    impl Worker { fn run(&self) { recursive(); } }
+  - |
+    impl Worker {
+        fn helper(&self) {}
+        fn run(&self) { self.helper(); }
+    }
+  - |
+    impl Worker {
+        fn helper() {}
+        fn run(&self) { Self::helper(); }
+    }
+  - |
+    trait Worker {
+        fn helper(&self) {}
+        fn run(&self) { self.helper(); }
+    }
+  - |
+    impl Worker {
+        fn run(&self) {
+            fn helper() {}
+            helper();
+        }
+    }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { register(helper); } }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { helper(); register(helper); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { helper(); invoke!(helper); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { let helper = || {}; helper(); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self, helper: fn()) { helper(); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { helper(); self::helper(); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { helper(); { { helper(); } } }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { consume(helper(), helper()); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { register(helper); helper(); }
+    }
+  - |
+    fn helper<T>() {}
+    impl Worker {
+        fn run(&self) { helper::<u8>(); helper::<u16>(); }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) { use self::helper as alias; alias(); helper(); }
+    }
+  - |
+    mod first {
+        fn helper() {}
+        impl Worker { fn run(&self) { helper(); } }
+    }
+    mod second { fn helper() {} }
+  - |
+    mod first { fn helper() {} }
+    mod second {
+        fn helper() {}
+        impl Worker { fn run(&self) { helper(); } }
+    }
+  - |
+    fn helper() {}
+    mod child {
+        use external::*;
+        impl Worker { fn run(&self) { helper(); } }
+    }
+  - |
+    fn helper() {}
+    mod child;
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { elsewhere::helper(); } }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { self.helper(); } }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { Self::helper(); } }
+  - |
+    fn helper() { self::helper(); }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { invoke!(helper()); } }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { helper(); register(Callbacks { helper }); } }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self, Callbacks { helper }: Callbacks) { helper(); }
+    }
+  - |
+    extern "C" fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    pub(self) fn helper() {}
+    impl Worker { fn run(&self) { helper(); helper(); } }
+invalid:
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    impl Worker { fn run(&self) { helper(); } }
+    fn helper() {}
+  - |
+    fn helper(value: usize) -> usize { value + 1 }
+    impl Worker {
+        fn run(&self, value: usize) -> usize { helper(value) }
+    }
+  - |
+    fn helper() {}
+    fn run() { helper(); }
+  - |
+    fn first() { second(); }
+    fn second() { third(); }
+    fn third() {}
+    impl Worker { fn run(&self) { first(); } }
+  - |
+    impl Worker { fn run(&self) { first(); } }
+    fn third() {}
+    fn second() { third(); }
+    fn first() { second(); }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) {
+            if ready() { for _ in 0..3 { helper(); } }
+        }
+    }
+  - |
+    async fn helper(value: usize) -> usize { value + 1 }
+    impl Worker {
+        async fn run(&self, value: usize) -> usize { helper(value).await }
+    }
+  - |
+    fn helper<T: Default>() -> T { T::default() }
+    impl Worker { fn run(&self) -> usize { helper::<usize>() } }
+  - |
+    mod worker {
+        fn helper() {}
+        impl Worker { fn run(&self) { helper(); } }
+    }
+  - |
+    fn helper() {}
+    impl Worker {
+        fn run(&self) {
+            // helper() in a comment is not a call.
+            let _ = "helper()";
+            helper();
+        }
+    }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { self::helper(); } }
+  - |
+    fn helper<T: Default>() -> T { T::default() }
+    impl Worker { fn run(&self) -> usize { self::helper::<usize>() } }
+  - |
+    mod worker {
+        fn helper() {}
+        impl Worker { fn run(&self) { self::helper(); } }
+    }
+  - |
+    mod outer {
+        mod inner {
+            fn helper() {}
+            impl Worker { fn run(&self) { helper(); } }
+        }
+    }
+  - |
+    fn helper() {}
+    impl Worker { fn run(&self) { let action = || helper(); action(); } }
+  - |
+    unsafe fn helper() {}
+    impl Worker { fn run(&self) { unsafe { helper(); } } }
+  - |
+    fn r#type() {}
+    impl Worker { fn run(&self) { r#type(); } }
+  - |
+    pub(self) fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }
+  - |
+    pub(in self) fn helper() {}
+    impl Worker { fn run(&self) { helper(); } }

@@ -1,0 +1,52 @@
+id: no-comments-tsx
+valid:
+  - |
+    let view = <div title="/* not a comment */">// plain text</div>;
+  - |
+    let view = <div>{"/* not a comment */"}{`// text`}</div>;
+  - |
+    let url: string = "https://example.com";
+    let pattern = /\/\/|\/\*/;
+invalid:
+  - |
+    // comment
+    let view = <div />;
+  - |
+    //
+  - |
+    let view = <div />; // trailing comment
+  - |
+    let view = /* inline comment */ <div />;
+  - |
+    /**/
+  - |
+    /* multiple
+       lines */
+  - |
+    /** API documentation */
+    function Probe() { return <div />; }
+  - |
+    let view = <div>{/* JSX comment */}</div>;
+  - |
+    let view = <div>{/**/}</div>;
+  - |
+    let view = (
+      <div>
+        {
+          // JSX line comment
+        }
+      </div>
+    );
+  - |
+    let view = <div>{/* expression comment */ value}</div>;
+  - |
+    let view = <div /* attribute comment */ title="probe" />;
+  - |
+    // eslint-disable-next-line no-console
+    console.log("probe");
+  - |
+    /* oxlint-disable no-console */
+    console.log("probe");
+  - |
+    /* eslint no-console: off */
+    console.log("probe");

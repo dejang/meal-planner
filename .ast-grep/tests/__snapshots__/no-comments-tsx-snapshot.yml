@@ -1,0 +1,94 @@
+id: no-comments-tsx
+snapshots:
+  "/* eslint no-console: off */\nconsole.log(\"probe\");\n":
+    labels:
+    - source: "/* eslint no-console: off */"
+      style: primary
+      start: 0
+      end: 28
+  "/* multiple\n   lines */\n":
+    labels:
+    - source: |-
+        /* multiple
+           lines */
+      style: primary
+      start: 0
+      end: 23
+  "/* oxlint-disable no-console */\nconsole.log(\"probe\");\n":
+    labels:
+    - source: /* oxlint-disable no-console */
+      style: primary
+      start: 0
+      end: 31
+  "/** API documentation */\nfunction Probe() { return <div />; }\n":
+    labels:
+    - source: /** API documentation */
+      style: primary
+      start: 0
+      end: 24
+  "/**/\n":
+    labels:
+    - source: /**/
+      style: primary
+      start: 0
+      end: 4
+  "//\n":
+    labels:
+    - source: //
+      style: primary
+      start: 0
+      end: 2
+  "// comment\nlet view = <div />;\n":
+    labels:
+    - source: // comment
+      style: primary
+      start: 0
+      end: 10
+  "// eslint-disable-next-line no-console\nconsole.log(\"probe\");\n":
+    labels:
+    - source: // eslint-disable-next-line no-console
+      style: primary
+      start: 0
+      end: 38
+  "let view = (\n  <div>\n    {\n      // JSX line comment\n    }\n  </div>\n);\n":
+    labels:
+    - source: // JSX line comment
+      style: primary
+      start: 33
+      end: 52
+  "let view = /* inline comment */ <div />;\n":
+    labels:
+    - source: /* inline comment */
+      style: primary
+      start: 11
+      end: 31
+  "let view = <div /* attribute comment */ title=\"probe\" />;\n":
+    labels:
+    - source: /* attribute comment */
+      style: primary
+      start: 16
+      end: 39
+  "let view = <div />; // trailing comment\n":
+    labels:
+    - source: // trailing comment
+      style: primary
+      start: 20
+      end: 39
+  "let view = <div>{/* JSX comment */}</div>;\n":
+    labels:
+    - source: /* JSX comment */
+      style: primary
+      start: 17
+      end: 34
+  "let view = <div>{/* expression comment */ value}</div>;\n":
+    labels:
+    - source: /* expression comment */
+      style: primary
+      start: 17
+      end: 41
+  "let view = <div>{/**/}</div>;\n":
+    labels:
+    - source: /**/
+      style: primary
+      start: 17
+      end: 21

@@ -1,0 +1,154 @@
+id: organism-props-tsx
+snapshots:
+  "const Lane = function ({ lane }: LaneProps) {\n  return lane;\n};\n":
+    labels:
+    - source: "{ lane }: LaneProps"
+      style: primary
+      start: 23
+      end: 42
+    - source: Lane
+      style: secondary
+      start: 6
+      end: 10
+    - source: |-
+        Lane = function ({ lane }: LaneProps) {
+          return lane;
+        }
+      style: secondary
+      start: 6
+      end: 62
+    - source: |-
+        function ({ lane }: LaneProps) {
+          return lane;
+        }
+      style: secondary
+      start: 13
+      end: 62
+    - source: "({ lane }: LaneProps)"
+      style: secondary
+      start: 22
+      end: 43
+  "export const BoardLane = ({ lane }: { lane: string }) => lane;\n":
+    labels:
+    - source: "{ lane }: { lane: string }"
+      style: primary
+      start: 26
+      end: 52
+    - source: BoardLane
+      style: secondary
+      start: 13
+      end: 22
+    - source: "BoardLane = ({ lane }: { lane: string }) => lane"
+      style: secondary
+      start: 13
+      end: 61
+    - source: "({ lane }: { lane: string }) => lane"
+      style: secondary
+      start: 25
+      end: 61
+    - source: "({ lane }: { lane: string })"
+      style: secondary
+      start: 25
+      end: 53
+  "export const BoardLane = props => props;\n":
+    labels:
+    - source: props
+      style: primary
+      start: 25
+      end: 30
+    - source: BoardLane
+      style: secondary
+      start: 13
+      end: 22
+    - source: BoardLane = props => props
+      style: secondary
+      start: 13
+      end: 39
+    - source: props => props
+      style: secondary
+      start: 25
+      end: 39
+  "export function IssueCard(props) {\n  return props;\n}\n":
+    labels:
+    - source: props
+      style: primary
+      start: 26
+      end: 31
+    - source: IssueCard
+      style: secondary
+      start: 16
+      end: 25
+    - source: |-
+        function IssueCard(props) {
+          return props;
+        }
+      style: secondary
+      start: 7
+      end: 52
+    - source: (props)
+      style: secondary
+      start: 25
+      end: 32
+  "export function IssueCard({ issue }: IssueCardProps) {\n  return <Card title={issue.title} />;\n}\n":
+    labels:
+    - source: "{ issue }: IssueCardProps"
+      style: primary
+      start: 26
+      end: 51
+    - source: IssueCard
+      style: secondary
+      start: 16
+      end: 25
+    - source: |-
+        function IssueCard({ issue }: IssueCardProps) {
+          return <Card title={issue.title} />;
+        }
+      style: secondary
+      start: 7
+      end: 95
+    - source: "({ issue }: IssueCardProps)"
+      style: secondary
+      start: 25
+      end: 52
+  "export function IssueCard({ issue }: IssueCardProps) {\n  return issue.title;\n}\n":
+    labels:
+    - source: "{ issue }: IssueCardProps"
+      style: primary
+      start: 26
+      end: 51
+    - source: IssueCard
+      style: secondary
+      start: 16
+      end: 25
+    - source: |-
+        function IssueCard({ issue }: IssueCardProps) {
+          return issue.title;
+        }
+      style: secondary
+      start: 7
+      end: 78
+    - source: "({ issue }: IssueCardProps)"
+      style: secondary
+      start: 25
+      end: 52
+  "function List({ ids }: Keys<ListProps>, extra: number) {\n  return extra;\n}\n":
+    labels:
+    - source: "extra: number"
+      style: primary
+      start: 40
+      end: 53
+    - source: List
+      style: secondary
+      start: 9
+      end: 13
+    - source: |-
+        function List({ ids }: Keys<ListProps>, extra: number) {
+          return extra;
+        }
+      style: secondary
+      start: 0
+      end: 74
+    - source: "({ ids }: Keys<ListProps>, extra: number)"
+      style: secondary
+      start: 13
+      end: 54

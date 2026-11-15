@@ -1,0 +1,112 @@
+id: selector-fresh-value-ts
+language: ts
+severity: error
+message: "A selector returns a stored reference or a primitive, never a new object or array: a new value on every call re-renders its hook on every store update (L7)."
+files:
+  - "ui/src/stores/**"
+# The selector is the second argument of createSelectorHook and createHook, and the function
+# returned by the second argument of createKeyedSelectorHook and createKeyedHook. Only inline
+# selectors are checked. A returned value is followed through `??`, `||`, `&&`, `? :`, `as`,
+# `satisfies`, `!` and parentheses.
+utils:
+  function:
+    any:
+      - kind: arrow_function
+      - kind: function_expression
+  boundary:
+    any:
+      - kind: arrow_function
+      - kind: function_expression
+      - kind: function_declaration
+      - kind: method_definition
+      - kind: generator_function_declaration
+      - kind: generator_function
+  fresh:
+    any:
+      - kind: object
+      - kind: array
+      - kind: call_expression
+        has:
+          field: function
+          kind: member_expression
+          has:
+            field: property
+            regex: '^(map|filter|slice)$'
+      - any:
+          - kind: parenthesized_expression
+          - kind: as_expression
+          - kind: satisfies_expression
+          - kind: non_null_expression
+        has:
+          matches: fresh
+      - kind: ternary_expression
+        any:
+          - has:
+              field: consequence
+              matches: fresh
+          - has:
+              field: alternative
+              matches: fresh
+      - kind: binary_expression
+        all:
+          - has:
+              field: operator
+              regex: '^(\?\?|\|\||&&)$'
+          - any:
+              - has:
+                  field: left
+                  matches: fresh
+              - has:
+                  field: right
+                  matches: fresh
+  returns-fresh:
+    any:
+      - has:
+          field: body
+          matches: fresh
+      - has:
+          field: body
+          kind: statement_block
+          has:
+            kind: return_statement
+            stopBy:
+              matches: boundary
+            has:
+              matches: fresh
+  selector:
+    matches: function
+    nthChild: 2
+    inside:
+      kind: arguments
+      inside:
+        kind: call_expression
+        has:
+          field: function
+          regex: '(^|\.)(createSelectorHook|createHook)$'
+  selector-for:
+    matches: function
+    nthChild: 2
+    inside:
+      kind: arguments
+      inside:
+        kind: call_expression
+        has:
+          field: function
+          regex: '(^|\.)(createKeyedSelectorHook|createKeyedHook)$'
+  keyed-selector:
+    matches: function
+    any:
+      - inside:
+          field: body
+          matches: selector-for
+      - inside:
+          kind: return_statement
+          inside:
+            stopBy:
+              matches: boundary
+            matches: selector-for
+rule:
+  any:
+    - matches: selector
+    - matches: keyed-selector
+  matches: returns-fresh

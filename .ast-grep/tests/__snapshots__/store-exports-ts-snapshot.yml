@@ -1,0 +1,71 @@
+id: store-exports-ts
+snapshots:
+  "const BoardContext = createContext(null);\nexport { BoardContext };\n":
+    labels:
+    - source: export { BoardContext };
+      style: primary
+      start: 42
+      end: 66
+  "export * from \"./board\";\n":
+    labels:
+    - source: export * from "./board";
+      style: primary
+      start: 0
+      end: 24
+  "export * from \"./core/board\";\n":
+    labels:
+    - source: export * from "./core/board";
+      style: primary
+      start: 0
+      end: 29
+  "export abstract class LiveStore<S> {}\n":
+    labels:
+    - source: export abstract class LiveStore<S> {}
+      style: primary
+      start: 0
+      end: 37
+  "export class BoardStore {}\n":
+    labels:
+    - source: export class BoardStore {}
+      style: primary
+      start: 0
+      end: 26
+  "export const BoardContext = createContext(null);\n":
+    labels:
+    - source: export const BoardContext = createContext(null);
+      style: primary
+      start: 0
+      end: 48
+  "export const useLane = () => 1;\n":
+    labels:
+    - source: export const useLane = () => 1;
+      style: primary
+      start: 0
+      end: 31
+  "export default BoardStore;\n":
+    labels:
+    - source: export default BoardStore;
+      style: primary
+      start: 0
+      end: 26
+  "export function boardOf(projectId: number) {\n  return projectId;\n}\n":
+    labels:
+    - source: |-
+        export function boardOf(projectId: number) {
+          return projectId;
+        }
+      style: primary
+      start: 0
+      end: 66
+  "export { BoardFilter } from \"./board\";\n":
+    labels:
+    - source: export { BoardFilter } from "./board";
+      style: primary
+      start: 0
+      end: 38
+  "export { BoardStore } from \"../core/board\";\n":
+    labels:
+    - source: export { BoardStore } from "../core/board";
+      style: primary
+      start: 0
+      end: 43

@@ -1,0 +1,33 @@
+id: string-union-type-ts
+language: ts
+severity: error
+message: "A closed set of string values is a regular string `enum`: not a union of string literals, and never a `const enum`, as Vite transpiles one file at a time (T2)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/stores/**"
+  - "ui/src/organisms/**"
+  - "ui/src/pages/**"
+  - "ui/src/lib/live.ts"
+# A union that mixes in any other type (`MenuItem | MenuSeparator`, `"a" | null`) is allowed.
+utils:
+  string-member:
+    kind: literal_type
+    has:
+      kind: string
+  string-union:
+    kind: union_type
+    not:
+      has:
+        not:
+          any:
+            - regex: '^\|$'
+            - matches: string-member
+            - matches: string-union
+rule:
+  any:
+    - kind: type_alias_declaration
+      has:
+        field: value
+        matches: string-union
+    - kind: enum_declaration
+      regex: '^const\s+enum\b'

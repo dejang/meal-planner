@@ -1,0 +1,60 @@
+id: router-imports-tsx
+snapshots:
+  "const router = import(\"react-router\");\n":
+    labels:
+    - source: import("react-router")
+      style: primary
+      start: 15
+      end: 37
+    - source: import
+      style: secondary
+      start: 15
+      end: 21
+    - source: "\"react-router\""
+      style: secondary
+      start: 22
+      end: 36
+    - source: "\"react-router\""
+      style: secondary
+      start: 22
+      end: 36
+  "export { Link } from \"react-router\";\n":
+    labels:
+    - source: export { Link } from "react-router";
+      style: primary
+      start: 0
+      end: 36
+    - source: "\"react-router\""
+      style: secondary
+      start: 21
+      end: 35
+  "import type { Location } from \"react-router\";\n":
+    labels:
+    - source: import type { Location } from "react-router";
+      style: primary
+      start: 0
+      end: 45
+    - source: "\"react-router\""
+      style: secondary
+      start: 30
+      end: 44
+  "import { HydratedRouter } from \"react-router/dom\";\n":
+    labels:
+    - source: import { HydratedRouter } from "react-router/dom";
+      style: primary
+      start: 0
+      end: 50
+    - source: "\"react-router/dom\""
+      style: secondary
+      start: 31
+      end: 49
+  "import { useNavigate } from \"react-router\";\n":
+    labels:
+    - source: import { useNavigate } from "react-router";
+      style: primary
+      start: 0
+      end: 43
+    - source: "\"react-router\""
+      style: secondary
+      start: 28
+      end: 42

@@ -1,0 +1,58 @@
+id: no-comments-rust
+valid:
+  - |
+    fn probe() {
+        let url = "https://example.com";
+        let markers = "// /* */ /// //!";
+        let raw = r#"/* not a comment */"#;
+    }
+  - |
+    fn probe(value: usize) -> usize {
+        value / 2
+    }
+invalid:
+  - |
+    // comment
+    fn probe() {}
+  - |
+    //
+  - |
+    fn probe() {} // trailing comment
+  - |
+    fn probe() {
+        let value = /* inline comment */ 1;
+    }
+  - |
+    /**/
+  - |
+    /* multiple
+       lines */
+  - |
+    /* outer /* nested */ comment */
+  - |
+    /// API documentation
+    fn probe() {}
+  - |
+    //! Module documentation
+  - |
+    /** API documentation */
+    fn probe() {}
+  - |
+    /*! Module documentation */
+  - |
+    macro_rules! probe {
+        () => {
+            // macro comment
+            fn probe() {}
+        };
+    }
+  - |
+    macro_rules! probe {
+        () => {
+            /* macro comment */
+            fn probe() {}
+        };
+    }
+  - |
+    // TODO: implement this
+    fn probe() {}

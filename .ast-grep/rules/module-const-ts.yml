@@ -1,0 +1,43 @@
+id: module-const-ts
+language: ts
+severity: error
+message: "Module-level `const` holding a literal value. Values come in as props or from `AppConfig` (L6)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/stores/**"
+  - "ui/src/organisms/**"
+  - "ui/src/pages/**"
+# A literal seen through `as`, `satisfies` and parentheses (`[…] as const`) counts too,
+# as does a negative number.
+utils:
+  literal:
+    any:
+      - kind: number
+      - kind: string
+      - kind: template_string
+      - kind: array
+      - kind: object
+      - kind: unary_expression
+        has:
+          field: argument
+          kind: number
+      - any:
+          - kind: as_expression
+          - kind: satisfies_expression
+          - kind: parenthesized_expression
+        has:
+          matches: literal
+rule:
+  kind: variable_declarator
+  has:
+    field: value
+    matches: literal
+  inside:
+    kind: lexical_declaration
+    regex: '^const\b'
+    inside:
+      any:
+        - kind: program
+        - kind: export_statement
+          inside:
+            kind: program

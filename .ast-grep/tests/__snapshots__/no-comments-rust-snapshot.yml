@@ -1,0 +1,90 @@
+id: no-comments-rust
+snapshots:
+  "/* multiple\n   lines */\n":
+    labels:
+    - source: |-
+        /* multiple
+           lines */
+      style: primary
+      start: 0
+      end: 23
+  "/* outer /* nested */ comment */\n":
+    labels:
+    - source: /* outer /* nested */ comment */
+      style: primary
+      start: 0
+      end: 32
+  "/*! Module documentation */\n":
+    labels:
+    - source: /*! Module documentation */
+      style: primary
+      start: 0
+      end: 27
+  "/** API documentation */\nfn probe() {}\n":
+    labels:
+    - source: /** API documentation */
+      style: primary
+      start: 0
+      end: 24
+  "/**/\n":
+    labels:
+    - source: /**/
+      style: primary
+      start: 0
+      end: 4
+  "//\n":
+    labels:
+    - source: //
+      style: primary
+      start: 0
+      end: 2
+  "// TODO: implement this\nfn probe() {}\n":
+    labels:
+    - source: "// TODO: implement this"
+      style: primary
+      start: 0
+      end: 23
+  "// comment\nfn probe() {}\n":
+    labels:
+    - source: // comment
+      style: primary
+      start: 0
+      end: 10
+  "//! Module documentation\n":
+    labels:
+    - source: |
+        //! Module documentation
+      style: primary
+      start: 0
+      end: 25
+  "/// API documentation\nfn probe() {}\n":
+    labels:
+    - source: |
+        /// API documentation
+      style: primary
+      start: 0
+      end: 22
+  "fn probe() {\n    let value = /* inline comment */ 1;\n}\n":
+    labels:
+    - source: /* inline comment */
+      style: primary
+      start: 29
+      end: 49
+  "fn probe() {} // trailing comment\n":
+    labels:
+    - source: // trailing comment
+      style: primary
+      start: 14
+      end: 33
+  "macro_rules! probe {\n    () => {\n        /* macro comment */\n        fn probe() {}\n    };\n}\n":
+    labels:
+    - source: /* macro comment */
+      style: primary
+      start: 41
+      end: 60
+  "macro_rules! probe {\n    () => {\n        // macro comment\n        fn probe() {}\n    };\n}\n":
+    labels:
+    - source: // macro comment
+      style: primary
+      start: 41
+      end: 57

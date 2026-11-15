@@ -1,0 +1,29 @@
+id: store-imports-tsx
+language: tsx
+severity: error
+message: "`@/stores` is imported only by organisms/**, pages/** and App.tsx (L3)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/theme/**"
+# Covers imports, `export … from` and `import(…)`. Only the `@/` alias is matched.
+utils:
+  banned:
+    kind: string
+    regex: '^["'']@/stores(/[^"'']*)?["'']$'
+rule:
+  any:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+      has:
+        field: source
+        matches: banned
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: import
+        - has:
+            field: arguments
+            has:
+              matches: banned

@@ -1,0 +1,28 @@
+id: object-type-alias-ts
+valid:
+  - |
+    interface IssueCardProps {
+      issueId: number;
+    }
+  - |
+    type Ids = readonly number[];
+  - |
+    type Keys<P extends Record<keyof P, string | number | null | (() => void)>> = P;
+  - |
+    type MenuEntry = MenuItem | MenuSeparator;
+  - |
+    type Folded = { [K in BoardColumn]?: boolean };
+  - |
+    type Handler = (issueId: number) => void;
+invalid:
+  - |
+    type IssueCardProps = { issueId: number };
+  - |
+    export type Point = {
+      x: number;
+      y: number;
+    };
+  - |
+    type Box<T> = { value: T };
+  - |
+    type Empty = {};

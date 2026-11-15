@@ -1,0 +1,142 @@
+id: single-use-private-helper
+snapshots:
+  "async fn helper(value: usize) -> usize { value + 1 }\nimpl Worker {\n    async fn run(&self, value: usize) -> usize { helper(value).await }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 9
+      end: 15
+  "fn first() { second(); }\nfn second() { third(); }\nfn third() {}\nimpl Worker { fn run(&self) { first(); } }\n":
+    labels:
+    - source: first
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 8
+  "fn helper() {}\nfn run() { helper(); }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper() {}\nimpl Worker {\n    fn run(&self) {\n        // helper() in a comment is not a call.\n        let _ = \"helper()\";\n        helper();\n    }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper() {}\nimpl Worker {\n    fn run(&self) {\n        if ready() { for _ in 0..3 { helper(); } }\n    }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper() {}\nimpl Worker { fn run(&self) { helper(); } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper() {}\nimpl Worker { fn run(&self) { let action = || helper(); action(); } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper() {}\nimpl Worker { fn run(&self) { self::helper(); } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper(value: usize) -> usize { value + 1 }\nimpl Worker {\n    fn run(&self, value: usize) -> usize { helper(value) }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper<T: Default>() -> T { T::default() }\nimpl Worker { fn run(&self) -> usize { helper::<usize>() } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn helper<T: Default>() -> T { T::default() }\nimpl Worker { fn run(&self) -> usize { self::helper::<usize>() } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "fn r#type() {}\nimpl Worker { fn run(&self) { r#type(); } }\n":
+    labels:
+    - source: r#type
+      message: Inline this private helper.
+      style: primary
+      start: 3
+      end: 9
+  "impl Worker { fn run(&self) { first(); } }\nfn third() {}\nfn second() { third(); }\nfn first() { second(); }\n":
+    labels:
+    - source: third
+      message: Inline this private helper.
+      style: primary
+      start: 46
+      end: 51
+  "impl Worker { fn run(&self) { helper(); } }\nfn helper() {}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 47
+      end: 53
+  "mod outer {\n    mod inner {\n        fn helper() {}\n        impl Worker { fn run(&self) { helper(); } }\n    }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 39
+      end: 45
+  "mod worker {\n    fn helper() {}\n    impl Worker { fn run(&self) { helper(); } }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 20
+      end: 26
+  "mod worker {\n    fn helper() {}\n    impl Worker { fn run(&self) { self::helper(); } }\n}\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 20
+      end: 26
+  "pub(in self) fn helper() {}\nimpl Worker { fn run(&self) { helper(); } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 16
+      end: 22
+  "pub(self) fn helper() {}\nimpl Worker { fn run(&self) { helper(); } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 13
+      end: 19
+  "unsafe fn helper() {}\nimpl Worker { fn run(&self) { unsafe { helper(); } } }\n":
+    labels:
+    - source: helper
+      message: Inline this private helper.
+      style: primary
+      start: 10
+      end: 16

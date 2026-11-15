@@ -1,0 +1,66 @@
+id: store-exports-tsx
+valid:
+  - |
+    class BoardStore extends LiveStore<BoardState> {}
+    const BoardContext = createContext<BoardStore | null>(null);
+    function useBoard(): BoardStore {
+      return use(BoardContext);
+    }
+
+    export interface BoardScopeProps {
+      projectId: number;
+    }
+
+    export function BoardScope({ projectId }: BoardScopeProps) {
+      return projectId;
+    }
+
+    export function useIssue(issueId: number) {
+      return useBoard().issue(issueId);
+    }
+  - |
+    export type Ids = readonly number[];
+  - |
+    export enum DialogKind {
+      Setup = "setup",
+    }
+  - |
+    export type { Draft } from "./core/draft";
+  - |
+    export { BoardFilter, NewIssueColumn } from "./core/board";
+  - |
+    export function useLane(lane: number): number;
+    export function useLane(lane: number): number {
+      return lane;
+    }
+  - |
+    export function BoardScope({ projectId, children }: BoardScopeProps): ReactElement {
+      const [store] = useState(() => new BoardStore(projectId));
+      return <BoardContext.Provider value={store}>{children}</BoardContext.Provider>;
+    }
+invalid:
+  - |
+    export class BoardStore {}
+  - |
+    export abstract class LiveStore<S> {}
+  - |
+    export const BoardContext = createContext(null);
+  - |
+    export const useLane = () => 1;
+  - |
+    export function boardOf(projectId: number) {
+      return projectId;
+    }
+  - |
+    const BoardContext = createContext(null);
+    export { BoardContext };
+  - |
+    export default BoardStore;
+  - |
+    export * from "./board";
+  - |
+    export { BoardFilter } from "./board";
+  - |
+    export * from "./core/board";
+  - |
+    export { BoardStore } from "../core/board";

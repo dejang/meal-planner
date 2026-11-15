@@ -1,0 +1,170 @@
+id: no-private-forwarder
+snapshots:
+  "impl Store {\n    async fn save(&self, item: Item) -> Id { return self.inner.save(item).await }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 26
+      end: 30
+  "impl Store {\n    async fn save(&self, item: Item) -> Id { return self.inner.save(item).await; }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 26
+      end: 30
+  "impl Store {\n    async fn save(&self, item: Item) -> Id { self.inner.save(item).await }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 26
+      end: 30
+  "impl Store {\n    async fn save(&self, item: Item) { self.inner.save(item).await; }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 26
+      end: 30
+  "impl Store {\n    fn flush(&self) { persist(self); }\n}\n":
+    labels:
+    - source: flush
+      style: primary
+      start: 20
+      end: 25
+  "impl Store {\n    fn flush(&self) { self.inner.flush(); }\n}\n":
+    labels:
+    - source: flush
+      style: primary
+      start: 20
+      end: 25
+  "impl Store {\n    fn flush() { flush_storage(); }\n}\n":
+    labels:
+    - source: flush
+      style: primary
+      start: 20
+      end: 25
+  "impl Store {\n    fn save(&mut self, item: Item) -> Id { self.inner.save(item) }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) -> Id { return self.inner.save(item) }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) -> Id { return self.inner.save(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) -> Id { self.inner.save(item) }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) {\n        // Forward to the actual implementation.\n        self.inner.save(item);\n    }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) { Self::persist(self, item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) { persist(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) { persist(self, item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) { self.0.save(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) { self.inner.save(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item) { self.inner.storage.save(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item, /* policy */ mode: Mode) {\n        /* forward */ self.inner.save(item, /* policy */ mode); /* end */\n    }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item, mode: Mode) { self.inner.save(item, mode); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, item: Item, mode: Mode, retries: usize) {\n        self.inner.save(item, mode, retries);\n    }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(&self, r#type: Item) { self.inner.save(r#type); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(item: Item) { crate::storage::persist(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save(self, item: Item) -> Id { self.inner.save(item) }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    fn save<'a>(&self, item: &'a Item) -> &'a Item { self.inner.save(item) }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 20
+      end: 24
+  "impl Store {\n    pub(in self) fn save(&self, item: Item) { self.inner.save(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 33
+      end: 37
+  "impl Store {\n    pub(self) fn save(&self, item: Item) { self.inner.save(item); }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 30
+      end: 34
+  "impl<T> Store<T> {\n    fn save(&self, item: T) -> Id { self.inner.save(item) }\n}\n":
+    labels:
+    - source: save
+      style: primary
+      start: 26
+      end: 30

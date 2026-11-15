@@ -1,0 +1,55 @@
+id: string-union-type-tsx
+snapshots:
+  "const enum Drawer {\n  Closed = \"closed\",\n}\n":
+    labels:
+    - source: |-
+        const enum Drawer {
+          Closed = "closed",
+        }
+      style: primary
+      start: 0
+      end: 42
+  "export const enum Kind {\n  A = \"a\",\n}\n":
+    labels:
+    - source: |-
+        const enum Kind {
+          A = "a",
+        }
+      style: primary
+      start: 7
+      end: 37
+  "export type Lane = \"todo\" | \"doing\" | \"done\";\n":
+    labels:
+    - source: type Lane = "todo" | "doing" | "done";
+      style: primary
+      start: 7
+      end: 45
+    - source: "\"todo\" | \"doing\" | \"done\""
+      style: secondary
+      start: 19
+      end: 44
+  "type Quote =\n  | 'single'\n  | 'double';\n":
+    labels:
+    - source: |-
+        type Quote =
+          | 'single'
+          | 'double';
+      style: primary
+      start: 0
+      end: 39
+    - source: |-
+        | 'single'
+          | 'double'
+      style: secondary
+      start: 15
+      end: 38
+  "type Theme = \"light\" | \"dark\";\n":
+    labels:
+    - source: type Theme = "light" | "dark";
+      style: primary
+      start: 0
+      end: 30
+    - source: "\"light\" | \"dark\""
+      style: secondary
+      start: 13
+      end: 29

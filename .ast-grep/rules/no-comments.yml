@@ -1,0 +1,31 @@
+id: no-comments-rust
+language: rust
+severity: error
+message: Comments are forbidden. Express intent in code instead.
+rule:
+  any:
+    - kind: line_comment
+    - kind: block_comment
+---
+id: no-comments-ts
+language: TypeScript
+severity: error
+message: Comments are forbidden. Express intent in code instead.
+rule:
+  kind: comment
+---
+id: no-comments-tsx
+language: Tsx
+severity: error
+message: Comments are forbidden. Express intent in code instead.
+rule:
+  kind: comment
+---
+id: no-comments-js
+language: JavaScript
+severity: error
+message: Comments are forbidden. Express intent in code instead.
+rule:
+  any:
+    - kind: comment
+    - kind: html_comment

@@ -1,0 +1,66 @@
+id: no-comments-js
+valid:
+  - |
+    let url = "https://example.com";
+    let markers = "// /* */ <!-- -->";
+    let template = `/* not a comment */`;
+    let pattern = /\/\/|\/\*/;
+  - |
+    function probe(value) {
+      return value / 2;
+    }
+  - |
+    let view = <div title="/* not a comment */">// plain text</div>;
+  - |
+    let view = <div>{"/* not a comment */"}{`// text`}</div>;
+invalid:
+  - |
+    // comment
+    let value = 1;
+  - |
+    //
+  - |
+    let value = 1; // trailing comment
+  - |
+    let value = /* inline comment */ 1;
+  - |
+    /**/
+  - |
+    /* multiple
+       lines */
+  - |
+    /** API documentation */
+    function probe() {}
+  - |
+    <!-- HTML-style comment
+    let value = 1;
+  - |
+    --> HTML-style comment
+    let value = 1;
+  - |
+    let view = <div>{/* JSX comment */}</div>;
+  - |
+    let view = <div>{/**/}</div>;
+  - |
+    let view = (
+      <div>
+        {
+          // JSX line comment
+        }
+      </div>
+    );
+  - |
+    let view = <div>{/* expression comment */ value}</div>;
+  - |
+    let view = <div /* attribute comment */ title="probe" />;
+  - |
+    // eslint-disable-next-line no-console
+    console.log("probe");
+  - |
+    /* oxlint-disable no-console */
+    console.log("probe");
+  - |
+    /* eslint no-console: off */
+    console.log("probe");
+  - |
+    let template = `${/* expression comment */ value}`;

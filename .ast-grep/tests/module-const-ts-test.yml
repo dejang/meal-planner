@@ -1,0 +1,40 @@
+id: module-const-ts
+valid:
+  - |
+    const BoardContext = createContext<BoardStore | null>(null);
+  - |
+    const toLabel = (n: number) => `${n}`;
+  - |
+    const format = function (n: number) {
+      return n;
+    };
+  - |
+    function limit() {
+      const max = 10;
+      return max;
+    }
+  - |
+    const { lanes } = config;
+  - |
+    class Pager {
+      size = 10;
+    }
+invalid:
+  - |
+    const LIMIT = 10;
+  - |
+    export const LABEL = "Board";
+  - |
+    const PATH = `/projects`;
+  - |
+    const LANES = ["todo", "doing"];
+  - |
+    const DEFAULTS = { size: 3 };
+  - |
+    const OFFSET = -1;
+  - |
+    const LANES = ["todo"] as const;
+  - |
+    const SIZES = { sm: 1 } satisfies Record<string, number>;
+  - |
+    const first = load(), second = 2;

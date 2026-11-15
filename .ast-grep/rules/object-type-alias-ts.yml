@@ -1,0 +1,21 @@
+id: object-type-alias-ts
+language: ts
+severity: error
+message: "An object shape is an `interface`, not a `type` alias (T1)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/stores/**"
+  - "ui/src/organisms/**"
+  - "ui/src/pages/**"
+  - "ui/src/lib/live.ts"
+# A mapped type (`{ [K in X]: Y }`) has no interface form and is allowed.
+rule:
+  kind: type_alias_declaration
+  has:
+    field: value
+    kind: object_type
+    not:
+      has:
+        kind: index_signature
+        has:
+          kind: mapped_type_clause

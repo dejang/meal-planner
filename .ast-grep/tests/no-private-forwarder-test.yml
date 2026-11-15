@@ -1,0 +1,303 @@
+id: no-private-forwarder
+valid:
+  - |
+    impl Store {
+        pub fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl Store {
+        pub(crate) fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl Store {
+        pub(super) fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl Save for Store {
+        fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl<T> crate::Save<T> for Store<T> {
+        fn save(&self, item: T) { self.inner.save(item); }
+    }
+  - |
+    trait Save {
+        fn save(&self, item: Item) { persist(item); }
+    }
+  - |
+    fn save(item: Item) { persist(item); }
+  - |
+    impl Store {
+        fn save(&self, item: Item) {
+            validate(&item);
+            self.inner.save(item);
+        }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item.into()); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(&item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item, true); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item, self.mode); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item, mode: Mode) { self.inner.save(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item, mode: Mode) { self.inner.save(mode, item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item, item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item).map_err(Error::Save); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) -> Result<(), Error> { Ok(self.inner.save(item)?) }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.connection().save(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, (item, mode): (Item, Mode)) { self.inner.save(item, mode); }
+    }
+  - |
+    impl Store {
+        fn save(&self, _: Item) { self.inner.flush(); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { save(item, self); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.save(item); }
+    }
+  - |
+    impl Store {
+        fn save(item: Item) { Self::save(item); }
+    }
+  - |
+    impl Store {
+        unsafe fn save(&self, item: Item) { persist(item); }
+    }
+  - |
+    impl Store {
+        extern "C" fn save(item: Item) { persist(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { unsafe { persist(item); } }
+    }
+  - |
+    impl Store {
+        fn parse(&self, text: &str) -> Number { decode::<Number>(text) }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save::<Item>(item); }
+    }
+  - |
+    impl Store {
+        fn optional(item: Item) -> Option<Item> { Some(item) }
+    }
+  - |
+    impl Store {
+        fn success(item: Item) -> Result<Item, Error> { Ok(item) }
+    }
+  - |
+    impl Store {
+        fn variant(item: Item) -> Event { Event::Saved(item) }
+    }
+  - |
+    impl Store {
+        fn boxed(item: Item) -> Box<Item> { Box::new(item) }
+    }
+  - |
+    impl Store {
+        fn convert(item: Item) -> Other { Other::from(item) }
+    }
+  - |
+    impl Store {
+        fn text(&self) -> &str { self.text.as_str() }
+    }
+  - |
+    impl Store {
+        fn copy_item(&self) -> Item { self.item.clone() }
+    }
+  - |
+    impl Store {
+        fn save(&self, a: usize, b: usize, c: usize) { self.inner.save(a, c, b); }
+    }
+  - |
+    impl Store {
+        fn save(&self, a: usize, b: usize, c: usize) { self.inner.save(b, a, c); }
+    }
+  - |
+    impl Store {
+        fn save(&self, a: usize, b: usize, c: usize) { self.inner.save(c, b, a); }
+    }
+  - |
+    impl Store {
+        fn save(&self, a: usize, b: usize, c: usize) { self.inner.save(a, a, c); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { persist(self, self, item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item); self.inner.flush(); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item); log_saved(); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) -> Result<Id, Error> { self.inner.save(item)? }
+    }
+  - |
+    impl Store {
+        fn save(&self, callback: fn(Item), item: Item) { callback(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) -> Id { (self.inner.save(item), record_save()).0 }
+    }
+invalid:
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) -> Id { self.inner.save(item) }
+    }
+  - |
+    impl Store {
+        fn save(&mut self, item: Item) -> Id { self.inner.save(item) }
+    }
+  - |
+    impl Store {
+        fn save(self, item: Item) -> Id { self.inner.save(item) }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { persist(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { persist(self, item); }
+    }
+  - |
+    impl Store {
+        fn save(item: Item) { crate::storage::persist(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item, mode: Mode) { self.inner.save(item, mode); }
+    }
+  - |
+    impl Store {
+        fn flush(&self) { self.inner.flush(); }
+    }
+  - |
+    impl Store {
+        fn flush() { flush_storage(); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) -> Id { return self.inner.save(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) -> Id { return self.inner.save(item) }
+    }
+  - |
+    impl Store {
+        async fn save(&self, item: Item) -> Id { self.inner.save(item).await }
+    }
+  - |
+    impl Store {
+        async fn save(&self, item: Item) { self.inner.save(item).await; }
+    }
+  - |
+    impl Store {
+        async fn save(&self, item: Item) -> Id { return self.inner.save(item).await; }
+    }
+  - |
+    impl Store {
+        async fn save(&self, item: Item) -> Id { return self.inner.save(item).await }
+    }
+  - |
+    impl Store {
+        pub(self) fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl Store {
+        pub(in self) fn save(&self, item: Item) { self.inner.save(item); }
+    }
+  - |
+    impl<T> Store<T> {
+        fn save(&self, item: T) -> Id { self.inner.save(item) }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) {
+            // Forward to the actual implementation.
+            self.inner.save(item);
+        }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item, mode: Mode, retries: usize) {
+            self.inner.save(item, mode, retries);
+        }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item, /* policy */ mode: Mode) {
+            /* forward */ self.inner.save(item, /* policy */ mode); /* end */
+        }
+    }
+  - |
+    impl Store {
+        fn flush(&self) { persist(self); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { Self::persist(self, item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.inner.storage.save(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, item: Item) { self.0.save(item); }
+    }
+  - |
+    impl Store {
+        fn save(&self, r#type: Item) { self.inner.save(r#type); }
+    }
+  - |
+    impl Store {
+        fn save<'a>(&self, item: &'a Item) -> &'a Item { self.inner.save(item) }
+    }

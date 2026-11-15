@@ -1,0 +1,57 @@
+id: store-helper-tsx
+language: tsx
+severity: error
+message: "Logic that reads or writes a store's state is a method of that store. No module-level function takes a store or its state as an argument (S5)."
+files:
+  - "ui/src/stores/**"
+# A parameter is reported when its annotation is a type reference whose name ends in `Store`
+# or `State` (`BoardState`, `LiveStore<S>`). A wrapped one (`Readonly<BoardState>`) is not seen.
+utils:
+  top-level:
+    any:
+      - kind: program
+      - kind: export_statement
+        inside:
+          kind: program
+  module-function:
+    any:
+      - any:
+          - kind: function_declaration
+          - kind: generator_function_declaration
+        inside:
+          matches: top-level
+      - any:
+          - kind: arrow_function
+          - kind: function_expression
+          - kind: generator_function
+        inside:
+          kind: variable_declarator
+          field: value
+          inside:
+            any:
+              - kind: lexical_declaration
+              - kind: variable_declaration
+            inside:
+              matches: top-level
+  state-type:
+    any:
+      - kind: type_identifier
+        regex: '(Store|State)$'
+      - any:
+          - kind: generic_type
+          - kind: nested_type_identifier
+        has:
+          field: name
+          regex: '(Store|State)$'
+rule:
+  any:
+    - kind: required_parameter
+    - kind: optional_parameter
+  has:
+    field: type
+    has:
+      matches: state-type
+  inside:
+    kind: formal_parameters
+    inside:
+      matches: module-function

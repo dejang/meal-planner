@@ -1,0 +1,33 @@
+id: store-exports-tsx
+language: tsx
+severity: error
+message: "A store module exports only its `*Scope` component, its `use*` hooks, interfaces, types and enums. Its class, context and getter stay unexported, so no component can hold a store (L4)."
+files:
+  - "ui/src/stores/**"
+ignores:
+  - "ui/src/stores/core/**"
+# Only `function` declarations count as the scope and hooks: `export const useX = …` is reported.
+# A by-name re-export from `./core/` passes, for the enums and types organisms need.
+rule:
+  kind: export_statement
+  not:
+    any:
+      - regex: '^export\s+type\s*\{'
+      - all:
+          - regex: '^export\s*\{'
+          - has:
+              field: source
+              regex: '^["'']\./core/'
+      - has:
+          field: declaration
+          any:
+            - kind: interface_declaration
+            - kind: type_alias_declaration
+            - kind: enum_declaration
+            - all:
+                - any:
+                    - kind: function_declaration
+                    - kind: function_signature
+                - has:
+                    field: name
+                    regex: '^use[A-Z]|Scope$'

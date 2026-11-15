@@ -1,0 +1,128 @@
+id: listen-in-constructor-ts
+snapshots:
+  "class BoardStore extends LiveStore<BoardState> {\n  constructor(live: Live) {\n    super(live, {});\n    this.live.listen(\"board\", () => this.read(), (event) => this.hear(event));\n  }\n}\n":
+    labels:
+    - source: this.live.listen("board", () => this.read(), (event) => this.hear(event))
+      style: primary
+      start: 102
+      end: 175
+    - source: constructor
+      style: secondary
+      start: 51
+      end: 62
+    - source: |-
+        constructor(live: Live) {
+            super(live, {});
+            this.live.listen("board", () => this.read(), (event) => this.hear(event));
+          }
+      style: secondary
+      start: 51
+      end: 180
+    - source: listen
+      style: secondary
+      start: 112
+      end: 118
+    - source: this.live.listen
+      style: secondary
+      start: 102
+      end: 118
+  "class BoardStore {\n  constructor() {\n    queueMicrotask(() => this.connect());\n  }\n}\n":
+    labels:
+    - source: this.connect()
+      style: primary
+      start: 62
+      end: 76
+    - source: constructor
+      style: secondary
+      start: 21
+      end: 32
+    - source: |-
+        constructor() {
+            queueMicrotask(() => this.connect());
+          }
+      style: secondary
+      start: 21
+      end: 82
+    - source: connect
+      style: secondary
+      start: 67
+      end: 74
+    - source: this.connect
+      style: secondary
+      start: 62
+      end: 74
+  "class BoardStore {\n  constructor() {\n    this.subscribe(() => this.refilter());\n  }\n}\n":
+    labels:
+    - source: this.subscribe(() => this.refilter())
+      style: primary
+      start: 41
+      end: 78
+    - source: constructor
+      style: secondary
+      start: 21
+      end: 32
+    - source: |-
+        constructor() {
+            this.subscribe(() => this.refilter());
+          }
+      style: secondary
+      start: 21
+      end: 83
+    - source: subscribe
+      style: secondary
+      start: 46
+      end: 55
+    - source: this.subscribe
+      style: secondary
+      start: 41
+      end: 55
+  "class BoardStore {\n  constructor() {\n    this.subscribeWithSelector((s) => s.filter, () => this.refilter());\n  }\n}\n":
+    labels:
+    - source: this.subscribeWithSelector((s) => s.filter, () => this.refilter())
+      style: primary
+      start: 41
+      end: 107
+    - source: constructor
+      style: secondary
+      start: 21
+      end: 32
+    - source: |-
+        constructor() {
+            this.subscribeWithSelector((s) => s.filter, () => this.refilter());
+          }
+      style: secondary
+      start: 21
+      end: 112
+    - source: subscribeWithSelector
+      style: secondary
+      start: 46
+      end: 67
+    - source: this.subscribeWithSelector
+      style: secondary
+      start: 41
+      end: 67
+  "class BoardStore {\n  constructor(live: Live) {\n    live.connect();\n  }\n}\n":
+    labels:
+    - source: live.connect()
+      style: primary
+      start: 51
+      end: 65
+    - source: constructor
+      style: secondary
+      start: 21
+      end: 32
+    - source: |-
+        constructor(live: Live) {
+            live.connect();
+          }
+      style: secondary
+      start: 21
+      end: 70
+    - source: connect
+      style: secondary
+      start: 56
+      end: 63
+    - source: live.connect
+      style: secondary
+      start: 51
+      end: 63

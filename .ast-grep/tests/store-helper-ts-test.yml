@@ -1,0 +1,48 @@
+id: store-helper-ts
+valid:
+  - |
+    class BoardStore {
+      matches(s: BoardState, issueId: number) {
+        return s.ids.includes(issueId);
+      }
+    }
+  - |
+    export function useLane(lane: BoardColumn) {
+      const store = useBoard();
+      const useStoreLane = useMemo(
+        () => createKeyedSelectorHook(store, (lane: BoardColumn) => (s: BoardState) => s.visible[lane]),
+        [store],
+      );
+      return useStoreLane(lane);
+    }
+  - |
+    function useBoard(): BoardStore {
+      return use(BoardContext);
+    }
+  - |
+    export function BoardScope({ projectId }: BoardScopeProps) {
+      return projectId;
+    }
+  - |
+    export function startsSave<T>(held: Draft<T> | null) {
+      return held;
+    }
+invalid:
+  - |
+    function visibleIds(state: BoardState, lane: BoardColumn) {
+      return state.visible[lane];
+    }
+  - |
+    export function moveIssue(store: BoardStore, issueId: number) {
+      store.moveIssue(issueId);
+    }
+  - |
+    const countIssues = (s: BoardState) => s.ids.length;
+  - |
+    function connectAll(store: LiveStore<BoardState>) {
+      return store.connect();
+    }
+  - |
+    const refresh = function (s?: UiState) {
+      return s;
+    };

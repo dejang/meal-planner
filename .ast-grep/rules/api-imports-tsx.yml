@@ -1,0 +1,35 @@
+id: api-imports-tsx
+language: tsx
+severity: error
+message: "`@/api` is imported only by stores/**; elsewhere only `import type` is allowed. Every server write is a store hook setter (L5)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/organisms/**"
+  - "ui/src/pages/**"
+  - "ui/src/theme/**"
+  - "ui/src/App.tsx"
+# Covers imports, `export … from` and `import(…)`. `import type` and `export type … from`
+# are allowed. Only the `@/` alias is matched.
+utils:
+  banned:
+    kind: string
+    regex: '^["'']@/api(/[^"'']*)?["'']$'
+rule:
+  any:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+      has:
+        field: source
+        matches: banned
+      not:
+        regex: '^(import|export)\s+type\b'
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: import
+        - has:
+            field: arguments
+            has:
+              matches: banned

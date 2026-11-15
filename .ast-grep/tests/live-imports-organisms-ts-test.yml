@@ -1,0 +1,25 @@
+id: live-imports-organisms-ts
+valid:
+  - |
+    import type { Draft } from "@/stores/core/draft";
+  - |
+    import type { Draft } from "../stores/core/draft";
+  - |
+    export type { Draft } from "@/stores/core/draft";
+  - |
+    import { useIssue } from "@/stores/board";
+invalid:
+  - |
+    import { draftOf } from "@/stores/core/draft";
+  - |
+    import { type Draft } from "@/stores/core/draft";
+  - |
+    import type { AppConfig } from "@/stores/core/config";
+  - |
+    import type { Live } from "@/lib/live";
+  - |
+    import { useLive } from "../stores/core/live";
+  - |
+    export * from "@/stores/core/draft";
+  - |
+    const draft = import("@/stores/core/draft");

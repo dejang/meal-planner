@@ -1,0 +1,110 @@
+id: live-imports-ts
+snapshots:
+  "const live = import(\"@/lib/live\");\n":
+    labels:
+    - source: import("@/lib/live")
+      style: primary
+      start: 13
+      end: 33
+    - source: import
+      style: secondary
+      start: 13
+      end: 19
+    - source: "\"@/lib/live\""
+      style: secondary
+      start: 20
+      end: 32
+    - source: "\"@/lib/live\""
+      style: secondary
+      start: 20
+      end: 32
+  "export * from \"@/stores/core/draft\";\n":
+    labels:
+    - source: export * from "@/stores/core/draft";
+      style: primary
+      start: 0
+      end: 36
+    - source: "\"@/stores/core/draft\""
+      style: secondary
+      start: 14
+      end: 35
+  "import type { Draft } from \"@/stores/core/draft\";\n":
+    labels:
+    - source: import type { Draft } from "@/stores/core/draft";
+      style: primary
+      start: 0
+      end: 49
+    - source: "\"@/stores/core/draft\""
+      style: secondary
+      start: 27
+      end: 48
+  "import type { Live } from \"@/lib/live\";\n":
+    labels:
+    - source: import type { Live } from "@/lib/live";
+      style: primary
+      start: 0
+      end: 39
+    - source: "\"@/lib/live\""
+      style: secondary
+      start: 26
+      end: 38
+  "import { LiveStore } from \"@/stores/core\";\n":
+    labels:
+    - source: import { LiveStore } from "@/stores/core";
+      style: primary
+      start: 0
+      end: 42
+    - source: "\"@/stores/core\""
+      style: secondary
+      start: 26
+      end: 41
+  "import { createLive } from \"@/lib/live\";\n":
+    labels:
+    - source: import { createLive } from "@/lib/live";
+      style: primary
+      start: 0
+      end: 40
+    - source: "\"@/lib/live\""
+      style: secondary
+      start: 27
+      end: 39
+  "import { useLive } from \"../../stores/core/live\";\n":
+    labels:
+    - source: import { useLive } from "../../stores/core/live";
+      style: primary
+      start: 0
+      end: 49
+    - source: "\"../../stores/core/live\""
+      style: secondary
+      start: 24
+      end: 48
+  "import { useLive } from \"../stores/core/live\";\n":
+    labels:
+    - source: import { useLive } from "../stores/core/live";
+      style: primary
+      start: 0
+      end: 46
+    - source: "\"../stores/core/live\""
+      style: secondary
+      start: 24
+      end: 45
+  "import { useLive } from \"./stores/core/live\";\n":
+    labels:
+    - source: import { useLive } from "./stores/core/live";
+      style: primary
+      start: 0
+      end: 45
+    - source: "\"./stores/core/live\""
+      style: secondary
+      start: 24
+      end: 44
+  "import { useLive } from \"@/stores/core/live\";\n":
+    labels:
+    - source: import { useLive } from "@/stores/core/live";
+      style: primary
+      start: 0
+      end: 45
+    - source: "\"@/stores/core/live\""
+      style: secondary
+      start: 24
+      end: 44

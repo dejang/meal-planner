@@ -1,0 +1,60 @@
+id: store-imports-tsx
+snapshots:
+  "const ui = import(\"@/stores/ui\");\n":
+    labels:
+    - source: import("@/stores/ui")
+      style: primary
+      start: 11
+      end: 32
+    - source: import
+      style: secondary
+      start: 11
+      end: 17
+    - source: "\"@/stores/ui\""
+      style: secondary
+      start: 18
+      end: 31
+    - source: "\"@/stores/ui\""
+      style: secondary
+      start: 18
+      end: 31
+  "export { useTheme } from \"@/stores/ui\";\n":
+    labels:
+    - source: export { useTheme } from "@/stores/ui";
+      style: primary
+      start: 0
+      end: 39
+    - source: "\"@/stores/ui\""
+      style: secondary
+      start: 25
+      end: 38
+  "import type { DialogKind } from \"@/stores/ui\";\n":
+    labels:
+    - source: import type { DialogKind } from "@/stores/ui";
+      style: primary
+      start: 0
+      end: 46
+    - source: "\"@/stores/ui\""
+      style: secondary
+      start: 32
+      end: 45
+  "import { useConfig } from \"@/stores\";\n":
+    labels:
+    - source: import { useConfig } from "@/stores";
+      style: primary
+      start: 0
+      end: 37
+    - source: "\"@/stores\""
+      style: secondary
+      start: 26
+      end: 36
+  "import { useIssue } from \"@/stores/board\";\n":
+    labels:
+    - source: import { useIssue } from "@/stores/board";
+      style: primary
+      start: 0
+      end: 42
+    - source: "\"@/stores/board\""
+      style: secondary
+      start: 25
+      end: 41

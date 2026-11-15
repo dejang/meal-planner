@@ -1,0 +1,53 @@
+id: listen-in-constructor-tsx
+valid:
+  - |
+    class BoardStore extends LiveStore<BoardState> {
+      constructor(live: Live, projectId: number) {
+        super(live, { projectId, issues: {} });
+      }
+
+      connect(): () => void {
+        const stop = this.live.listen("board", () => this.read(), (event) => this.hear(event));
+        const unsubscribe = this.subscribeWithSelector((s) => s.filter, () => this.refilter());
+        return () => {
+          stop();
+          unsubscribe();
+        };
+      }
+    }
+  - |
+    function start(live: Live) {
+      return live.connect();
+    }
+invalid:
+  - |
+    class BoardStore extends LiveStore<BoardState> {
+      constructor(live: Live) {
+        super(live, {});
+        this.live.listen("board", () => this.read(), (event) => this.hear(event));
+      }
+    }
+  - |
+    class BoardStore {
+      constructor() {
+        this.subscribe(() => this.refilter());
+      }
+    }
+  - |
+    class BoardStore {
+      constructor() {
+        this.subscribeWithSelector((s) => s.filter, () => this.refilter());
+      }
+    }
+  - |
+    class BoardStore {
+      constructor(live: Live) {
+        live.connect();
+      }
+    }
+  - |
+    class BoardStore {
+      constructor() {
+        queueMicrotask(() => this.connect());
+      }
+    }

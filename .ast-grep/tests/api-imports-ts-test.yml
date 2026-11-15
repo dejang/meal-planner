@@ -1,0 +1,21 @@
+id: api-imports-ts
+valid:
+  - |
+    import type { Issue } from "@/api";
+  - |
+    export type { Issue } from "@/api";
+  - |
+    import { cn } from "@/lib/utils";
+  - |
+    import { thing } from "@/apis";
+invalid:
+  - |
+    import { api } from "@/api";
+  - |
+    import { api, type Issue } from "@/api";
+  - |
+    import { type Issue } from "@/api";
+  - |
+    export { api } from "@/api";
+  - |
+    const server = import("@/api");

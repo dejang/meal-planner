@@ -1,0 +1,32 @@
+id: string-union-type-ts
+valid:
+  - |
+    enum Drawer {
+      Closed = "closed",
+      Open = "open",
+    }
+  - |
+    type MenuEntry = MenuItem | MenuSeparator;
+  - |
+    type Pick = "a" | null;
+  - |
+    type Size = 1 | 2;
+  - |
+    type Ids = readonly number[];
+invalid:
+  - |
+    type Theme = "light" | "dark";
+  - |
+    export type Lane = "todo" | "doing" | "done";
+  - |
+    type Quote =
+      | 'single'
+      | 'double';
+  - |
+    const enum Drawer {
+      Closed = "closed",
+    }
+  - |
+    export const enum Kind {
+      A = "a",
+    }

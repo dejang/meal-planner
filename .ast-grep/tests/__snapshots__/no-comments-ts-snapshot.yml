@@ -1,0 +1,82 @@
+id: no-comments-ts
+snapshots:
+  "/* eslint no-console: off */\nconsole.log(\"probe\");\n":
+    labels:
+    - source: "/* eslint no-console: off */"
+      style: primary
+      start: 0
+      end: 28
+  "/* multiple\n   lines */\n":
+    labels:
+    - source: |-
+        /* multiple
+           lines */
+      style: primary
+      start: 0
+      end: 23
+  "/* oxlint-disable no-console */\nconsole.log(\"probe\");\n":
+    labels:
+    - source: /* oxlint-disable no-console */
+      style: primary
+      start: 0
+      end: 31
+  "/** API documentation */\nfunction probe(): void {}\n":
+    labels:
+    - source: /** API documentation */
+      style: primary
+      start: 0
+      end: 24
+  "/**/\n":
+    labels:
+    - source: /**/
+      style: primary
+      start: 0
+      end: 4
+  "//\n":
+    labels:
+    - source: //
+      style: primary
+      start: 0
+      end: 2
+  "// @ts-ignore\nprobe();\n":
+    labels:
+    - source: // @ts-ignore
+      style: primary
+      start: 0
+      end: 13
+  "// comment\nlet value = 1;\n":
+    labels:
+    - source: // comment
+      style: primary
+      start: 0
+      end: 10
+  "// eslint-disable-next-line no-console\nconsole.log(\"probe\");\n":
+    labels:
+    - source: // eslint-disable-next-line no-console
+      style: primary
+      start: 0
+      end: 38
+  "/// <reference types=\"node\" />\n":
+    labels:
+    - source: /// <reference types="node" />
+      style: primary
+      start: 0
+      end: 30
+  "let template = `${/* expression comment */ value}`;\n":
+    labels:
+    - source: /* expression comment */
+      style: primary
+      start: 18
+      end: 42
+  "let value = /* inline comment */ 1;\n":
+    labels:
+    - source: /* inline comment */
+      style: primary
+      start: 12
+      end: 32
+  "let value = 1; // trailing comment\n":
+    labels:
+    - source: // trailing comment
+      style: primary
+      start: 15
+      end: 34

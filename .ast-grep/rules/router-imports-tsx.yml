@@ -1,0 +1,30 @@
+id: router-imports-tsx
+language: tsx
+severity: error
+message: "`react-router` is imported only by App.tsx, pages/** and organisms/** (L10)."
+files:
+  - "ui/src/kit/**"
+  - "ui/src/stores/**"
+  - "ui/src/theme/**"
+# Covers imports, `export … from` and `import(…)`.
+utils:
+  banned:
+    kind: string
+    regex: '^["'']react-router(/[^"'']*)?["'']$'
+rule:
+  any:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+      has:
+        field: source
+        matches: banned
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: import
+        - has:
+            field: arguments
+            has:
+              matches: banned

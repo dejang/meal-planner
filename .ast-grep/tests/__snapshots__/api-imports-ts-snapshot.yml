@@ -1,0 +1,60 @@
+id: api-imports-ts
+snapshots:
+  "const server = import(\"@/api\");\n":
+    labels:
+    - source: import("@/api")
+      style: primary
+      start: 15
+      end: 30
+    - source: import
+      style: secondary
+      start: 15
+      end: 21
+    - source: "\"@/api\""
+      style: secondary
+      start: 22
+      end: 29
+    - source: "\"@/api\""
+      style: secondary
+      start: 22
+      end: 29
+  "export { api } from \"@/api\";\n":
+    labels:
+    - source: export { api } from "@/api";
+      style: primary
+      start: 0
+      end: 28
+    - source: "\"@/api\""
+      style: secondary
+      start: 20
+      end: 27
+  "import { api } from \"@/api\";\n":
+    labels:
+    - source: import { api } from "@/api";
+      style: primary
+      start: 0
+      end: 28
+    - source: "\"@/api\""
+      style: secondary
+      start: 20
+      end: 27
+  "import { api, type Issue } from \"@/api\";\n":
+    labels:
+    - source: import { api, type Issue } from "@/api";
+      style: primary
+      start: 0
+      end: 40
+    - source: "\"@/api\""
+      style: secondary
+      start: 32
+      end: 39
+  "import { type Issue } from \"@/api\";\n":
+    labels:
+    - source: import { type Issue } from "@/api";
+      style: primary
+      start: 0
+      end: 35
+    - source: "\"@/api\""
+      style: secondary
+      start: 27
+      end: 34

@@ -1,0 +1,17 @@
+id: store-imports-tsx
+valid:
+  - |
+    import { Badge } from "@/kit/atoms/badge";
+  - |
+    import { thing } from "@/storesque";
+invalid:
+  - |
+    import { useConfig } from "@/stores";
+  - |
+    import { useIssue } from "@/stores/board";
+  - |
+    import type { DialogKind } from "@/stores/ui";
+  - |
+    export { useTheme } from "@/stores/ui";
+  - |
+    const ui = import("@/stores/ui");
