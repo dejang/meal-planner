@@ -10,7 +10,7 @@ See the [demo](https://dejang.github.io/meal-planner-egui/)
 
 ## Development
 
-Use the pinned Rust toolchain, Node.js 22 and **pnpm** (version in `ui/package.json`).
+Use the pinned Rust toolchain, Node.js 22 and **pnpm** (version in the root `package.json`).
 On Linux, install Tauri v2 prerequisites: `libwebkit2gtk-4.1-dev`, `build-essential`,
 `curl`, `wget`, `file`, `libxdo-dev`, `libssl-dev`, `librsvg2-dev`,
 `libayatana-appindicator3-dev`, `libxcb-render0-dev`, `libxcb-shape0-dev`,
@@ -19,12 +19,13 @@ On Linux, install Tauri v2 prerequisites: `libwebkit2gtk-4.1-dev`, `build-essent
 From the repository root, start the Tauri app and its Vite/React frontend:
 
 ```sh
-pnpm --dir ui install --frozen-lockfile
-pnpm --dir ui run tauri dev
+pnpm install --frozen-lockfile
+pnpm tauri dev
 ```
 
 The frontend dev server uses `http://127.0.0.1:1420`. To build the desktop app,
-run `pnpm --dir ui run tauri build`.
+run `pnpm tauri build`. The root pnpm workspace installs both the desktop CLI
+and the frontend dependencies; Tauri starts the Vite server automatically.
 
 Run the legacy egui app from the repository root so state exports remain in root:
 
