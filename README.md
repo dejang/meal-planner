@@ -8,12 +8,36 @@ See the [demo](https://dejang.github.io/meal-planner-egui/)
 <img width="1728" height="967" alt="Screenshot 2026-09-05 at 12 50 42 AM" src="https://github.com/user-attachments/assets/2ca20095-5a58-475c-abb8-c0c30a76e5db" />
 
 
-## Building from source
+## Development
+
+Use the pinned Rust toolchain, Node.js 22 and **pnpm** (version in `ui/package.json`).
+On Linux, install Tauri v2 prerequisites: `libwebkit2gtk-4.1-dev`, `build-essential`,
+`curl`, `wget`, `file`, `libxdo-dev`, `libssl-dev`, `librsvg2-dev`,
+`libayatana-appindicator3-dev`, `libxcb-render0-dev`, `libxcb-shape0-dev`,
+`libxcb-xfixes0-dev` and `libxkbcommon-dev` (Debian/Ubuntu package names).
+
+From the repository root, start the Tauri app and its Vite/React frontend:
+
+```sh
+pnpm --dir ui install --frozen-lockfile
+pnpm --dir ui run tauri dev
 ```
-cargo build && cargo run
-// wasm
-trunk serve
+
+The frontend dev server uses `http://127.0.0.1:1420`. To build the desktop app,
+run `pnpm --dir ui run tauri build`.
+
+Run the legacy egui app from the repository root so state exports remain in root:
+
+```sh
+cargo run -p meal_planner
 ```
+
+For the legacy web app, install Trunk and run `cd legacy && trunk serve`.
+`state.json` stays at the repository root and is embedded by the legacy app.
+
+Run `./check.sh` for workspace fmt, clippy, build and tests, frontend typecheck
+and Vitest, a Tauri build, and the legacy wasm/Trunk checks. Install the Linux
+packages above, frontend dependencies and Trunk first.
 
 ## Features
 
