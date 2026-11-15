@@ -12,3 +12,6 @@ dist
 
 # https://github.com/lycheeverse/lychee
 .lycheecache
+
+node_modules
+src-tauri/gen/schemas

@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# This scripts runs various CI-like checks in a convenient way.
-set -eux
+set -euxo pipefail
+cd "$(dirname "$0")"
 
-cargo check --quiet --workspace --all-targets
-cargo check --quiet --workspace --all-features --lib --target wasm32-unknown-unknown
 cargo fmt --all -- --check
-cargo clippy --quiet --workspace --all-targets --all-features --  -D warnings -W clippy::all
-cargo test --quiet --workspace --all-targets --all-features
-cargo test --quiet --workspace --doc
-trunk build
+cargo clippy --locked --workspace --all-targets --all-features -- -D warnings -W clippy::all
+cargo build --locked --workspace --all-targets --all-features
+cargo test --locked --workspace --all-targets --all-features
+cargo test --locked --workspace --doc
+cargo check --locked -p meal_planner --all-features --lib --target wasm32-unknown-unknown
+pnpm --dir ui run typecheck
+pnpm --dir ui test
+pnpm --dir ui run tauri build --no-bundle --debug
+(cd legacy && trunk build)

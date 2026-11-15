@@ -1,68 +1,9 @@
-[package]
-name = "meal_planner"
-version = "0.1.0"
-authors = ["Dejan Gitin <dejangitin@gmail.com>"]
-edition = "2021"
-include = ["LICENSE-APACHE", "LICENSE-MIT", "**/*.rs", "Cargo.toml"]
-
-[package.metadata.docs.rs]
-all-features = true
-targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
-
-[dependencies]
-egui = { version = "0.36.1", default-features = false }
-eframe = { version = "0.36.1", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "x11", "wayland"] }
-log = "0.4"
-
-# You only need serde if you want app persistence:
-serde = { version = "1", features = ["derive"] }
-reqwest = { version = "0.12.5", features = ["json"] }
-serde_json = "1.0.125"
-scraper = "0.25.0"
-url = "2.5.4"
-egui_extras = { version = "0.36.1", features = ["image", "all_loaders"] }
-pollster = "0.3.0"
-ehttp = { version = "0.5.0", features = ["json", "native-async"] }
-image = { version = "0.25.2", features = ["jpeg", "png", "webp"] }
-uuid = { version = "1.10.0", features = ["js", "serde", "v4"] }
-rfd = { version = "0.15.4", features = ["file-handle-inner"] }
-futures = "0.3.30"
-base64 = "0.22.1"
-
-# native:
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.10"
-
-# web:
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen-futures = "0.4"
-wasm-bindgen = "0.2"
-
-# to access the DOM (to hide the loading text)
-[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
-version = "0.3.104"
-features = [
-    "Document",
-    "Element",
-    "HtmlCanvasElement",
-    "Window",
-]
+[workspace]
+members = ["crates/core", "src-tauri", "legacy"]
+resolver = "2"
 
 [profile.release]
-opt-level = 2 # fast and small wasm
-
-# Optimize all dependencies even in debug builds:
-[profile.dev.package."*"]
 opt-level = 2
 
-
-[patch.crates-io]
-
-# If you want to use the bleeding edge version of egui and eframe:
-# egui = { git = "https://github.com/emilk/egui", branch = "master" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
-
-# If you fork https://github.com/emilk/egui you can test with:
-# egui = { path = "../egui/crates/egui" }
-# eframe = { path = "../egui/crates/eframe" }
-
+[profile.dev.package."*"]
+opt-level = 2
