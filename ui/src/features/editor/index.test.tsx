@@ -6,15 +6,16 @@ import { open } from "@tauri-apps/plugin-dialog";
 import Editor from "./index";
 import { deferred } from "../../api/fixtures";
 import { commands } from "../../api";
-import { EditorScope } from "../../stores/EditorStore";
+import { AppScopes } from "../../test-support/scopes";
+import { ok } from "../../test-support/ipc";
 
 function renderEditor() {
   return renderHook(useEditor, {
     wrapper: ({ children }) => (
-      <EditorScope>
+      <AppScopes>
         {children}
         <Editor />
-      </EditorScope>
+      </AppScopes>
     ),
   });
 }
@@ -63,10 +64,7 @@ it("saves photo removal without a pending load overwriting it", async () => {
   });
   await user.click(screen.getByRole("button", { name: "Remove photo" }));
   await act(async () => {
-    response.resolve({
-      status: "ok",
-      data: { bytes: "old", width: 2, height: 2 },
-    });
+    response.resolve(ok({ bytes: "old", width: 2, height: 2 }));
   });
   expect(result.current.draft?.image).toEqual({ kind: "remove" });
   expect(
@@ -93,12 +91,10 @@ it.each([false, true])(
     const input = screen.getByRole("textbox", { name: "IMAGE" });
     await user.click(input);
     await user.paste("https://images.test/new.jpg");
-    if (!pending)
-      await act(async () => response.resolve({ status: "ok", data: image }));
+    if (!pending) await act(async () => response.resolve(ok(image)));
     await user.tab();
     expect(commands.loadImageUrl).toHaveBeenCalledTimes(1);
-    if (pending)
-      await act(async () => response.resolve({ status: "ok", data: image }));
+    if (pending) await act(async () => response.resolve(ok(image)));
     expect(result.current.draft?.image).toEqual({ kind: "set", image });
     await user.click(input);
     await user.tab();
@@ -116,12 +112,11 @@ it("retries a failed URL on blur and shows the selected file source", async () =
       status: "error",
       error: { kind: "image", detail: "Offline" },
     })
-    .mockResolvedValue({ status: "ok", data: image });
+    .mockResolvedValue(ok(image));
   vi.mocked(open).mockResolvedValueOnce("/soup.png");
-  vi.mocked(commands.loadImageFile).mockResolvedValueOnce({
-    status: "ok",
-    data: { ...image, bytes: "file" },
-  });
+  vi.mocked(commands.loadImageFile).mockResolvedValueOnce(
+    ok({ ...image, bytes: "file" }),
+  );
   act(() => result.current.actions.openNew());
   const input = screen.getByRole<HTMLInputElement>("textbox", {
     name: "IMAGE",
@@ -176,7 +171,7 @@ it.each(["url", "file"])(
     await user.clear(input);
     await user.type(input, "https://images.test/next.jpg");
     const image = { bytes: "first", width: 2, height: 2 };
-    await act(async () => response.resolve({ status: "ok", data: image }));
+    await act(async () => response.resolve(ok(image)));
     expect(input.value).toBe("https://images.test/next.jpg");
     expect(result.current.draft?.imageSource).toBe(input.value);
     expect(result.current.draft?.image).toEqual({ kind: "set", image });

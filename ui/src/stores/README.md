@@ -19,17 +19,14 @@ return primitives or stable stored references, not freshly allocated arrays or o
 For keyed entities, use `createKeyedSelectorHook` inside `useScopedHook` and invoke the
 returned hook with the key (see `useRecipe`) so subscriptions follow key changes.
 Do not export generic caller-supplied selectors.
-The shell uses `useEditorOpen()`, `useEditorError()` and `useImportOpen()`; features use named field hooks
-such as `useRecipesVisibleIds()`, `useRecipe(id)` and `usePlanShoppingItems()`.
-Constructors initialize state only. Feature scopes should perform initial reloads
-and manage external subscriptions in effects, with cleanup for StrictMode remounts.
+Constructors initialize state only. Scopes own external subscriptions in effects,
+with cleanup for StrictMode remounts; feature effects request initial reloads as needed.
 
 ## Public interface and implementation rules
 
-- Export `*Scope` provider functions and `use*` hook functions, plus the interfaces,
-  types, and enums callers need.
-- Use function declarations for exported scopes and hooks: the export rule rejects
-  `export const useSomething = ...` even when the value is a function.
+- Export `*Scope` provider functions and named `use*` hook functions, plus the
+  interfaces, types, and enums callers need.
+- Use function declarations for exported scopes and hooks, not exported arrow values.
 - Keep store classes, instances, React contexts, and raw getters private.
 - Expose useful actions and selections rather than making callers manipulate state.
 - Call `api/` and, when needed, `lib/live.ts` here. UI callers use store hooks instead
@@ -46,74 +43,68 @@ Relevant rules: `store-exports-*`, `store-helper-*`, `selector-fresh-value-*`,
 `listen-in-constructor-*`, `module-const-*`, `router-imports-*`, and the
 [shared conventions](../README.md).
 
-## Final contracts and remaining TODOs
+## Contract ownership
 
-PlanStore implements serialized persistence and independent projection refreshes through IPC.
-RecipesStore persistence actions are implemented over IPC using `listRecipes`,
-`searchRecipes`, and `deleteRecipe`.
-SettingsStore.reload reads credentials and save persists them, then refreshes the
-stored values. Editor persistence, image loading and ingredient analysis are implemented.
-Remaining persistence actions are placeholders for their owning feature tickets; preserve
-their names and state shapes. Loading and error fields belong to the store performing the
-operation; never put IPC orchestration in UI.
+Read the TypeScript modules for current state types, action signatures, and named hooks:
+[PlanStore](PlanStore.tsx), [RecipesStore](RecipesStore.tsx),
+[EditorStore](EditorStore.tsx), [ImportStore](ImportStore.tsx), and
+[SettingsStore](SettingsStore.tsx). Do not maintain a second signature inventory here.
+Loading and operation errors belong to the store performing the operation; never put
+IPC orchestration in UI. Backend search stays in Rust, not a duplicate JS filter.
 
-| Store         | State                                                                            | Actions and backend responsibility                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| RecipesStore  | recipes by ID, visibleIds, query, selectedId, loading, error                     | `reload()` lists recipes and reapplies the current query; `setQuery(query)` asynchronously calls `searchRecipes` and stores the ordered result IDs; `select(id)` changes selection; `deleteRecipe(id)` deletes and refreshes caches; `retry()` re-runs the last failed operation (reload/search, or the failed delete). Do not reimplement backend search in JS.                                                                                                                                                                                                                                                                                                 |
-| PlanStore     | plan (six days), dayTotals (six analyses or null), shoppingItems, loading, error | `reload()` loads `getPlan`, `dayTotals` for every day and `shoppingList`. `addToDay(position, recipeId)`, `moveMeal(from, to)`, `removeFromDay(position)`, `clearDay(day)`, `copyPreviousDay(day)` persist mutations and refresh totals/shopping after storing the returned plan. `dropRecipe(payload, target)` handles gallery additions and plan moves, including same-day row shifts and no-op drops.                                                                                                                                                                                                                                                         |
-| EditorStore   | draft or null, saving, analyzing, loadingImage, error                            | `reload()` refreshes the persisted open draft (no-op for a new draft); `openNew()`, `openRecipe(id)` (getRecipe), `assertCanImport()`, `openImported(recipe, sourceUrl)` (creates a draft and starts ingredient analysis), `dismissError()`, `close()`, `patchDraft(patch)`, `save()` (create/update), `analyzeIngredients()`, `chooseImageFile()` (opens the dialog plugin with image filters, then runs `loadImageFile`), `loadImageFile(path)`, `loadImageUrl(url)`, `setImageSource(text)` (edits the image field without loading). Draft includes nullable ID, imageVersion and imageSource plus RecipeInput. Use patchDraft for image removal/replacement. |
-| ImportStore   | open, url, supportedSites, importing, error, linkError                           | `reload()` loads supportedSites; `open()` (clears form and link errors), `close()`, `setUrl(url)`, `importRecipe()` imports into the editor; `openSite(url)` opens a supported-site link through the opener plugin and reports failures in linkError independently of form errors; retrying the link clears linkError.                                                                                                                                                                                                                                                                                                                                           |
-| SettingsStore | credentials, startupCredentials, loadFailed, loading, saving, error, linkError   | `reload()` reads credentials; `setCredentials(credentials)` edits locally; `save()` persists credentials; `openSite(url)` opens the Edamam link through the opener plugin.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+Link/opener failures are independent of form or operation failures. Reuse
+[`core/openSite.ts`](core/openSite.ts) and render the separate link error: retrying a
+link must not clear an import, credential-load, or save error.
 
-`useDraftRecipe()` selects the React-only editor draft. Closing saves it, except for
-new drafts with a blank title, which are discarded. Failed saves leave the draft open.
-`draft.imageSource` owns the image field text. Starting a load sets the source;
-finishing a load never changes text typed in the meantime. Choosing a file writes
-its path, and removing a photo clears the field. Loaded-source deduplication is private.
-`EditorStore` is open exactly when `draft !== null`; it has no second visibility flag.
-Shopping and settings visibility belongs to the shell. Shopping receives `onClose`;
-its feature calls PlanStore.reload when opened and selects shoppingItems. PlanStore
-refreshes that projection after plan changes even if shopping remains open. Editor and shopping own their window header/content and footer.
-The import/settings shell frames supply their headers.
+The editor is open exactly when its draft is non-null, without a second visibility flag.
+Closing saves it, except for new drafts with a blank title, which are discarded.
+Failed saves leave it open. The draft owns image field text; completed loads must not
+replace text typed in the meantime. Choosing a file writes its path, removing a photo
+clears the field, and loaded-source deduplication stays private to the editor.
 
-Settings reloads on open, discarding unsaved edits. `credentials` is the editable
-draft; `startupCredentials` captures only the first successful load and remains null
-until then. Welcome uses that startup snapshot, not edits or subsequent reloads, and
-owns its session-only dismissal. `loadFailed` distinguishes load errors from save
-errors so retry loading never discards edits after a failed save.
+Shopping and settings visibility belongs to the shell. Shopping reloads the plan when
+opened; the plan refreshes shopping projections after mutations even while shopping
+remains open. Editor and shopping own their window header/content and footer;
+the import/settings shell frames supply their headers.
+
+Settings reloads on open, discarding unsaved edits. Its editable credentials are separate
+from the first successful startup snapshot used by Welcome. Welcome owns session-only
+dismissal. Distinguish load failures from save failures so retry loading does not discard
+edits after a failed save.
 
 ## Dependency and reload graph
 
 Scopes nest Plan → Recipes → Editor → Import; Settings is independent. Provider
-construction injects stable peer actions into private store constructors now, so
-feature tickets do not need to change the shell or core context to wire peers.
+construction injects stable peer actions into private store constructors. Commands
+are stable arrow functions on `actions`, so passing them as callbacks preserves receivers.
 
-| Successful change                | Owning store's responsibility                                                                                                                                                                                                                                                       |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Delete recipe                    | RecipesStore reloads itself and its injected PlanStore (deleted references are pruned by Rust). Clear stale selectedId.                                                                                                                                                             |
-| Save recipe                      | EditorStore reloads injected RecipesStore and PlanStore, then closes its draft.                                                                                                                                                                                                     |
-| Plan mutation                    | PlanStore updates/reloads the plan and recalculates day totals and shoppingItems.                                                                                                                                                                                                   |
-| Import recipe                    | ImportStore checks EditorStore.assertCanImport(), then calls openImported(result, sourceUrl) and closes. The editor rechecks for conflicts before creating a draft and automatically starts ingredient analysis; saving waits for analysis. Import alone does not persist a recipe. |
-| Save credentials                 | SettingsStore refreshes persisted credentials. No recipe/plan reload.                                                                                                                                                                                                               |
-| Analyze ingredients / load image | EditorStore changes only its draft; other stores reload after save.                                                                                                                                                                                                                 |
+- Recipe deletion refreshes recipes and plan, and clears stale selection. Rust prunes
+  deleted recipe references from the plan.
+- Recipe save refreshes recipes and plan, then closes the draft.
+- Plan persistence is serialized. Mutations store the returned plan and independently
+  refresh day totals and shopping projections.
+- Import checks for editor conflicts before requesting data and again before opening
+  the imported draft. Opening it automatically starts ingredient analysis; saving waits
+  for analysis. Import alone does not persist a recipe.
+- Credential save refreshes persisted credentials, not recipes or plan.
+- Analysis and image loading change only the draft; peers refresh after save.
 
-The peer actions are available as `this.plan`, `this.recipes`, and `this.editor` in
-the respective private classes. Commands are stable arrow functions on `actions`,
-so passing `onClick={actions.close}` preserves the receiver. Keep new commands in
-that same form. Async TODO parameters use `_` prefixes until implemented.
+Tests should mount real scopes with [`AppScopes`](../test-support/scopes.tsx) and mock
+IPC/plugins through [`test-support/ipc.ts`](../test-support/ipc.ts), rather than
+hand-writing peer action objects that break when stores grow.
 
 ## Drag and drop
 
 The shell owns one dnd-kit context with PointerSensor (6px activation distance),
 KeyboardSensor and `pointerWithin` collision detection, excluding pointer hits
 outside any scroll ancestor's visible bounds. It falls back to `rectIntersection`
-for keyboard drags without pointer coordinates. A card remains
-clickable until movement crosses the threshold. Enter/Space on the drag activator
-starts a keyboard drag. Cards that also open with Enter/Space must put drag listeners
-on a separate handle using `setActivatorNodeRef`. Use `useDraggable`/`useDroppable` in
-features, and `useDndMonitor` in the planner for drop handling without editing App.tsx.
-`lib/recipeDrag.ts` defines `RecipeDragPayload` for draggable data: recipeId plus
-position (`null` from the gallery; day/row from the planner). PlanStore's `dropRecipe(payload, target)` handles gallery additions, plan moves,
+for keyboard drags without pointer coordinates. A card remains clickable until
+movement crosses the threshold. Enter/Space on the drag activator starts a keyboard
+drag. Cards that also open with Enter/Space must put drag listeners on a separate
+handle using `setActivatorNodeRef`. Use `useDraggable`/`useDroppable` in features,
+and `useDndMonitor` in the planner for drop handling without editing App.tsx.
+`lib/recipeDrag.ts` defines draggable data: recipe ID plus position (null from the
+gallery; day/row from the planner). PlanStore owns gallery additions, plan moves,
 same-day row shifts and no-op drops. Days and rows are zero-based Rust positions.
 
 Day totals are the API's `AnalysisResponse`, not a separate wire shape. Render them

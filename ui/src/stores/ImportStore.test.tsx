@@ -1,9 +1,10 @@
-import { ImportScopes } from "../test-support/import";
+import { ok } from "../test-support/ipc";
+import { AppScopes } from "../test-support/scopes";
+import { commands } from "../api";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { invoke } from "@tauri-apps/api/core";
-import { analysis } from "../api/fixtures";
+import { analysis, deferred } from "../api/fixtures";
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { useEditorActions, useDraftRecipe } from "./EditorStore";
 import {
   useImportLinkError,
@@ -14,14 +15,6 @@ import {
   useImportSupportedSites,
   useImportUrl,
 } from "./ImportStore";
-
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
-vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
-
-beforeEach(() => {
-  vi.mocked(invoke).mockReset();
-  vi.mocked(openUrl).mockReset().mockResolvedValue();
-});
 
 function useImportSnapshot() {
   return {
@@ -40,14 +33,14 @@ function useImportSnapshot() {
 it.each([new Error("Connection lost"), "Connection lost"])(
   "reports supported-site load failures and clears the error on retry: %s",
   async (failure) => {
-    const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
-    vi.mocked(invoke).mockRejectedValueOnce(failure);
+    const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
+    vi.mocked(commands.supportedSites).mockRejectedValueOnce(failure);
     await act(() => result.current.actions.reload());
-    expect(invoke).toHaveBeenCalledWith("supported_sites");
+    expect(commands.supportedSites).toHaveBeenCalledOnce();
     expect(result.current.error).toBe("Connection lost");
     expect(result.current.sites).toEqual([]);
     const sites = [{ name: "Recipe site", domains: ["recipes.example"] }];
-    vi.mocked(invoke).mockResolvedValueOnce(sites);
+    vi.mocked(commands.supportedSites).mockResolvedValueOnce(sites);
     await act(() => result.current.actions.reload());
     expect(result.current.error).toBeNull();
     expect(result.current.sites).toEqual(sites);
@@ -55,9 +48,11 @@ it.each([new Error("Connection lost"), "Connection lost"])(
 );
 
 it("clears link and form errors when reopening the import dialog", async () => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
+  const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
   act(() => result.current.actions.open());
-  vi.mocked(invoke).mockRejectedValueOnce(new Error("Load failed"));
+  vi.mocked(commands.supportedSites).mockRejectedValueOnce(
+    new Error("Load failed"),
+  );
   await act(() => result.current.actions.reload());
   vi.mocked(openUrl).mockRejectedValueOnce(new Error("Cannot open browser"));
   await act(() => result.current.actions.openSite("https://recipes.example/"));
@@ -74,7 +69,7 @@ it("clears link and form errors when reopening the import dialog", async () => {
 it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
   "imports a new editable draft with image %j without persisting it",
   async (image) => {
-    const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
+    const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
     const imported = {
       title: "Soup",
       ingredients: ["1 carrot", "2 potatoes"],
@@ -83,14 +78,10 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
       image,
     };
     const nutrition = analysis();
-    let resolveImport!: (value: typeof imported) => void;
-    vi.mocked(invoke)
-      .mockReturnValueOnce(
-        new Promise((resolve) => {
-          resolveImport = resolve;
-        }),
-      )
-      .mockResolvedValueOnce(nutrition);
+    const response =
+      deferred<Awaited<ReturnType<typeof commands.importRecipe>>>();
+    vi.mocked(commands.importRecipe).mockReturnValueOnce(response.promise);
+    vi.mocked(commands.analyzeIngredients).mockResolvedValueOnce(ok(nutrition));
     let pending!: Promise<void>;
     act(() => {
       result.current.actions.open();
@@ -99,17 +90,18 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
     });
     expect(result.current.importing).toBe(true);
     await act(() => result.current.actions.importRecipe());
-    expect(invoke).toHaveBeenCalledWith("import_recipe", {
-      url: "https://recipes.example/soup",
-    });
+    expect(commands.importRecipe).toHaveBeenCalledExactlyOnceWith(
+      "https://recipes.example/soup",
+    );
     await act(async () => {
-      resolveImport(imported);
+      response.resolve(ok(imported));
       await pending;
     });
-    expect(invoke).toHaveBeenCalledTimes(2);
-    expect(invoke).toHaveBeenLastCalledWith("analyze_ingredients", {
-      lines: imported.ingredients,
-    });
+    expect(commands.analyzeIngredients).toHaveBeenCalledExactlyOnceWith(
+      imported.ingredients,
+    );
+    expect(commands.createRecipe).not.toHaveBeenCalled();
+    expect(commands.updateRecipe).not.toHaveBeenCalled();
     expect(result.current.draft).toEqual({
       id: null,
       title: "Soup",
@@ -129,13 +121,14 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
 );
 
 it("ignores blank input and protects an existing draft before requesting an import", async () => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
+  const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
   act(() => {
     result.current.actions.open();
     result.current.actions.setUrl("   ");
   });
   await act(() => result.current.actions.importRecipe());
-  expect(invoke).not.toHaveBeenCalled();
+  expect(commands.importRecipe).not.toHaveBeenCalled();
+  expect(commands.analyzeIngredients).not.toHaveBeenCalled();
   expect(result.current.error).toBeNull();
   act(() => {
     result.current.editor.openNew();
@@ -144,7 +137,8 @@ it("ignores blank input and protects an existing draft before requesting an impo
   });
   const draft = result.current.draft;
   await act(() => result.current.actions.importRecipe());
-  expect(invoke).not.toHaveBeenCalled();
+  expect(commands.importRecipe).not.toHaveBeenCalled();
+  expect(commands.analyzeIngredients).not.toHaveBeenCalled();
   expect(result.current.draft).toBe(draft);
   expect(result.current.error).toBe(
     "Close the current new recipe before importing another one",
@@ -154,13 +148,10 @@ it("ignores blank input and protects an existing draft before requesting an impo
 });
 
 it("does not replace a draft opened while the import was pending", async () => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
-  let resolveImport!: (value: unknown) => void;
-  vi.mocked(invoke).mockReturnValue(
-    new Promise((resolve) => {
-      resolveImport = resolve;
-    }),
-  );
+  const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
+  const response =
+    deferred<Awaited<ReturnType<typeof commands.importRecipe>>>();
+  vi.mocked(commands.importRecipe).mockReturnValueOnce(response.promise);
   let pending!: Promise<void>;
   act(() => {
     result.current.actions.open();
@@ -171,13 +162,15 @@ it("does not replace a draft opened while the import was pending", async () => {
   });
   const draft = result.current.draft;
   await act(async () => {
-    resolveImport({
-      title: "Imported",
-      ingredients: [],
-      instructions: [],
-      servings: 1,
-      image: null,
-    });
+    response.resolve(
+      ok({
+        title: "Imported",
+        ingredients: [],
+        instructions: [],
+        servings: 1,
+        image: null,
+      }),
+    );
     await pending;
   });
   expect(result.current.draft).toBe(draft);
@@ -190,13 +183,19 @@ it("does not replace a draft opened while the import was pending", async () => {
 
 it.each([
   {
-    failure: { kind: "import", detail: "Unsupported website" },
+    failure: { kind: "import" as const, detail: "Unsupported website" },
     message: "Unsupported website",
   },
   { failure: new Error("Connection lost"), message: "Connection lost" },
 ])("reports $message and allows retry", async ({ failure, message }) => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
-  vi.mocked(invoke).mockRejectedValue(failure);
+  const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
+  if (failure instanceof Error)
+    vi.mocked(commands.importRecipe).mockRejectedValue(failure);
+  else
+    vi.mocked(commands.importRecipe).mockResolvedValue({
+      status: "error",
+      error: failure,
+    });
   act(() => {
     result.current.actions.open();
     result.current.actions.setUrl("https://recipes.example/soup");
@@ -207,13 +206,15 @@ it.each([
   expect(result.current.open).toBe(true);
   expect(result.current.url).toBe("https://recipes.example/soup");
   expect(result.current.draft).toBeNull();
-  vi.mocked(invoke).mockResolvedValue({
-    title: "Soup",
-    ingredients: [],
-    instructions: [],
-    servings: 1,
-    image: null,
-  });
+  vi.mocked(commands.importRecipe).mockResolvedValue(
+    ok({
+      title: "Soup",
+      ingredients: [],
+      instructions: [],
+      servings: 1,
+      image: null,
+    }),
+  );
   await act(() => result.current.actions.importRecipe());
   expect(result.current.error).toBeNull();
   expect(result.current.draft?.title).toBe("Soup");

@@ -4,14 +4,14 @@ import { recipe, analysis, deferred } from "../api/fixtures";
 import { expect, it, vi } from "vitest";
 import { open } from "@tauri-apps/plugin-dialog";
 import { commands, type Error as ApiError } from "../api";
-import { useRecipesActions } from "./RecipesStore";
-import { usePlanActions } from "./PlanStore";
-import { EditorScope } from "./EditorStore";
+import { useRecipesError } from "./RecipesStore";
+import { AppScopes } from "../test-support/scopes";
+import { ok } from "../test-support/ipc";
 
 it.each(["", " \n "])(
   "discards an untitled new draft on close (%j)",
   async (title) => {
-    const { result } = renderHook(useEditor, { wrapper: EditorScope });
+    const { result } = renderHook(useEditor, { wrapper: AppScopes });
     act(() => {
       result.current.actions.openNew();
       result.current.actions.patchDraft({ title, ingredients: "1 onion" });
@@ -20,9 +20,7 @@ it.each(["", " \n "])(
     expect(result.current.draft).toBeNull();
     expect(commands.createRecipe).not.toHaveBeenCalled();
     expect(commands.updateRecipe).not.toHaveBeenCalled();
-    expect(
-      vi.mocked(useRecipesActions).mock.results[0].value.reload,
-    ).not.toHaveBeenCalled();
+    expect(commands.listRecipes).not.toHaveBeenCalled();
   },
 );
 
@@ -35,7 +33,7 @@ it.each(["new", "existing", "imported"])(
     vi.mocked(commands.analyzeIngredients).mockReturnValue(
       nutritionResult.promise,
     );
-    const { result } = renderHook(useEditor, { wrapper: EditorScope });
+    const { result } = renderHook(useEditor, { wrapper: AppScopes });
     if (source === "existing") {
       await act(() => result.current.actions.openRecipe("recipe-1"));
     } else {
@@ -75,7 +73,7 @@ it.each(["new", "existing", "imported"])(
       expect(commands.analyzeIngredients).not.toHaveBeenCalled();
     }
     await act(async () => {
-      nutritionResult.resolve({ status: "ok", data: nutrition });
+      nutritionResult.resolve(ok(nutrition));
       await closing;
     });
     const input = {
@@ -89,18 +87,14 @@ it.each(["new", "existing", "imported"])(
     if (source === "existing")
       expect(commands.updateRecipe).toHaveBeenCalledWith("recipe-1", input);
     else expect(commands.createRecipe).toHaveBeenCalledWith(input);
-    expect(
-      vi.mocked(useRecipesActions).mock.results[0].value.reload,
-    ).toHaveBeenCalledOnce();
-    expect(
-      vi.mocked(usePlanActions).mock.results[0].value.reload,
-    ).toHaveBeenCalledOnce();
+    expect(commands.listRecipes).toHaveBeenCalledOnce();
+    expect(commands.getPlan).toHaveBeenCalledOnce();
     expect(result.current.draft).toBeNull();
   },
 );
 
 it("reloads persisted drafts but does not fetch unsaved ones", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
+  const { result } = renderHook(useEditor, { wrapper: AppScopes });
   act(() => result.current.actions.openNew());
   await act(() => result.current.actions.reload());
   expect(commands.getRecipe).not.toHaveBeenCalled();
@@ -112,10 +106,9 @@ it("reloads persisted drafts but does not fetch unsaved ones", async () => {
     imageVersion: "v1",
     image: { kind: "keep" },
   });
-  vi.mocked(commands.getRecipe).mockResolvedValueOnce({
-    status: "ok",
-    data: { ...recipe(), title: "Reloaded" },
-  });
+  vi.mocked(commands.getRecipe).mockResolvedValueOnce(
+    ok({ ...recipe(), title: "Reloaded" }),
+  );
   await act(() => result.current.actions.reload());
   expect(result.current.draft?.title).toBe("Reloaded");
 });
@@ -123,7 +116,7 @@ it("reloads persisted drafts but does not fetch unsaved ones", async () => {
 it.each([false, true])(
   "keeps the current draft when opening a recipe fails (existing: %s)",
   async (existing) => {
-    const { result } = renderHook(useEditor, { wrapper: EditorScope });
+    const { result } = renderHook(useEditor, { wrapper: AppScopes });
     if (existing)
       await act(() => result.current.actions.openRecipe("recipe-1"));
     const draft = result.current.draft;
@@ -152,7 +145,7 @@ it.each([false, true])(
 it.each(["image", "analysis"])(
   "saves despite a pending %s failure and reports the error",
   async (source) => {
-    const { result } = renderHook(useEditor, { wrapper: EditorScope });
+    const { result } = renderHook(useEditor, { wrapper: AppScopes });
     const response = deferred<{ status: "error"; error: ApiError }>();
     if (source === "image")
       vi.mocked(commands.loadImageUrl).mockReturnValueOnce(response.promise);
@@ -197,34 +190,30 @@ it.each(["image", "analysis"])(
       }),
     );
     await act(async () => {
-      persisted.resolve({ status: "ok", data: recipe() });
+      persisted.resolve(ok(recipe()));
       await saving;
     });
     expect(result.current.draft).toBeNull();
-    expect(
-      vi.mocked(useRecipesActions).mock.results[0].value.reload,
-    ).toHaveBeenCalledOnce();
-    expect(
-      vi.mocked(usePlanActions).mock.results[0].value.reload,
-    ).toHaveBeenCalledOnce();
+    expect(commands.listRecipes).toHaveBeenCalledOnce();
+    expect(commands.getPlan).toHaveBeenCalledOnce();
   },
 );
 
-it("does not create twice when a cache refresh fails after persistence", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
-  vi.mocked(
-    vi.mocked(useRecipesActions).mock.results[0].value.reload,
-  ).mockRejectedValueOnce(new Error("Reload failed"));
+it("reports a cache refresh failure on its owning store after saving", async () => {
+  const { result } = renderHook(
+    () => ({ ...useEditor(), recipesError: useRecipesError() }),
+    { wrapper: AppScopes },
+  );
+  vi.mocked(commands.listRecipes).mockRejectedValueOnce(
+    new Error("Reload failed"),
+  );
   act(() => {
     result.current.actions.openNew();
     result.current.actions.patchDraft({ title: "Soup" });
   });
   await act(() => result.current.actions.close());
-  expect(result.current.error).toBe("Reload failed");
-  expect(result.current.draft?.id).toBe("recipe-1");
-  await act(() => result.current.actions.close());
-  expect(commands.createRecipe).toHaveBeenCalledOnce();
-  expect(commands.updateRecipe).toHaveBeenCalledOnce();
+  expect(result.current.recipesError).toBe("Reload failed");
+  expect(result.current.error).toBeNull();
   expect(result.current.draft).toBeNull();
 });
 
@@ -238,7 +227,7 @@ it.each<{ error: ApiError; message: string }>([
 ])(
   "retains a failed save for retry without refreshing peers ($error.kind)",
   async ({ error, message }) => {
-    const { result } = renderHook(useEditor, { wrapper: EditorScope });
+    const { result } = renderHook(useEditor, { wrapper: AppScopes });
     act(() => {
       result.current.actions.openNew();
       result.current.actions.patchDraft({ title: "Soup" });
@@ -251,16 +240,14 @@ it.each<{ error: ApiError; message: string }>([
     expect(result.current.error).toBe(message);
     expect(result.current.draft?.title).toBe("Soup");
     expect(result.current.saving).toBe(false);
-    expect(
-      vi.mocked(usePlanActions).mock.results[0].value.reload,
-    ).not.toHaveBeenCalled();
+    expect(commands.getPlan).not.toHaveBeenCalled();
     await act(() => result.current.actions.close());
     expect(result.current.draft).toBeNull();
   },
 );
 
 it("waits for image and analysis before saving and ignores duplicate close requests", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
+  const { result } = renderHook(useEditor, { wrapper: AppScopes });
   const image = { bytes: "jpeg", width: 20, height: 10 };
   const nutrition = analysis();
   const imageResult =
@@ -289,8 +276,8 @@ it("waits for image and analysis before saving and ignores duplicate close reque
   await act(() => result.current.actions.close());
   expect(commands.createRecipe).not.toHaveBeenCalled();
   await act(async () => {
-    imageResult.resolve({ status: "ok", data: image });
-    analysisResult.resolve({ status: "ok", data: nutrition });
+    imageResult.resolve(ok(image));
+    analysisResult.resolve(ok(nutrition));
     await saving;
   });
   expect(commands.analyzeIngredients).toHaveBeenCalledWith([
@@ -310,12 +297,12 @@ it("waits for image and analysis before saving and ignores duplicate close reque
 it.each(["file", "url"])(
   "loads a %s image into the draft and reports failures",
   async (source) => {
-    const { result } = renderHook(useEditor, { wrapper: EditorScope });
+    const { result } = renderHook(useEditor, { wrapper: AppScopes });
     const image = { bytes: "jpeg", width: 20, height: 10 };
     const command =
       source === "file" ? commands.loadImageFile : commands.loadImageUrl;
     vi.mocked(command)
-      .mockResolvedValueOnce({ status: "ok", data: image })
+      .mockResolvedValueOnce(ok(image))
       .mockResolvedValueOnce({
         status: "error",
         error: { kind: "image", detail: "Bad image" },
@@ -336,12 +323,12 @@ it.each(["file", "url"])(
 );
 
 it("keeps the loaded image when reselected during a different image load", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
+  const { result } = renderHook(useEditor, { wrapper: AppScopes });
   const image = { bytes: "image-a", width: 20, height: 10 };
   const response =
     deferred<Awaited<ReturnType<typeof commands.loadImageUrl>>>();
   vi.mocked(commands.loadImageUrl)
-    .mockResolvedValueOnce({ status: "ok", data: image })
+    .mockResolvedValueOnce(ok(image))
     .mockReturnValueOnce(response.promise);
   act(() => result.current.actions.openNew());
   await act(() => result.current.actions.loadImageUrl("source-a"));
@@ -353,10 +340,7 @@ it("keeps the loaded image when reselected during a different image load", async
   await act(() => result.current.actions.loadImageUrl("source-a"));
   expect(result.current.loadingImage).toBe(false);
   await act(async () => {
-    response.resolve({
-      status: "ok",
-      data: { bytes: "image-b", width: 2, height: 2 },
-    });
+    response.resolve(ok({ bytes: "image-b", width: 2, height: 2 }));
     await pending;
   });
   expect(result.current.draft?.image).toEqual({ kind: "set", image });
@@ -366,15 +350,14 @@ it("keeps the loaded image when reselected during a different image load", async
 });
 
 it("chooses supported files and leaves the image alone when the picker is canceled", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
+  const { result } = renderHook(useEditor, { wrapper: AppScopes });
   act(() => result.current.actions.openNew());
   vi.mocked(open)
     .mockResolvedValueOnce(null)
     .mockResolvedValueOnce("/soup.png");
-  vi.mocked(commands.loadImageFile).mockResolvedValue({
-    status: "ok",
-    data: { bytes: "jpeg", width: 2, height: 2 },
-  });
+  vi.mocked(commands.loadImageFile).mockResolvedValue(
+    ok({ bytes: "jpeg", width: 2, height: 2 }),
+  );
   await act(() => result.current.actions.chooseImageFile());
   expect(commands.loadImageFile).not.toHaveBeenCalled();
   await act(() => result.current.actions.chooseImageFile());
@@ -388,7 +371,7 @@ it("chooses supported files and leaves the image alone when the picker is cancel
 });
 
 it("rejects stale analysis and image responses after switching drafts", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
+  const { result } = renderHook(useEditor, { wrapper: AppScopes });
   const imageResult =
     deferred<Awaited<ReturnType<typeof commands.loadImageUrl>>>();
   const analysisResult =
@@ -406,11 +389,8 @@ it("rejects stale analysis and image responses after switching drafts", async ()
     result.current.actions.patchDraft({ title: "New draft" });
   });
   await act(async () => {
-    imageResult.resolve({
-      status: "ok",
-      data: { bytes: "old", width: 2, height: 2 },
-    });
-    analysisResult.resolve({ status: "ok", data: analysis() });
+    imageResult.resolve(ok({ bytes: "old", width: 2, height: 2 }));
+    analysisResult.resolve(ok(analysis()));
   });
   expect(result.current.draft).toMatchObject({
     title: "New draft",
@@ -422,7 +402,7 @@ it("rejects stale analysis and image responses after switching drafts", async ()
 });
 
 it("keeps edited ingredients from receiving stale nutrition and shows analysis errors", async () => {
-  const { result } = renderHook(useEditor, { wrapper: EditorScope });
+  const { result } = renderHook(useEditor, { wrapper: AppScopes });
   const response =
     deferred<Awaited<ReturnType<typeof commands.analyzeIngredients>>>();
   vi.mocked(commands.analyzeIngredients)
@@ -438,7 +418,7 @@ it("keeps edited ingredients from receiving stale nutrition and shows analysis e
     result.current.actions.patchDraft({ ingredients: "2 carrots" });
   });
   await act(async () => {
-    response.resolve({ status: "ok", data: analysis() });
+    response.resolve(ok(analysis()));
   });
   expect(result.current.draft?.analysis).toBeNull();
   await act(() => result.current.actions.analyzeIngredients());
