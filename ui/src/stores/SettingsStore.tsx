@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createSelectorHook, Store } from "bonsai-react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { createOpenSiteAction } from "./core/openSite";
 import { commands, unwrap, type Credentials } from "../api";
 import { createStoreContext } from "./core/context";
 import { errorMessage } from "./core/error";
@@ -29,14 +29,7 @@ class SettingsStore extends Store<SettingsState> {
   }
 
   readonly actions = {
-    openSite: async (url: string): Promise<void> => {
-      this.update({ linkError: null });
-      try {
-        await openUrl(url);
-      } catch (error) {
-        this.update({ linkError: errorMessage(error) });
-      }
-    },
+    openSite: createOpenSiteAction((linkError) => this.update({ linkError })),
     reload: async (): Promise<void> => {
       if (this.getSnapshot().loading) return;
       this.update({ loading: true, loadFailed: false, error: null });

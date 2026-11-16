@@ -72,9 +72,9 @@ pub struct FakeImageStore {
 }
 
 impl ImageStore for FakeImageStore {
-    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<()> {
+    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<Uuid> {
         self.images.lock()?.insert(recipe_id, image.clone());
-        Ok(())
+        Ok(Uuid::new_v4())
     }
 
     fn get(&self, recipe_id: Uuid) -> Result<Option<ResizedImage>> {

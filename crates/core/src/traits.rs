@@ -26,7 +26,7 @@ pub trait Storage: Send + Sync {
 }
 
 pub trait ImageStore: Send + Sync {
-    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<()>;
+    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<Uuid>;
     fn get(&self, recipe_id: Uuid) -> Result<Option<ResizedImage>>;
     fn remove(&self, recipe_id: Uuid) -> Result<()>;
 }

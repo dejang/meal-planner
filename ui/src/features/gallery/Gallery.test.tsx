@@ -68,6 +68,7 @@ beforeEach(() => {
     copyPreviousDay: vi.fn(),
   });
   vi.mocked(useEditorActions).mockReturnValue({
+    dismissError: vi.fn(),
     reload: vi.fn(),
     openNew: vi.fn(),
     openRecipe: vi.fn(),

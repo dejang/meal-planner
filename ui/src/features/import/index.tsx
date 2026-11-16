@@ -4,6 +4,7 @@ import { TextInput } from "../../components/TextInput";
 import {
   useImportActions,
   useImportError,
+  useImportLinkError,
   useImportImporting,
   useImportSupportedSites,
   useImportUrl,
@@ -15,6 +16,7 @@ export default function Import() {
   const url = useImportUrl();
   const importing = useImportImporting();
   const error = useImportError();
+  const linkError = useImportLinkError();
   const supportedSites = useImportSupportedSites();
 
   useEffect(() => {
@@ -87,6 +89,11 @@ export default function Import() {
           </li>
         ))}
       </ul>
+      {linkError && (
+        <p className="import-error" role="alert">
+          {linkError}
+        </p>
+      )}
     </section>
   );
 }
