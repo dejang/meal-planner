@@ -1,9 +1,6 @@
-# Meal Planner App using egui
+# Meal Planner
 
-A pet project that I am using on a weekly basis. It has helped me save money, lose body fat and avoid taking food supplements. Aside from all these wonderful benefits, I learned a lot about Rust, WebAssembly and egui to the point where 
-I am seriously considering having all my future pet projects in Rust and a GUI framework that targets WebAssembly (cxx-qt or egui).
-
-See the [demo](https://dejang.github.io/meal-planner-egui/)
+A pet project that I am using on a weekly basis. It has helped me save money, lose body fat and avoid taking food supplements.
 
 <img width="1728" height="967" alt="Screenshot 2026-09-05 at 12 50 42 AM" src="https://github.com/user-attachments/assets/2ca20095-5a58-475c-abb8-c0c30a76e5db" />
 
@@ -13,8 +10,9 @@ See the [demo](https://dejang.github.io/meal-planner-egui/)
 Use the pinned Rust toolchain, Node.js 22 and **pnpm** (version in the root `package.json`).
 On Linux, install Tauri v2 prerequisites: `libwebkit2gtk-4.1-dev`, `build-essential`,
 `curl`, `wget`, `file`, `libxdo-dev`, `libssl-dev`, `librsvg2-dev`,
-`libayatana-appindicator3-dev`, `libxcb-render0-dev`, `libxcb-shape0-dev`,
-`libxcb-xfixes0-dev` and `libxkbcommon-dev` (Debian/Ubuntu package names).
+and `libayatana-appindicator3-dev` (Debian/Ubuntu package names).
+On macOS and Windows, install the platform's
+[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) first.
 
 From the repository root, start the Tauri app and its Vite/React frontend:
 
@@ -24,32 +22,22 @@ pnpm tauri dev
 ```
 
 The frontend dev server uses `http://127.0.0.1:1420`. To build the desktop app,
-run `pnpm tauri build`. The root pnpm workspace installs both the desktop CLI
-and the frontend dependencies; Tauri starts the Vite server automatically.
+run `pnpm tauri build`. The executable is written to `target/release/` and
+platform installers to `target/release/bundle/`. The root pnpm workspace installs
+both the desktop CLI and the frontend dependencies; Tauri starts Vite automatically.
 
-Run the legacy egui app from the repository root so state exports remain in root:
+Run `./check.sh` for workspace fmt, clippy, build and tests, frontend
+typecheck and Vitest, and a Tauri build. Install the prerequisites and frontend
+dependencies first.
 
-```sh
-cargo run -p meal_planner
-```
-
-For the legacy web app, install Trunk and run `cd legacy && trunk serve`.
-`state.json` stays at the repository root and is embedded by the legacy app.
-
-Run `./check.sh` for workspace fmt, clippy, build and tests, frontend typecheck
-and Vitest, a Tauri build, and the legacy wasm/Trunk checks. Install the Linux
-packages above, frontend dependencies and Trunk first.
-
-## Comparing the desktop apps
-
-Use the [development commands above](#development) to run both apps in separate terminals.
+## Desktop data and manual checks
 
 For a fresh Tauri database on Linux without deleting existing data, first run
 `export XDG_DATA_HOME="$(mktemp -d)"` in its terminal. Keep that terminal and the
 same environment for restart checks. The desktop app stores `meal_planner.sqlite`
 and `settings.json` under the `com.meal-planner.desktop` application data directory.
-The legacy app has separate storage and embeds the root `state.json`; data is not
-synchronized between the two apps. Do not commit credentials or database files.
+The root `state.json` is parked historical data; the desktop app does not read or
+modify it. Do not commit credentials or database files.
 
 Manual acceptance checklist (requires a graphical desktop, network access and
 valid Edamam Nutrition Analysis credentials):
@@ -74,8 +62,7 @@ valid Edamam Nutrition Analysis credentials):
 8. Quit and restart using the same data directory. Verify recipes, photos, meal
    ordering, totals, shopping list and credentials. Welcome should not reappear
    when credentials are present.
-9. Compare these flows with egui and inspect the Rust logs and browser developer
-   console for warnings/errors. Visual acceptance belongs to the user.
+9. Inspect the Rust logs and webview developer console for warnings/errors.
 
 ## Desktop command bindings
 
@@ -111,11 +98,6 @@ experience you can drag a recipe into the column (day) you want. At the bottom o
 
 ## Always free! Because we should all be healthy!
 This app will never cost money. Use it for yourself, explore delicious recipes and maintain your fitness goals. As someone who has already tried this for more than 6 months I can tell you this: if it worked for me, it will work for you too!
-
-## Known issues
-This APP uses minimal storage. There's a default recipe book (the ones I actually cook for myself) but you can easily modify them or even remove them, if you wish. The changes will be stored in your local storage (WASM) or on your machine (native app).
-Because of not having an actual backend layer, when running the app in the Browser you will see that some images are not loading. This is because of CORS restrictions from those domains. There is nothing that can be done about it. If you are annoyed
-by this, download the app, compile it using Rust and then run it.
 
 ## Contributions
 Help me make it better! I am looking forward to see PRs from like-minded people who have the skills to make changes to this app so it can look/feel better.

@@ -18,6 +18,6 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["../legacy/assets/icon-256.png", "../legacy/assets/favicon.ico"]
+    "icon": ["icons/icon-256.png", "icons/favicon.ico"]
   }
 }
