@@ -23,7 +23,7 @@ fn setup_state<R: tauri::Runtime>(
         Arc::new(storage::SqliteStorage::new(connection)),
         Arc::new(images::LocalImages),
         Arc::new(edamam::EdamamClient::new(settings.clone())?),
-        Arc::new(importer::JsonLdExtractor),
+        Arc::new(importer::JsonLdExtractor::new()?),
     )?);
     app.manage(settings);
     Ok(())
@@ -152,9 +152,18 @@ mod tests {
             (
                 "import_recipe",
                 json!({"url": "https://example.test/recipe"}),
-                Err(json!({"kind":"not_implemented", "detail":"Recipe import"})),
+                Err(
+                    json!({"kind":"import", "detail":"Recipes from example.test are not supported yet"}),
+                ),
             ),
-            ("supported_sites", json!({}), Ok(json!([]))),
+            (
+                "supported_sites",
+                json!({}),
+                Ok(json!([
+                    {"name": "Healthy Fitness Meals", "domains": ["healthyfitnessmeals.com", "healthyfitnessrecipes.com"]},
+                    {"name": "Spanish Sabores", "domains": ["spanishsabores.com"]}
+                ])),
+            ),
             (
                 "analyze_ingredients",
                 json!({"lines": ["1 carrot"]}),
