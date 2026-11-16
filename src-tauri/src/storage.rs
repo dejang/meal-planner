@@ -1,18 +1,16 @@
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use meal_planner_core::{Error, Recipe, Result, Storage, WeeklyPlan};
 use rusqlite::{params, Connection};
 use uuid::Uuid;
 
 pub struct SqliteStorage {
-    connection: Mutex<Connection>,
+    connection: Arc<Mutex<Connection>>,
 }
 
 impl SqliteStorage {
-    pub fn new(connection: Connection) -> Self {
-        Self {
-            connection: Mutex::new(connection),
-        }
+    pub fn new(connection: Arc<Mutex<Connection>>) -> Self {
+        Self { connection }
     }
 
     fn write_recipe(&self, sql: &str, recipe: &Recipe) -> Result<usize> {

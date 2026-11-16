@@ -8,6 +8,12 @@ pub fn open(app_data_dir: &Path) -> Result<Connection> {
     let mut connection =
         Connection::open(app_data_dir.join("meal_planner.sqlite")).map_err(Error::storage)?;
     connection
+        .busy_timeout(std::time::Duration::from_secs(5))
+        .map_err(Error::storage)?;
+    connection
+        .pragma_update(None, "journal_mode", "WAL")
+        .map_err(Error::storage)?;
+    connection
         .pragma_update(None, "foreign_keys", true)
         .map_err(Error::storage)?;
 

@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use super::{protocol_response, LocalImages};
 use crate::tests::TestResult;
 use meal_planner_core::{Error, ImageStore, ResizedImage};
@@ -13,7 +15,7 @@ fn image_store(
         "INSERT INTO recipes VALUES (?1, 0, 'Soup', '', '', 1, NULL)",
         [id.to_string()],
     )?;
-    let images = LocalImages::new(crate::db::open(directory)?);
+    let images = LocalImages::new(Arc::new(Mutex::new(crate::db::open(directory)?)));
     Ok((connection, images, id))
 }
 
@@ -48,7 +50,7 @@ fn images_replace_persist_and_remove() -> TestResult {
     assert_ne!(versions[0], versions[1]);
     let count: u32 = connection.query_row("SELECT count(*) FROM images", [], |row| row.get(0))?;
     assert_eq!(count, 1);
-    let reopened = LocalImages::new(crate::db::open(directory.path())?);
+    let reopened = LocalImages::new(Arc::new(Mutex::new(crate::db::open(directory.path())?)));
     assert_eq!(reopened.get(id)?, images.get(id)?);
     for _ in 0..2 {
         reopened.remove(id)?;
