@@ -1,13 +1,10 @@
 use std::collections::HashMap;
 
-use crate::{app::State, DayTotals, Error, Nutrient, Result, ShoppingItem};
+use crate::{app::State, plan::day_index, DayTotals, Nutrient, Result, ShoppingItem};
 
 pub(crate) fn day_totals(state: &State, day: u32) -> Result<DayTotals> {
-    let meals = state
-        .plan
-        .days
-        .get(day as usize)
-        .ok_or_else(|| Error::InvalidInput("Day must be between 0 and 5".into()))?;
+    let day = day_index(&state.plan, day)?;
+    let meals = &state.plan.days[day];
     let food_label_codes = [
         "FAT", "FASAT", "FATRN", "CHOLE", "NA", "CHOCDF", "FIBTG", "SUGAR", "PROCNT",
     ];
