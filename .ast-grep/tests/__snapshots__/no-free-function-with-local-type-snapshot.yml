@@ -1,0 +1,870 @@
+id: no-free-function-with-local-type
+snapshots:
+  "enum State { Ready } fn run(state: &mut State) {}":
+    labels:
+    - source: "fn run(state: &mut State) {}"
+      style: primary
+      start: 21
+      end: 49
+    - source: "enum State { Ready } fn run(state: &mut State) {}"
+      style: secondary
+      start: 0
+      end: 49
+    - source: run
+      style: secondary
+      start: 24
+      end: 27
+    - source: State
+      style: secondary
+      start: 40
+      end: 45
+    - source: "&mut State"
+      style: secondary
+      start: 35
+      end: 45
+    - source: State
+      style: secondary
+      start: 5
+      end: 10
+    - source: enum State { Ready }
+      style: secondary
+      start: 0
+      end: 20
+    - source: "enum State { Ready } fn run(state: &mut State) {}"
+      style: secondary
+      start: 0
+      end: 49
+    - source: "fn run(state: &mut State) {}"
+      style: secondary
+      start: 21
+      end: 49
+    - source: "state: &mut State"
+      style: secondary
+      start: 28
+      end: 45
+    - source: "state: &mut State"
+      style: secondary
+      start: 28
+      end: 45
+  "fn save(store: &mut Store) {} struct Store;":
+    labels:
+    - source: "fn save(store: &mut Store) {}"
+      style: primary
+      start: 0
+      end: 29
+    - source: "fn save(store: &mut Store) {} struct Store;"
+      style: secondary
+      start: 0
+      end: 43
+    - source: save
+      style: secondary
+      start: 3
+      end: 7
+    - source: Store
+      style: secondary
+      start: 20
+      end: 25
+    - source: "&mut Store"
+      style: secondary
+      start: 15
+      end: 25
+    - source: Store
+      style: secondary
+      start: 37
+      end: 42
+    - source: struct Store;
+      style: secondary
+      start: 30
+      end: 43
+    - source: "fn save(store: &mut Store) {} struct Store;"
+      style: secondary
+      start: 0
+      end: 43
+    - source: "fn save(store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 29
+    - source: "store: &mut Store"
+      style: secondary
+      start: 8
+      end: 25
+    - source: "store: &mut Store"
+      style: secondary
+      start: 8
+      end: 25
+  "mod nested { struct Store; fn save(store: &mut Store) {} }":
+    labels:
+    - source: "fn save(store: &mut Store) {}"
+      style: primary
+      start: 27
+      end: 56
+    - source: "mod nested { struct Store; fn save(store: &mut Store) {} }"
+      style: secondary
+      start: 0
+      end: 58
+    - source: "{ struct Store; fn save(store: &mut Store) {} }"
+      style: secondary
+      start: 11
+      end: 58
+    - source: save
+      style: secondary
+      start: 30
+      end: 34
+    - source: Store
+      style: secondary
+      start: 47
+      end: 52
+    - source: "&mut Store"
+      style: secondary
+      start: 42
+      end: 52
+    - source: "mod nested { struct Store; fn save(store: &mut Store) {} }"
+      style: secondary
+      start: 0
+      end: 58
+    - source: Store
+      style: secondary
+      start: 20
+      end: 25
+    - source: struct Store;
+      style: secondary
+      start: 13
+      end: 26
+    - source: "{ struct Store; fn save(store: &mut Store) {} }"
+      style: secondary
+      start: 11
+      end: 58
+    - source: "fn save(store: &mut Store) {}"
+      style: secondary
+      start: 27
+      end: 56
+    - source: "store: &mut Store"
+      style: secondary
+      start: 35
+      end: 52
+    - source: "store: &mut Store"
+      style: secondary
+      start: 35
+      end: 52
+  "struct First; struct Second; fn save(first: &First, second: &Second) {}":
+    labels:
+    - source: "fn save(first: &First, second: &Second) {}"
+      style: primary
+      start: 29
+      end: 71
+    - source: "struct First; struct Second; fn save(first: &First, second: &Second) {}"
+      style: secondary
+      start: 0
+      end: 71
+    - source: save
+      style: secondary
+      start: 32
+      end: 36
+    - source: First
+      style: secondary
+      start: 45
+      end: 50
+    - source: "&First"
+      style: secondary
+      start: 44
+      end: 50
+    - source: First
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct First;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct First; struct Second; fn save(first: &First, second: &Second) {}"
+      style: secondary
+      start: 0
+      end: 71
+    - source: "fn save(first: &First, second: &Second) {}"
+      style: secondary
+      start: 29
+      end: 71
+    - source: "first: &First"
+      style: secondary
+      start: 37
+      end: 50
+    - source: "first: &First"
+      style: secondary
+      start: 37
+      end: 50
+  "struct Other; struct Store; fn save(external: External, store: &Store) {}":
+    labels:
+    - source: "fn save(external: External, store: &Store) {}"
+      style: primary
+      start: 28
+      end: 73
+    - source: "struct Other; struct Store; fn save(external: External, store: &Store) {}"
+      style: secondary
+      start: 0
+      end: 73
+    - source: save
+      style: secondary
+      start: 31
+      end: 35
+    - source: Store
+      style: secondary
+      start: 64
+      end: 69
+    - source: "&Store"
+      style: secondary
+      start: 63
+      end: 69
+    - source: Store
+      style: secondary
+      start: 21
+      end: 26
+    - source: struct Store;
+      style: secondary
+      start: 14
+      end: 27
+    - source: "struct Other; struct Store; fn save(external: External, store: &Store) {}"
+      style: secondary
+      start: 0
+      end: 73
+    - source: "fn save(external: External, store: &Store) {}"
+      style: secondary
+      start: 28
+      end: 73
+    - source: "store: &Store"
+      style: secondary
+      start: 56
+      end: 69
+    - source: "store: &Store"
+      style: secondary
+      start: 56
+      end: 69
+  "struct Store; fn consume(store: Store) {}":
+    labels:
+    - source: "fn consume(store: Store) {}"
+      style: primary
+      start: 14
+      end: 41
+    - source: "struct Store; fn consume(store: Store) {}"
+      style: secondary
+      start: 0
+      end: 41
+    - source: consume
+      style: secondary
+      start: 17
+      end: 24
+    - source: Store
+      style: secondary
+      start: 32
+      end: 37
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; fn consume(store: Store) {}"
+      style: secondary
+      start: 0
+      end: 41
+    - source: "fn consume(store: Store) {}"
+      style: secondary
+      start: 14
+      end: 41
+    - source: "store: Store"
+      style: secondary
+      start: 25
+      end: 37
+    - source: "store: Store"
+      style: secondary
+      start: 25
+      end: 37
+  "struct Store; fn read(store: &Store) {}":
+    labels:
+    - source: "fn read(store: &Store) {}"
+      style: primary
+      start: 14
+      end: 39
+    - source: "struct Store; fn read(store: &Store) {}"
+      style: secondary
+      start: 0
+      end: 39
+    - source: read
+      style: secondary
+      start: 17
+      end: 21
+    - source: Store
+      style: secondary
+      start: 30
+      end: 35
+    - source: "&Store"
+      style: secondary
+      start: 29
+      end: 35
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; fn read(store: &Store) {}"
+      style: secondary
+      start: 0
+      end: 39
+    - source: "fn read(store: &Store) {}"
+      style: secondary
+      start: 14
+      end: 39
+    - source: "store: &Store"
+      style: secondary
+      start: 22
+      end: 35
+    - source: "store: &Store"
+      style: secondary
+      start: 22
+      end: 35
+  "struct Store; fn read<'a>(store: &'a Store) {}":
+    labels:
+    - source: "fn read<'a>(store: &'a Store) {}"
+      style: primary
+      start: 14
+      end: 46
+    - source: "struct Store; fn read<'a>(store: &'a Store) {}"
+      style: secondary
+      start: 0
+      end: 46
+    - source: read
+      style: secondary
+      start: 17
+      end: 21
+    - source: Store
+      style: secondary
+      start: 37
+      end: 42
+    - source: "&'a Store"
+      style: secondary
+      start: 33
+      end: 42
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; fn read<'a>(store: &'a Store) {}"
+      style: secondary
+      start: 0
+      end: 46
+    - source: "fn read<'a>(store: &'a Store) {}"
+      style: secondary
+      start: 14
+      end: 46
+    - source: "store: &'a Store"
+      style: secondary
+      start: 26
+      end: 42
+    - source: "store: &'a Store"
+      style: secondary
+      start: 26
+      end: 42
+  "struct Store; fn save(store: &mut Store) {}":
+    labels:
+    - source: "fn save(store: &mut Store) {}"
+      style: primary
+      start: 14
+      end: 43
+    - source: "struct Store; fn save(store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 43
+    - source: save
+      style: secondary
+      start: 17
+      end: 21
+    - source: Store
+      style: secondary
+      start: 34
+      end: 39
+    - source: "&mut Store"
+      style: secondary
+      start: 29
+      end: 39
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; fn save(store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 43
+    - source: "fn save(store: &mut Store) {}"
+      style: secondary
+      start: 14
+      end: 43
+    - source: "store: &mut Store"
+      style: secondary
+      start: 22
+      end: 39
+    - source: "store: &mut Store"
+      style: secondary
+      start: 22
+      end: 39
+  "struct Store; fn save(store: &mut self::Store) {}":
+    labels:
+    - source: "fn save(store: &mut self::Store) {}"
+      style: primary
+      start: 14
+      end: 49
+    - source: "struct Store; fn save(store: &mut self::Store) {}"
+      style: secondary
+      start: 0
+      end: 49
+    - source: save
+      style: secondary
+      start: 17
+      end: 21
+    - source: self
+      style: secondary
+      start: 34
+      end: 38
+    - source: Store
+      style: secondary
+      start: 40
+      end: 45
+    - source: self::Store
+      style: secondary
+      start: 34
+      end: 45
+    - source: "&mut self::Store"
+      style: secondary
+      start: 29
+      end: 45
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; fn save(store: &mut self::Store) {}"
+      style: secondary
+      start: 0
+      end: 49
+    - source: "fn save(store: &mut self::Store) {}"
+      style: secondary
+      start: 14
+      end: 49
+    - source: "store: &mut self::Store"
+      style: secondary
+      start: 22
+      end: 45
+    - source: "store: &mut self::Store"
+      style: secondary
+      start: 22
+      end: 45
+  "struct Store; fn save<Store>(shadowed: Store, local: &self::Store) {}":
+    labels:
+    - source: "fn save<Store>(shadowed: Store, local: &self::Store) {}"
+      style: primary
+      start: 14
+      end: 69
+    - source: "struct Store; fn save<Store>(shadowed: Store, local: &self::Store) {}"
+      style: secondary
+      start: 0
+      end: 69
+    - source: save
+      style: secondary
+      start: 17
+      end: 21
+    - source: self
+      style: secondary
+      start: 54
+      end: 58
+    - source: Store
+      style: secondary
+      start: 60
+      end: 65
+    - source: self::Store
+      style: secondary
+      start: 54
+      end: 65
+    - source: "&self::Store"
+      style: secondary
+      start: 53
+      end: 65
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; fn save<Store>(shadowed: Store, local: &self::Store) {}"
+      style: secondary
+      start: 0
+      end: 69
+    - source: "fn save<Store>(shadowed: Store, local: &self::Store) {}"
+      style: secondary
+      start: 14
+      end: 69
+    - source: "local: &self::Store"
+      style: secondary
+      start: 46
+      end: 65
+    - source: "local: &self::Store"
+      style: secondary
+      start: 46
+      end: 65
+  "struct Store; pub fn save(store: &mut Store) {}":
+    labels:
+    - source: "pub fn save(store: &mut Store) {}"
+      style: primary
+      start: 14
+      end: 47
+    - source: "struct Store; pub fn save(store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 47
+    - source: save
+      style: secondary
+      start: 21
+      end: 25
+    - source: Store
+      style: secondary
+      start: 38
+      end: 43
+    - source: "&mut Store"
+      style: secondary
+      start: 33
+      end: 43
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; pub fn save(store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 47
+    - source: "pub fn save(store: &mut Store) {}"
+      style: secondary
+      start: 14
+      end: 47
+    - source: "store: &mut Store"
+      style: secondary
+      start: 26
+      end: 43
+    - source: "store: &mut Store"
+      style: secondary
+      start: 26
+      end: 43
+  "struct Store; pub(crate) fn save(storage: &dyn Storage, store: &mut Store) {}":
+    labels:
+    - source: "pub(crate) fn save(storage: &dyn Storage, store: &mut Store) {}"
+      style: primary
+      start: 14
+      end: 77
+    - source: "struct Store; pub(crate) fn save(storage: &dyn Storage, store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 77
+    - source: save
+      style: secondary
+      start: 28
+      end: 32
+    - source: Store
+      style: secondary
+      start: 68
+      end: 73
+    - source: "&mut Store"
+      style: secondary
+      start: 63
+      end: 73
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store;
+      style: secondary
+      start: 0
+      end: 13
+    - source: "struct Store; pub(crate) fn save(storage: &dyn Storage, store: &mut Store) {}"
+      style: secondary
+      start: 0
+      end: 77
+    - source: "pub(crate) fn save(storage: &dyn Storage, store: &mut Store) {}"
+      style: secondary
+      start: 14
+      end: 77
+    - source: "store: &mut Store"
+      style: secondary
+      start: 56
+      end: 73
+    - source: "store: &mut Store"
+      style: secondary
+      start: 56
+      end: 73
+  "struct Store<T>(T); fn save<T>(store: &mut Store<T>) {}":
+    labels:
+    - source: "fn save<T>(store: &mut Store<T>) {}"
+      style: primary
+      start: 20
+      end: 55
+    - source: "struct Store<T>(T); fn save<T>(store: &mut Store<T>) {}"
+      style: secondary
+      start: 0
+      end: 55
+    - source: save
+      style: secondary
+      start: 23
+      end: 27
+    - source: Store
+      style: secondary
+      start: 43
+      end: 48
+    - source: Store<T>
+      style: secondary
+      start: 43
+      end: 51
+    - source: "&mut Store<T>"
+      style: secondary
+      start: 38
+      end: 51
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store<T>(T);
+      style: secondary
+      start: 0
+      end: 19
+    - source: "struct Store<T>(T); fn save<T>(store: &mut Store<T>) {}"
+      style: secondary
+      start: 0
+      end: 55
+    - source: "fn save<T>(store: &mut Store<T>) {}"
+      style: secondary
+      start: 20
+      end: 55
+    - source: "store: &mut Store<T>"
+      style: secondary
+      start: 31
+      end: 51
+    - source: "store: &mut Store<T>"
+      style: secondary
+      start: 31
+      end: 51
+  "struct Store<T>(T); fn save<T>(store: Store<T>) {}":
+    labels:
+    - source: "fn save<T>(store: Store<T>) {}"
+      style: primary
+      start: 20
+      end: 50
+    - source: "struct Store<T>(T); fn save<T>(store: Store<T>) {}"
+      style: secondary
+      start: 0
+      end: 50
+    - source: save
+      style: secondary
+      start: 23
+      end: 27
+    - source: Store
+      style: secondary
+      start: 38
+      end: 43
+    - source: Store<T>
+      style: secondary
+      start: 38
+      end: 46
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store<T>(T);
+      style: secondary
+      start: 0
+      end: 19
+    - source: "struct Store<T>(T); fn save<T>(store: Store<T>) {}"
+      style: secondary
+      start: 0
+      end: 50
+    - source: "fn save<T>(store: Store<T>) {}"
+      style: secondary
+      start: 20
+      end: 50
+    - source: "store: Store<T>"
+      style: secondary
+      start: 31
+      end: 46
+    - source: "store: Store<T>"
+      style: secondary
+      start: 31
+      end: 46
+  "struct Store<T>(T); fn save<T>(store: self::Store<T>) {}":
+    labels:
+    - source: "fn save<T>(store: self::Store<T>) {}"
+      style: primary
+      start: 20
+      end: 56
+    - source: "struct Store<T>(T); fn save<T>(store: self::Store<T>) {}"
+      style: secondary
+      start: 0
+      end: 56
+    - source: save
+      style: secondary
+      start: 23
+      end: 27
+    - source: self
+      style: secondary
+      start: 38
+      end: 42
+    - source: Store
+      style: secondary
+      start: 44
+      end: 49
+    - source: self::Store
+      style: secondary
+      start: 38
+      end: 49
+    - source: self::Store<T>
+      style: secondary
+      start: 38
+      end: 52
+    - source: Store
+      style: secondary
+      start: 7
+      end: 12
+    - source: struct Store<T>(T);
+      style: secondary
+      start: 0
+      end: 19
+    - source: "struct Store<T>(T); fn save<T>(store: self::Store<T>) {}"
+      style: secondary
+      start: 0
+      end: 56
+    - source: "fn save<T>(store: self::Store<T>) {}"
+      style: secondary
+      start: 20
+      end: 56
+    - source: "store: self::Store<T>"
+      style: secondary
+      start: 31
+      end: 52
+    - source: "store: self::Store<T>"
+      style: secondary
+      start: 31
+      end: 52
+  "use std::collections::HashMap;\npub(crate) struct RecipeStore {\n    recipes: HashMap<Uuid, Recipe>,\n    order: Vec<Uuid>,\n}\nfn persist_update(\n    recipes: &mut RecipeStore,\n    storage: &dyn Storage,\n    images: &dyn ImageStore,\n    recipe: Recipe,\n) -> Result<Recipe> {\n    storage.update_recipe(&recipe)?;\n    recipes.recipes.insert(recipe.id, recipe.clone());\n    Ok(recipe)\n}\n":
+    labels:
+    - source: |-
+        fn persist_update(
+            recipes: &mut RecipeStore,
+            storage: &dyn Storage,
+            images: &dyn ImageStore,
+            recipe: Recipe,
+        ) -> Result<Recipe> {
+            storage.update_recipe(&recipe)?;
+            recipes.recipes.insert(recipe.id, recipe.clone());
+            Ok(recipe)
+        }
+      style: primary
+      start: 123
+      end: 379
+    - source: |
+        use std::collections::HashMap;
+        pub(crate) struct RecipeStore {
+            recipes: HashMap<Uuid, Recipe>,
+            order: Vec<Uuid>,
+        }
+        fn persist_update(
+            recipes: &mut RecipeStore,
+            storage: &dyn Storage,
+            images: &dyn ImageStore,
+            recipe: Recipe,
+        ) -> Result<Recipe> {
+            storage.update_recipe(&recipe)?;
+            recipes.recipes.insert(recipe.id, recipe.clone());
+            Ok(recipe)
+        }
+      style: secondary
+      start: 0
+      end: 380
+    - source: persist_update
+      style: secondary
+      start: 126
+      end: 140
+    - source: RecipeStore
+      style: secondary
+      start: 160
+      end: 171
+    - source: "&mut RecipeStore"
+      style: secondary
+      start: 155
+      end: 171
+    - source: RecipeStore
+      style: secondary
+      start: 49
+      end: 60
+    - source: |-
+        pub(crate) struct RecipeStore {
+            recipes: HashMap<Uuid, Recipe>,
+            order: Vec<Uuid>,
+        }
+      style: secondary
+      start: 31
+      end: 122
+    - source: |
+        use std::collections::HashMap;
+        pub(crate) struct RecipeStore {
+            recipes: HashMap<Uuid, Recipe>,
+            order: Vec<Uuid>,
+        }
+        fn persist_update(
+            recipes: &mut RecipeStore,
+            storage: &dyn Storage,
+            images: &dyn ImageStore,
+            recipe: Recipe,
+        ) -> Result<Recipe> {
+            storage.update_recipe(&recipe)?;
+            recipes.recipes.insert(recipe.id, recipe.clone());
+            Ok(recipe)
+        }
+      style: secondary
+      start: 0
+      end: 380
+    - source: |-
+        fn persist_update(
+            recipes: &mut RecipeStore,
+            storage: &dyn Storage,
+            images: &dyn ImageStore,
+            recipe: Recipe,
+        ) -> Result<Recipe> {
+            storage.update_recipe(&recipe)?;
+            recipes.recipes.insert(recipe.id, recipe.clone());
+            Ok(recipe)
+        }
+      style: secondary
+      start: 123
+      end: 379
+    - source: "recipes: &mut RecipeStore"
+      style: secondary
+      start: 146
+      end: 171
+    - source: "recipes: &mut RecipeStore"
+      style: secondary
+      start: 146
+      end: 171

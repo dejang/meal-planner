@@ -1,0 +1,46 @@
+id: no-free-function-with-local-type
+valid:
+  - 'struct Store; impl Store { fn save(&mut self) {} }'
+  - 'struct Store; impl Store { fn merge(&mut self, other: Store) {} }'
+  - 'struct Store; fn build() -> Store { Store }'
+  - 'fn save(store: &mut ImportedStore) {}'
+  - 'mod a { struct Store; } mod b { fn save(store: &Store) {} }'
+  - 'struct Store; mod child { fn save(store: &Store) {} }'
+  - 'struct Store; fn save(store: &other::Store) {}'
+  - 'struct Store; fn save<Store>(store: Store) {}'
+  - 'struct Store; trait Save { fn save(store: Store) {} }'
+  - 'struct Store; fn save(stores: Vec<Store>) {}'
+  - 'struct Store; fn save(callback: fn(Store)) {}'
+invalid:
+  - 'struct Store; fn save(store: &mut Store) {}'
+  - 'struct Store; fn read(store: &Store) {}'
+  - 'struct Store; fn consume(store: Store) {}'
+  - 'fn save(store: &mut Store) {} struct Store;'
+  - 'struct Store; pub(crate) fn save(storage: &dyn Storage, store: &mut Store) {}'
+  - 'struct Store; pub fn save(store: &mut Store) {}'
+  - "struct Store; fn read<'a>(store: &'a Store) {}"
+  - 'struct Store<T>(T); fn save<T>(store: &mut Store<T>) {}'
+  - 'struct Store<T>(T); fn save<T>(store: Store<T>) {}'
+  - 'enum State { Ready } fn run(state: &mut State) {}'
+  - 'mod nested { struct Store; fn save(store: &mut Store) {} }'
+  - 'struct Store; fn save(store: &mut self::Store) {}'
+  - 'struct Store<T>(T); fn save<T>(store: self::Store<T>) {}'
+  - 'struct Other; struct Store; fn save(external: External, store: &Store) {}'
+  - |
+    use std::collections::HashMap;
+    pub(crate) struct RecipeStore {
+        recipes: HashMap<Uuid, Recipe>,
+        order: Vec<Uuid>,
+    }
+    fn persist_update(
+        recipes: &mut RecipeStore,
+        storage: &dyn Storage,
+        images: &dyn ImageStore,
+        recipe: Recipe,
+    ) -> Result<Recipe> {
+        storage.update_recipe(&recipe)?;
+        recipes.recipes.insert(recipe.id, recipe.clone());
+        Ok(recipe)
+    }
+  - 'struct First; struct Second; fn save(first: &First, second: &Second) {}'
+  - 'struct Store; fn save<Store>(shadowed: Store, local: &self::Store) {}'
