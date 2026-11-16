@@ -12,14 +12,18 @@ use std::sync::Arc;
 use meal_planner_core::App;
 use tauri::Manager;
 
-fn setup_state<R: tauri::Runtime>(app: &tauri::App<R>) -> meal_planner_core::Result<()> {
+fn setup_state<R: tauri::Runtime>(
+    app: &tauri::App<R>,
+    app_data_dir: &std::path::Path,
+) -> meal_planner_core::Result<()> {
+    let settings = Arc::new(settings::Settings::new(app, app_data_dir)?);
     app.manage(App::new(
         Arc::new(storage::SqliteStorage),
         Arc::new(images::LocalImages),
-        Arc::new(edamam::EdamamClient),
+        Arc::new(edamam::EdamamClient::new(settings.clone())?),
         Arc::new(importer::JsonLdExtractor),
     )?);
-    app.manage(settings::Settings);
+    app.manage(settings);
     Ok(())
 }
 
@@ -40,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .register_asynchronous_uri_scheme_protocol("image", images::protocol_handler)
         .invoke_handler(commands::builder().invoke_handler())
         .setup(|app| {
-            setup_state(app)?;
+            setup_state(app, &app.path().app_data_dir()?)?;
             Ok(())
         })
         .run(tauri::generate_context!())?;
@@ -57,6 +61,14 @@ mod tests {
         WebviewUrl, WebviewWindowBuilder,
     };
 
+    fn mock_app() -> tauri::App<tauri::test::MockRuntime> {
+        mock_builder()
+            .plugin(tauri_plugin_store::Builder::default().build())
+            .invoke_handler(crate::commands::builder().invoke_handler())
+            .build(mock_context(noop_assets()))
+            .unwrap()
+    }
+
     #[test]
     fn bindings_are_current() {
         let directory = tempfile::tempdir().unwrap();
@@ -71,11 +83,9 @@ mod tests {
 
     #[test]
     fn registered_commands_dispatch_against_the_desktop_state() {
-        let app = mock_builder()
-            .invoke_handler(crate::commands::builder().invoke_handler())
-            .build(mock_context(noop_assets()))
-            .unwrap();
-        crate::setup_state(&app).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let app = mock_app();
+        crate::setup_state(&app, directory.path()).unwrap();
         let window = WebviewWindowBuilder::new(&app, "main", WebviewUrl::default())
             .build()
             .unwrap();
@@ -150,7 +160,7 @@ mod tests {
             (
                 "analyze_ingredients",
                 json!({"lines": ["1 carrot"]}),
-                Err(json!({"kind":"not_implemented", "detail":"Ingredient analysis"})),
+                Err(json!({"kind":"analysis", "detail":"Edamam credentials are missing"})),
             ),
             (
                 "image",
@@ -170,12 +180,17 @@ mod tests {
             (
                 "get_credentials",
                 json!({}),
-                Err(json!({"kind":"not_implemented", "detail":"Read credentials"})),
+                Ok(json!({"app_id": "", "api_key": ""})),
             ),
             (
                 "save_credentials",
                 json!({"credentials": {"app_id": "app", "api_key": "key"}}),
-                Err(json!({"kind":"not_implemented", "detail":"Save credentials"})),
+                Ok(Value::Null),
+            ),
+            (
+                "get_credentials",
+                json!({}),
+                Ok(json!({"app_id": "app", "api_key": "key"})),
             ),
         ];
         for (cmd, payload, expected) in cases {
@@ -193,6 +208,49 @@ mod tests {
             )
             .map(|body| body.deserialize::<Value>().unwrap());
             assert_eq!(response, expected, "{cmd}");
+        }
+        assert!(directory.path().join("settings.json").is_file());
+        let reopened_app = mock_app();
+        let settings = crate::settings::Settings::new(&reopened_app, directory.path()).unwrap();
+        assert_eq!(
+            settings.get_credentials().unwrap(),
+            crate::settings::Credentials {
+                app_id: "app".into(),
+                api_key: "key".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn failed_credential_saves_preserve_the_previous_value() {
+        use crate::settings::{Credentials, Settings};
+        for previous in [
+            None,
+            Some(Credentials {
+                app_id: "old-app".into(),
+                api_key: "old-key".into(),
+            }),
+        ] {
+            let directory = tempfile::tempdir().unwrap();
+            let app = mock_app();
+            let settings = Settings::new(&app, directory.path()).unwrap();
+            let path = directory.path().join("settings.json");
+            if let Some(credentials) = previous.clone() {
+                settings.save_credentials(credentials).unwrap();
+                std::fs::remove_file(&path).unwrap();
+            }
+            std::fs::create_dir(&path).unwrap();
+            assert!(matches!(
+                settings.save_credentials(Credentials {
+                    app_id: "new-app".into(),
+                    api_key: "new-key".into(),
+                }),
+                Err(meal_planner_core::Error::Storage(_))
+            ));
+            assert_eq!(
+                settings.get_credentials().unwrap(),
+                previous.unwrap_or_default()
+            );
         }
     }
 }
