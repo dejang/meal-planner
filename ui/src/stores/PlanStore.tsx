@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { createSelectorHook, Store } from "bonsai-react";
+import { commands, unwrap } from "../api";
 import type {
   AnalysisResponse,
   MealPosition,
   ShoppingItem,
   WeeklyPlan,
 } from "../api";
-import { commands, unwrap } from "../api";
+import type { RecipeDragPayload } from "../lib/recipeDrag";
 import { createStoreContext } from "./core/context";
 import { errorMessage } from "./core/error";
 
@@ -29,39 +30,70 @@ class PlanStore extends Store<PlanState> {
     });
   }
 
-  readonly actions = {
-    reload: async (): Promise<void> => {
+  private pending = Promise.resolve();
+
+  private refresh(
+    load: () => ReturnType<typeof commands.getPlan>,
+  ): Promise<void> {
+    this.pending = this.pending.then(async () => {
       this.update({ loading: true, error: null });
       try {
-        const [plan, shopping, ...totals] = await Promise.all([
-          commands.getPlan(),
-          commands.shoppingList(),
-          ...Array.from({ length: 6 }, (_, day) => commands.dayTotals(day)),
-        ] as const);
-        this.update({
-          plan: unwrap(plan),
-          shoppingItems: unwrap(shopping),
-          dayTotals: totals.map(unwrap),
-          loading: false,
-        });
+        const plan = unwrap(await load());
+        this.update({ plan });
+        const projections = await Promise.allSettled([
+          Promise.all(
+            plan.days.map(async (_, day) =>
+              unwrap(await commands.dayTotals(day)),
+            ),
+          ).then((dayTotals) => this.update({ dayTotals })),
+          commands
+            .shoppingList()
+            .then((result) => this.update({ shoppingItems: unwrap(result) })),
+        ]);
+        for (const projection of projections) {
+          if (projection.status === "rejected") throw projection.reason;
+        }
       } catch (error) {
         this.update({
-          loading: false,
           error: errorMessage(error),
         });
+      } finally {
+        this.update({ loading: false });
       }
+    });
+    return this.pending;
+  }
+
+  readonly actions = {
+    reload: (): Promise<void> => this.refresh(commands.getPlan),
+    addToDay: (position: MealPosition, recipeId: string): Promise<void> =>
+      this.refresh(() => commands.addToDay(position, recipeId)),
+    moveMeal: (from: MealPosition, to: MealPosition): Promise<void> =>
+      this.refresh(() => commands.moveMeal(from, to)),
+    dropRecipe: (
+      payload: RecipeDragPayload,
+      target: MealPosition,
+    ): Promise<void> => {
+      if (payload.position === null) {
+        return this.actions.addToDay(target, payload.recipeId);
+      }
+      const from = payload.position;
+      const to = {
+        ...target,
+        row:
+          target.row - Number(from.day === target.day && from.row < target.row),
+      };
+      if (from.day === to.day && from.row === to.row) {
+        return Promise.resolve();
+      }
+      return this.actions.moveMeal(from, to);
     },
-    addToDay: async (
-      _position: MealPosition,
-      _recipeId: string,
-    ): Promise<void> => {},
-    moveMeal: async (
-      _from: MealPosition,
-      _to: MealPosition,
-    ): Promise<void> => {},
-    removeFromDay: async (_position: MealPosition): Promise<void> => {},
-    clearDay: async (_day: number): Promise<void> => {},
-    copyPreviousDay: async (_day: number): Promise<void> => {},
+    removeFromDay: (position: MealPosition): Promise<void> =>
+      this.refresh(() => commands.removeFromDay(position)),
+    clearDay: (day: number): Promise<void> =>
+      this.refresh(() => commands.clearDay(day)),
+    copyPreviousDay: (day: number): Promise<void> =>
+      this.refresh(() => commands.copyPreviousDay(day)),
   };
 }
 

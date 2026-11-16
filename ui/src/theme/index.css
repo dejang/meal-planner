@@ -121,6 +121,47 @@ details[open] > summary.button {
   color: var(--surface);
   border-color: transparent;
 }
+.popup-frame {
+  z-index: 10;
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  min-width: 180px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+}
+.popup-frame .button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 1px;
+  text-align: left;
+  white-space: nowrap;
+}
+.popup-frame .button:hover:not(:disabled),
+.popup-frame .button:active:not(:disabled) {
+  background: var(--sage);
+}
+.on-forest .popup-frame {
+  background: var(--forest);
+  color: var(--surface);
+  border-color: var(--green);
+}
+.on-forest .button {
+  color: var(--surface);
+}
+.on-forest .button:hover:not(:disabled),
+.on-forest .button:active:not(:disabled),
+.on-forest .button[aria-expanded="true"] {
+  background: var(--green);
+  color: var(--citrus);
+}
+.on-forest :focus-visible {
+  outline-color: var(--citrus);
+}
 .surface-frame {
   background: var(--surface);
   border: 1px solid var(--border);

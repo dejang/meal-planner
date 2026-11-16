@@ -47,7 +47,11 @@ vi.mock("./features/planner", () => ({
     useDndMonitor({
       onDragEnd: ({ over }) => setDropped(over ? String(over.id) : null),
     });
-    return <div ref={drop.setNodeRef}>Planner fixture; dropped {dropped}</div>;
+    return (
+      <div data-testid="planner-scroll" style={{ overflowY: "auto" }}>
+        <div ref={drop.setNodeRef}>Planner fixture; dropped {dropped}</div>
+      </div>
+    );
   },
 }));
 vi.mock("./features/editor", () => ({
@@ -215,6 +219,35 @@ it("resizes the planner with pointer and keyboard within its bounds and stops on
   fireEvent.pointerMove(handle, { pointerId: 1, clientY: 0 });
   expect(handle.getAttribute("aria-valuenow")).toBe("40");
 });
+
+it.each([
+  { location: "gallery", x: 150, y: 50, dropped: "" },
+  { location: "outside the column", x: 350, y: 180, dropped: "" },
+  { location: "visible column", x: 150, y: 180, dropped: "day" },
+])(
+  "only accepts visible pointer drops: $location",
+  async ({ x, y, dropped }) => {
+    render(<App />);
+    const card = screen.getByRole("button", { name: /Card clicks/ });
+    const day = screen.getByText(/Planner fixture/);
+    vi.spyOn(card, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(10, 10, 20, 20),
+    );
+    vi.spyOn(day, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(0, 0, 500, 500),
+    );
+    vi.spyOn(
+      screen.getByTestId("planner-scroll"),
+      "getBoundingClientRect",
+    ).mockReturnValue(new DOMRect(100, 160, 200, 80));
+    fireEvent.pointerDown(card, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(document, { clientX: 20, clientY: 10 });
+    fireEvent.pointerMove(document, { clientX: x, clientY: y });
+    fireEvent.pointerUp(document);
+    expect(day.textContent).toBe(`Planner fixture; dropped ${dropped}`);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 60)));
+  },
+);
 
 it("preserves card clicks below the pointer threshold and drops keyboard drags on the planner", async () => {
   const user = userEvent.setup();

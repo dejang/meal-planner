@@ -1,6 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
+import {
+  commands,
+  type AnalysisResponse,
+  type ShoppingItem,
+  type WeeklyPlan,
+} from "../api";
+import type { RecipeDragPayload } from "../lib/recipeDrag";
 import {
   PlanScope,
   usePlanActions,
@@ -11,117 +17,437 @@ import {
   usePlanWeeklyPlan,
 } from "./PlanStore";
 
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
+vi.mock("../api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../api")>()),
+  commands: {
+    getPlan: vi.fn(),
+    addToDay: vi.fn(),
+    moveMeal: vi.fn(),
+    removeFromDay: vi.fn(),
+    clearDay: vi.fn(),
+    copyPreviousDay: vi.fn(),
+    dayTotals: vi.fn(),
+    shoppingList: vi.fn(),
+  },
+}));
 
-beforeEach(() => {
-  vi.mocked(invoke).mockReset();
-  vi.mocked(invoke).mockImplementation(async (command, args) => {
-    if (command === "get_plan")
-      return { days: [["recipe"], [], [], [], [], []] };
-    if (command === "shopping_list") {
-      return [{ food_id: "apple", name: "Apple", weight: 120 }];
-    }
-    if (command === "day_totals") {
-      return {
-        uri: "",
-        yield: 1,
-        calories: Number((args as { day: number }).day) + 100,
-        totalCO2Emissions: 0,
-        co2EmissionsClass: "",
-        totalWeight: 0,
-        dietLabels: [],
-        healthLabels: [],
-        cautions: [],
-        totalNutrients: {},
-        totalDaily: {},
-        ingredients: [],
-        cuisineType: [],
-        mealType: [],
-        dishType: [],
-        totalNutrientsKCal: {},
-      };
-    }
-    throw new Error(`Unexpected command: ${command}`);
+interface CommandCase {
+  command: (typeof commands)[keyof ReturnType<typeof usePlanActions> &
+    keyof typeof commands];
+  run: (actions: ReturnType<typeof usePlanActions>) => Promise<void>;
+  args: unknown[];
+  getPlanCalls: number;
+}
+
+function mountPlan() {
+  vi.resetAllMocks();
+  const plan: WeeklyPlan = {
+    days: [["soup", "salad"], ["soup"], [], [], [], []],
+  };
+  const analysis: AnalysisResponse = {
+    uri: "",
+    yield: 1,
+    calories: 320,
+    totalCO2Emissions: 0,
+    co2EmissionsClass: "",
+    totalWeight: 0,
+    dietLabels: [],
+    healthLabels: [],
+    cautions: [],
+    totalNutrients: {},
+    totalDaily: {},
+    ingredients: [],
+    cuisineType: [],
+    mealType: [],
+    dishType: [],
+    totalNutrientsKCal: {},
+  };
+  const shoppingItems = [{ food_id: "tomato", name: "Tomatoes", weight: 125 }];
+  vi.mocked(commands.getPlan).mockResolvedValue({ status: "ok", data: plan });
+  vi.mocked(commands.dayTotals).mockImplementation(async (day) => ({
+    status: "ok",
+    data: { ...analysis, calories: day * 100 },
+  }));
+  vi.mocked(commands.shoppingList).mockResolvedValue({
+    status: "ok",
+    data: shoppingItems,
   });
-});
-
-function usePlanSnapshot() {
+  const hook = renderHook(
+    () => ({
+      actions: usePlanActions(),
+      plan: usePlanWeeklyPlan(),
+      totals: usePlanDayTotals(),
+      shopping: usePlanShoppingItems(),
+      loading: usePlanLoading(),
+      error: usePlanError(),
+    }),
+    { wrapper: PlanScope },
+  );
+  const replacementAnalysis = { ...analysis, calories: 999 };
+  const replacementShoppingItems = shoppingItems.map((item) => ({
+    ...item,
+    weight: 250,
+  }));
+  const changed: WeeklyPlan = { days: [[], ["soup"], [], [], [], []] };
+  async function prepareChange() {
+    await act(async () => {
+      await hook.result.current.actions.reload();
+    });
+    vi.mocked(commands.dayTotals).mockResolvedValue({
+      status: "ok",
+      data: replacementAnalysis,
+    });
+    vi.mocked(commands.shoppingList).mockResolvedValue({
+      status: "ok",
+      data: replacementShoppingItems,
+    });
+    vi.mocked(commands.clearDay).mockResolvedValueOnce({
+      status: "ok",
+      data: changed,
+    });
+  }
   return {
-    actions: usePlanActions(),
-    plan: usePlanWeeklyPlan(),
-    totals: usePlanDayTotals(),
-    shopping: usePlanShoppingItems(),
-    loading: usePlanLoading(),
-    error: usePlanError(),
+    ...hook,
+    plan,
+    analysis,
+    shoppingItems,
+    replacementAnalysis,
+    replacementShoppingItems,
+    changed,
+    prepareChange,
   };
 }
 
-it("reloads all projections and exposes loading until IPC completes", async () => {
-  const { result } = renderHook(usePlanSnapshot, { wrapper: PlanScope });
-  let pending: Promise<void>;
-  act(() => {
-    pending = result.current.actions.reload();
-  });
-  expect(result.current.loading).toBe(true);
-  await act(async () => pending);
-  expect(result.current.loading).toBe(false);
-  expect(result.current.error).toBeNull();
-  expect(result.current.plan.days).toEqual([["recipe"], [], [], [], [], []]);
-  expect(result.current.shopping).toEqual([
-    { food_id: "apple", name: "Apple", weight: 120 },
-  ]);
-  expect(result.current.totals.map((total) => total?.calories)).toEqual([
-    100, 101, 102, 103, 104, 105,
-  ]);
-  expect(invoke).toHaveBeenCalledWith("get_plan");
-  expect(invoke).toHaveBeenCalledWith("shopping_list");
-  expect(
-    vi
-      .mocked(invoke)
-      .mock.calls.filter(([command]) => command === "day_totals")
-      .map(([, args]) => args),
-  ).toEqual([
-    { day: 0 },
-    { day: 1 },
-    { day: 2 },
-    { day: 3 },
-    { day: 4 },
-    { day: 5 },
-  ]);
-});
+it.each([
+  {
+    command: commands.getPlan,
+    run: (actions) => actions.reload(),
+    args: [],
+    getPlanCalls: 1,
+  },
+  {
+    command: commands.addToDay,
+    run: (actions) => actions.addToDay({ day: 2, row: 0 }, "soup"),
+    args: [{ day: 2, row: 0 }, "soup"],
+    getPlanCalls: 0,
+  },
+  {
+    command: commands.moveMeal,
+    run: (actions) => actions.moveMeal({ day: 0, row: 1 }, { day: 1, row: 0 }),
+    args: [
+      { day: 0, row: 1 },
+      { day: 1, row: 0 },
+    ],
+    getPlanCalls: 0,
+  },
+  {
+    command: commands.removeFromDay,
+    run: (actions) => actions.removeFromDay({ day: 0, row: 1 }),
+    args: [{ day: 0, row: 1 }],
+    getPlanCalls: 0,
+  },
+  {
+    command: commands.clearDay,
+    run: (actions) => actions.clearDay(3),
+    args: [3],
+    getPlanCalls: 0,
+  },
+  {
+    command: commands.copyPreviousDay,
+    run: (actions) => actions.copyPreviousDay(4),
+    args: [4],
+    getPlanCalls: 0,
+  },
+] satisfies CommandCase[])(
+  "stores command result and refreshes all projections ($args)",
+  async ({ command, run, args, getPlanCalls }) => {
+    const { result, plan, analysis, shoppingItems } = mountPlan();
+    vi.mocked(command).mockResolvedValue({ status: "ok", data: plan });
+    expect(result.current.plan.days).toEqual([[], [], [], [], [], []]);
+    await act(async () => {
+      await run(result.current.actions);
+    });
+    expect(command).toHaveBeenCalledExactlyOnceWith(...args);
+    expect(result.current.plan).toEqual(plan);
+    expect(result.current.totals).toEqual(
+      plan.days.map((_, day) => ({ ...analysis, calories: day * 100 })),
+    );
+    expect(commands.dayTotals).toHaveBeenCalledTimes(6);
+    for (const day of plan.days.keys())
+      expect(commands.dayTotals).toHaveBeenCalledWith(day);
+    expect(commands.shoppingList).toHaveBeenCalledTimes(1);
+    expect(result.current.shopping).toEqual(shoppingItems);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(commands.getPlan).toHaveBeenCalledTimes(getPlanCalls);
+  },
+);
 
 it.each([
   {
-    command: "day_totals",
-    error: { kind: "lock_poisoned" },
-    message:
-      "Recipe storage is unavailable. Please restart the app and try again.",
+    fail: () =>
+      vi.mocked(commands.clearDay).mockResolvedValueOnce({
+        status: "error",
+        error: { kind: "storage", detail: "Disk full" },
+      }),
+    message: "Disk full",
   },
   {
-    command: "shopping_list",
-    error: new Error("Desktop connection lost"),
-    message: "Desktop connection lost",
+    fail: () =>
+      vi
+        .mocked(commands.clearDay)
+        .mockRejectedValueOnce(new Error("Connection lost")),
+    message: "Connection lost",
   },
 ])(
-  "reports $message without partially replacing state and recovers on reload",
-  async ({ command, error, message }) => {
-    const { result } = renderHook(usePlanSnapshot, { wrapper: PlanScope });
-    await act(() => result.current.actions.reload());
-    const previous = result.current;
-    const successfulInvoke = vi.mocked(invoke).getMockImplementation()!;
-    vi.mocked(invoke).mockImplementation(async (name, args, options) => {
-      if (name === command) throw error;
-      return successfulInvoke(name, args, options);
+  "preserves the plan on command failure and permits retry: $message",
+  async ({ fail, message }) => {
+    const { result, plan } = mountPlan();
+    await act(async () => {
+      await result.current.actions.reload();
     });
-    await act(() => result.current.actions.reload());
-    expect(result.current.loading).toBe(false);
+    const previousTotals = result.current.totals;
+    fail();
+    await act(async () => {
+      await result.current.actions.clearDay(0);
+    });
     expect(result.current.error).toBe(message);
-    expect(result.current.plan).toBe(previous.plan);
-    expect(result.current.shopping).toBe(previous.shopping);
-    expect(result.current.totals).toBe(previous.totals);
-    vi.mocked(invoke).mockImplementation(successfulInvoke);
-    await act(() => result.current.actions.reload());
+    expect(result.current.plan).toEqual(plan);
+    expect(result.current.totals).toBe(previousTotals);
     expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.actions.reload();
+    });
     expect(result.current.error).toBeNull();
   },
 );
+
+it.each([
+  {
+    projection: "totals",
+    fail: () =>
+      vi.mocked(commands.dayTotals).mockResolvedValueOnce({
+        status: "error",
+        error: { kind: "analysis", detail: "Refresh failed" },
+      }),
+    calories: [0, 100, 200, 300, 400, 500],
+    weights: [250],
+  },
+  {
+    projection: "shopping",
+    fail: () =>
+      vi
+        .mocked(commands.shoppingList)
+        .mockRejectedValueOnce(new Error("Refresh failed")),
+    calories: [999, 999, 999, 999, 999, 999],
+    weights: [125],
+  },
+])(
+  "keeps old $projection on failure and saves the other projection",
+  async ({ fail, calories, weights }) => {
+    const { result, changed, prepareChange } = mountPlan();
+    await prepareChange();
+    fail();
+    await act(async () => {
+      await result.current.actions.clearDay(0);
+    });
+    expect(result.current.plan).toEqual(changed);
+    expect(result.current.totals.map((total) => total?.calories)).toEqual(
+      calories,
+    );
+    expect(result.current.shopping.map((item) => item.weight)).toEqual(weights);
+    expect(result.current.error).toBe("Refresh failed");
+    expect(result.current.loading).toBe(false);
+  },
+);
+
+it.each([
+  {
+    name: "same day down",
+    from: { day: 0, row: 0 },
+    target: { day: 0, row: 2 },
+    expectedMove: [
+      [
+        { day: 0, row: 0 },
+        { day: 0, row: 1 },
+      ],
+    ],
+    expectedAdd: [],
+    refreshes: 1,
+  },
+  {
+    name: "same day up",
+    from: { day: 0, row: 1 },
+    target: { day: 0, row: 0 },
+    expectedMove: [
+      [
+        { day: 0, row: 1 },
+        { day: 0, row: 0 },
+      ],
+    ],
+    expectedAdd: [],
+    refreshes: 1,
+  },
+  {
+    name: "dropped on itself",
+    from: { day: 0, row: 0 },
+    target: { day: 0, row: 0 },
+    expectedMove: [],
+    expectedAdd: [],
+    refreshes: 0,
+  },
+  {
+    name: "dropped immediately after itself",
+    from: { day: 0, row: 0 },
+    target: { day: 0, row: 1 },
+    expectedMove: [],
+    expectedAdd: [],
+    refreshes: 0,
+  },
+  {
+    name: "another day",
+    from: { day: 0, row: 0 },
+    target: { day: 1, row: 1 },
+    expectedMove: [
+      [
+        { day: 0, row: 0 },
+        { day: 1, row: 1 },
+      ],
+    ],
+    expectedAdd: [],
+    refreshes: 1,
+  },
+  {
+    name: "gallery drop",
+    from: null,
+    target: { day: 1, row: 1 },
+    expectedMove: [],
+    expectedAdd: [[{ day: 1, row: 1 }, "soup"]],
+    refreshes: 1,
+  },
+])(
+  "handles $name through plan actions",
+  async ({ from, target, expectedMove, expectedAdd, refreshes }) => {
+    const { result, plan } = mountPlan();
+    vi.mocked(commands.addToDay).mockResolvedValue({
+      status: "ok",
+      data: plan,
+    });
+    vi.mocked(commands.moveMeal).mockResolvedValue({
+      status: "ok",
+      data: plan,
+    });
+    const payload: RecipeDragPayload = { recipeId: "soup", position: from };
+    await act(async () => {
+      await result.current.actions.dropRecipe(payload, target);
+    });
+    expect(vi.mocked(commands.moveMeal).mock.calls).toEqual(expectedMove);
+    expect(vi.mocked(commands.addToDay).mock.calls).toEqual(expectedAdd);
+    expect(commands.dayTotals).toHaveBeenCalledTimes(6 * refreshes);
+    expect(commands.shoppingList).toHaveBeenCalledTimes(refreshes);
+  },
+);
+
+it.each([
+  {
+    pending: "totals" as const,
+    loaded: "shopping" as const,
+    delay: (wait: Promise<void>, analysis: AnalysisResponse) =>
+      vi.mocked(commands.dayTotals).mockImplementationOnce(async () => {
+        await wait;
+        return { status: "ok", data: analysis };
+      }),
+  },
+  {
+    pending: "shopping" as const,
+    loaded: "totals" as const,
+    delay: (
+      wait: Promise<void>,
+      _analysis: AnalysisResponse,
+      shopping: ShoppingItem[],
+    ) =>
+      vi.mocked(commands.shoppingList).mockImplementationOnce(async () => {
+        await wait;
+        return {
+          status: "ok",
+          data: shopping,
+        };
+      }),
+  },
+])(
+  "keeps current $pending while saving $loaded immediately",
+  async ({ pending, loaded, delay }) => {
+    const {
+      result,
+      replacementAnalysis,
+      replacementShoppingItems,
+      changed,
+      prepareChange,
+    } = mountPlan();
+    await prepareChange();
+    const previous = {
+      totals: result.current.totals,
+      shopping: result.current.shopping,
+    };
+    let release!: () => void;
+    delay(
+      new Promise<void>((resolve) => {
+        release = resolve;
+      }),
+      replacementAnalysis,
+      replacementShoppingItems,
+    );
+    let refresh!: Promise<void>;
+    await act(async () => {
+      refresh = result.current.actions.clearDay(0);
+    });
+    expect(result.current.plan).toEqual(changed);
+    expect(result.current.loading).toBe(true);
+    expect(result.current[pending]).toBe(previous[pending]);
+    expect(result.current[loaded]).not.toBe(previous[loaded]);
+    await act(async () => {
+      release();
+      await refresh;
+    });
+    expect(result.current.totals[0]?.calories).toBe(999);
+    expect(result.current.shopping[0]?.weight).toBe(250);
+    expect(result.current.loading).toBe(false);
+  },
+);
+
+it("serializes reload and mutations so an older snapshot cannot replace a mutation", async () => {
+  const { result, plan } = mountPlan();
+  let resolvePlan!: (
+    value: Awaited<ReturnType<typeof commands.getPlan>>,
+  ) => void;
+  const deferred = new Promise<Awaited<ReturnType<typeof commands.getPlan>>>(
+    (resolve) => {
+      resolvePlan = resolve;
+    },
+  );
+  vi.mocked(commands.getPlan).mockReturnValueOnce(deferred);
+  const changed: WeeklyPlan = { days: [[], ["salad"], [], [], [], []] };
+  vi.mocked(commands.moveMeal).mockResolvedValueOnce({
+    status: "ok",
+    data: changed,
+  });
+  let reload: Promise<void>;
+  let move: Promise<void>;
+  await act(async () => {
+    reload = result.current.actions.reload();
+    move = result.current.actions.moveMeal(
+      { day: 0, row: 1 },
+      { day: 1, row: 0 },
+    );
+  });
+  expect(result.current.loading).toBe(true);
+  expect(commands.moveMeal).not.toHaveBeenCalled();
+  await act(async () => {
+    resolvePlan({ status: "ok", data: plan });
+    await reload;
+    await move;
+  });
+  expect(result.current.plan).toEqual(changed);
+  expect(result.current.loading).toBe(false);
+  expect(commands.dayTotals).toHaveBeenCalledTimes(12);
+});
