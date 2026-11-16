@@ -24,6 +24,29 @@ impl RecipeStore {
         self.recipes.get(&id).ok_or(Error::NotFound(id))
     }
 
+    fn persist_update(
+        &mut self,
+        storage: &dyn Storage,
+        images: &dyn ImageStore,
+        mut recipe: Recipe,
+        image: ImageChange,
+    ) -> Result<Recipe> {
+        match &image {
+            ImageChange::Keep => {}
+            ImageChange::Remove => recipe.image_version = None,
+            ImageChange::Set(image) => {
+                images.put(recipe.id, image)?;
+                recipe.image_version = Some(Uuid::new_v4());
+            }
+        }
+        storage.update_recipe(&recipe)?;
+        self.recipes.insert(recipe.id, recipe.clone());
+        if matches!(image, ImageChange::Remove) {
+            images.remove(recipe.id)?;
+        }
+        Ok(recipe)
+    }
+
     fn ordered(&self) -> impl Iterator<Item = &Recipe> {
         self.order.iter().filter_map(|id| self.recipes.get(id))
     }
@@ -71,29 +94,6 @@ fn build_recipe(
     ))
 }
 
-fn persist_update(
-    recipes: &mut RecipeStore,
-    storage: &dyn Storage,
-    images: &dyn ImageStore,
-    mut recipe: Recipe,
-    image: ImageChange,
-) -> Result<Recipe> {
-    match &image {
-        ImageChange::Keep => {}
-        ImageChange::Remove => recipe.image_version = None,
-        ImageChange::Set(image) => {
-            images.put(recipe.id, image)?;
-            recipe.image_version = Some(Uuid::new_v4());
-        }
-    }
-    storage.update_recipe(&recipe)?;
-    recipes.recipes.insert(recipe.id, recipe.clone());
-    if matches!(image, ImageChange::Remove) {
-        images.remove(recipe.id)?;
-    }
-    Ok(recipe)
-}
-
 pub(crate) fn create(
     state: &mut State,
     storage: &dyn Storage,
@@ -106,7 +106,7 @@ pub(crate) fn create(
     state.recipes.recipes.insert(recipe.id, recipe.clone());
     if matches!(image, ImageChange::Set(_)) {
         let id = recipe.id;
-        match persist_update(&mut state.recipes, storage, images, recipe, image) {
+        match state.recipes.persist_update(storage, images, recipe, image) {
             Ok(recipe) => return Ok(recipe),
             Err(error) => {
                 let _ = delete(state, storage, images, id);
@@ -126,7 +126,7 @@ pub(crate) fn update(
 ) -> Result<Recipe> {
     let previous = state.recipes.get(id)?;
     let (recipe, image) = build_recipe(id, previous.image_version, input)?;
-    persist_update(&mut state.recipes, storage, images, recipe, image)
+    state.recipes.persist_update(storage, images, recipe, image)
 }
 
 pub(crate) fn delete(

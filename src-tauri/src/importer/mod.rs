@@ -1,11 +1,7 @@
 mod schema;
 
-use std::time::Duration;
-
 use async_trait::async_trait;
-use meal_planner_core::{
-    image::resize_image, Error, ImportedRecipe, RecipeImporter, Result, SupportedSite,
-};
+use meal_planner_core::{Error, ImportedRecipe, RecipeImporter, Result, SupportedSite};
 use reqwest::Client;
 use url::Url;
 
@@ -14,13 +10,8 @@ pub struct JsonLdExtractor {
 }
 
 impl JsonLdExtractor {
-    pub fn new() -> Result<Self> {
-        let client = Client::builder()
-            .timeout(Duration::from_secs(30))
-            .user_agent(concat!("MealPlanner/", env!("CARGO_PKG_VERSION")))
-            .build()
-            .map_err(|error| Error::Import(format!("Could not create HTTP client: {error}")))?;
-        Ok(Self { client })
+    pub fn new(client: Client) -> Self {
+        Self { client }
     }
 }
 
@@ -60,17 +51,7 @@ impl RecipeImporter for JsonLdExtractor {
         let (mut recipe, image_url) =
             schema::extract_json_ld_recipe(html).map_err(Error::Import)?;
         if let Some(image_url) = image_url {
-            if let Ok(response) = self.client.get(image_url).send().await {
-                if response.status().is_success() {
-                    if let Ok(bytes) = response.bytes().await {
-                        recipe.image =
-                            tauri::async_runtime::spawn_blocking(move || resize_image(&bytes))
-                                .await
-                                .ok()
-                                .and_then(std::result::Result::ok);
-                    }
-                }
-            }
+            recipe.image = crate::images::load_url(&self.client, &image_url).await.ok();
         }
         Ok(recipe)
     }
