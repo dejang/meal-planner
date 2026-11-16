@@ -1,0 +1,39 @@
+id: no-relative-imports-tsx
+valid:
+  - |
+    import { Button } from "@/components/Button";
+  - |
+    import React from "react";
+  - |
+    export type { Recipe } from "@/api";
+  - |
+    import "@/theme/index.css";
+  - |
+    const module = import("@/api");
+  - |
+    vi.mock("@/api");
+  - |
+    const text = "../not-a-module";
+  - |
+    vi.importActual("@/api");
+  - |
+    vi.importMock("@/api");
+invalid:
+  - |
+    import { Button } from "./Button";
+  - |
+    import type { Recipe } from '../../api';
+  - |
+    export { Button } from "../components/Button";
+  - |
+    export type { Recipe } from "..";
+  - |
+    import "./style.css";
+  - |
+    const module = import(".");
+  - |
+    vi.mock("../api");
+  - |
+    vi.importActual("../api");
+  - |
+    vi.importMock("../api");

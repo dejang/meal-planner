@@ -6,13 +6,13 @@ import {
   useEditorAnalyzing,
   useEditorLoadingImage,
   useEditorError,
-} from "../../stores/EditorStore";
-import { Button, ButtonVariant } from "../../components/Button";
-import { Icon, IconName } from "../../components/Icon";
-import { RecipePhoto } from "../../components/RecipePhoto";
-import { NutritionLabel } from "../../components/NutritionLabel";
-import { TextArea, TextInput } from "../../components/TextInput";
-import "./editor.css";
+} from "@/stores/EditorStore";
+import { Button, ButtonVariant } from "@/components/Button";
+import { Icon, IconName } from "@/components/Icon";
+import { RecipePhoto } from "@/components/RecipePhoto";
+import { NutritionLabel } from "@/components/NutritionLabel";
+import { TextArea, TextInput } from "@/components/TextInput";
+import "@/features/editor/editor.css";
 
 export default function Editor() {
   const editor = useEditorActions();

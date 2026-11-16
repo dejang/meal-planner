@@ -25,9 +25,9 @@ valid:
       Setup = "setup",
     }
   - |
-    export type { Draft } from "./core/draft";
+    export type { Draft } from "@/stores/core/draft";
   - |
-    export { BoardFilter, NewIssueColumn } from "./core/board";
+    export { BoardFilter, NewIssueColumn } from "@/stores/core/board";
   - |
     export function useLane(lane: number): number;
     export function useLane(lane: number): number {

@@ -1,4 +1,4 @@
-import type { AnalysisResponse, Recipe } from "./index";
+import type { AnalysisResponse, Recipe } from "@/api";
 
 export function recipe(overrides: Partial<Recipe> = {}): Recipe {
   return {

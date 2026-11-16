@@ -1,21 +1,21 @@
 import { useDndMonitor } from "@dnd-kit/core";
 import { useEffect } from "react";
-import type { MealPosition } from "../../api";
-import { Button, ButtonVariant } from "../../components/Button";
-import { Icon, IconName } from "../../components/Icon";
-import { NutritionLabel } from "../../components/NutritionLabel";
-import type { RecipeDragPayload } from "../../lib/recipeDrag";
+import type { MealPosition } from "@/api";
+import { Button, ButtonVariant } from "@/components/Button";
+import { Icon, IconName } from "@/components/Icon";
+import { NutritionLabel } from "@/components/NutritionLabel";
+import type { RecipeDragPayload } from "@/lib/recipeDrag";
 import {
   usePlanActions,
   usePlanDayTotals,
   usePlanError,
   usePlanLoading,
   usePlanWeeklyPlan,
-} from "../../stores/PlanStore";
-import DropTarget from "./DropTarget";
-import MealCard from "./MealCard";
-import { PlanDragOverlay } from "./PlanDragOverlay";
-import "./planner.css";
+} from "@/stores/PlanStore";
+import DropTarget from "@/features/planner/DropTarget";
+import MealCard from "@/features/planner/MealCard";
+import { PlanDragOverlay } from "@/features/planner/PlanDragOverlay";
+import "@/features/planner/planner.css";
 
 export default function Planner() {
   const plan = usePlanWeeklyPlan();

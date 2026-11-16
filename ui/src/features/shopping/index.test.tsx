@@ -1,4 +1,4 @@
-import { ok } from "../../test-support/ipc";
+import { commands, ok } from "@/test-support/ipc";
 import {
   act,
   fireEvent,
@@ -8,12 +8,11 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { DialogSize, PaperDialog } from "../../components/PaperDialog";
-import { usePlanActions } from "../../stores/PlanStore";
-import { commands } from "../../api";
-import { deferred } from "../../api/fixtures";
-import { AppScopes } from "../../test-support/scopes";
-import Shopping from ".";
+import { DialogSize, PaperDialog } from "@/components/PaperDialog";
+import { usePlanActions } from "@/stores/PlanStore";
+import { deferred } from "@/test-support/fixtures";
+import { AppScopes } from "@/test-support/scopes";
+import Shopping from "@/features/shopping";
 
 let resize: ResizeObserverCallback;
 

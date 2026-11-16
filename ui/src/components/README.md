@@ -17,12 +17,13 @@ All controls are props-driven and independent of application stores.
   closeLabel supplies both the close button's accessible name and native hover tooltip,
   defaulting to "Close".
 - `NutritionLabel`: analysis plus optional servings and servingsLabel. The default
-  is one serving labelled Amount per day for the backend's dayTotals response. Nutrient
+  is one serving labelled Amount per day for the backend's dayTotals response. Optional
+  rows and nutrientGroups configure the displayed nutrient layout. Nutrient
   quantities preserve legacy's ceil(abs(quantity)) then integer division; calories
   truncate after division. Nutrients discloses vitamins/minerals from totalDaily.
 - `RecipePhoto`: optional nullable recipeId/imageVersion, optional ResizedImage,
   alt and optional style/className. A draft image takes precedence as a JPEG data URL;
-  otherwise it uses the API's versioned image:// helper. Photos cover the frame and
+  otherwise it uses the library's versioned image:// helper. Photos cover the frame and
   use legacy's plate/chef placeholder when missing or failed. Changed sources retry.
 
 Use the provided onClose through explicit controls to close frames. Editor and

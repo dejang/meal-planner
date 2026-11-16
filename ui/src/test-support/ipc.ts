@@ -1,21 +1,24 @@
 import { beforeEach, vi } from "vitest";
-import { commands, imageUrl } from "../api";
-import { analysis, recipe } from "../api/fixtures";
+import { commands as apiCommands } from "@/api";
+import { imageUrl } from "@/lib/imageUrl";
+import { analysis, recipe } from "@/test-support/fixtures";
 import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-vi.mock("../api", async (importOriginal) => {
-  const api = await importOriginal<typeof import("../api")>();
+vi.mock("@/api", async (importOriginal) => {
+  const api = await importOriginal<typeof import("@/api")>();
   return {
     ...api,
-    imageUrl: vi.fn(),
     commands: Object.fromEntries(
       Object.keys(api.commands).map((name) => [name, vi.fn()]),
     ),
   };
 });
+vi.mock("@/lib/imageUrl", () => ({ imageUrl: vi.fn() }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
+
+export const commands = apiCommands;
 
 export function ok<T>(data: T): { status: "ok"; data: T } {
   return { status: "ok", data };

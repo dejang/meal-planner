@@ -1,14 +1,14 @@
 import { useDraggable } from "@dnd-kit/core";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { MealPosition } from "../../api";
-import { Button, ButtonVariant } from "../../components/Button";
-import { Icon, IconName } from "../../components/Icon";
-import type { RecipeDragPayload } from "../../lib/recipeDrag";
-import { useEditorActions } from "../../stores/EditorStore";
-import { usePlanActions } from "../../stores/PlanStore";
-import { useRecipe } from "../../stores/RecipesStore";
-import DropTarget from "./DropTarget";
+import type { MealPosition } from "@/api";
+import { Button, ButtonVariant } from "@/components/Button";
+import { Icon, IconName } from "@/components/Icon";
+import type { RecipeDragPayload } from "@/lib/recipeDrag";
+import { useEditorActions } from "@/stores/EditorStore";
+import { usePlanActions } from "@/stores/PlanStore";
+import { useRecipe } from "@/stores/RecipesStore";
+import DropTarget from "@/features/planner/DropTarget";
 
 interface MealCardProps {
   recipeId: string;

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Button, ButtonVariant } from "./Button";
-import { Icon, IconName } from "./Icon";
+import { Button, ButtonVariant } from "@/components/Button";
+import { Icon, IconName } from "@/components/Icon";
 
 export enum DialogSize {
   Default = "default",

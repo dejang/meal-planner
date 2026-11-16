@@ -1,12 +1,11 @@
-import { ok } from "../../test-support/ipc";
-import { AppScopes } from "../../test-support/scopes";
-import { commands } from "../../api";
-import { recipe } from "../../api/fixtures";
-import { useRecipesActions } from "../../stores/RecipesStore";
+import { commands, ok } from "@/test-support/ipc";
+import { AppScopes } from "@/test-support/scopes";
+import { recipe } from "@/test-support/fixtures";
+import { useRecipesActions } from "@/stores/RecipesStore";
 import { DndContext } from "@dnd-kit/core";
 import { act, fireEvent, renderHook, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import MealCard from "./MealCard";
+import MealCard from "@/features/planner/MealCard";
 
 it("opens meal actions outside the draggable scroll column and restores focus on Escape", async () => {
   vi.mocked(commands.listRecipes).mockResolvedValue(

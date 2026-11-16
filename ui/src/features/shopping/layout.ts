@@ -1,4 +1,4 @@
-import type { ShoppingItem } from "../../api";
+import type { ShoppingItem } from "@/api";
 
 export function formatWeight(weight: number): string {
   const grams = Math.fround(weight);

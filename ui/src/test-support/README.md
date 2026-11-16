@@ -1,17 +1,17 @@
 # Scoped UI tests
 
-Import `./ipc` (or its `ok` helper) in a test to mock `api.commands`, `imageUrl`, the
-file-dialog plugin and the opener plugin. Import it before the API, stores or features
-so the shared mocks are installed before those modules load. The real API exports,
-including `unwrap`, remain intact. Import `AppScopes` from `./scopes` as the testing-library wrapper to
+Import `commands` and `ok` from `@/test-support/ipc` to configure typed command mocks.
+This shared harness mocks `api.commands`, `lib/imageUrl`, the file-dialog plugin and
+the opener plugin. Import it before stores or features so mocks are installed before
+those modules load. The real API exports, including `unwrap`, remain intact.
+Import `AppScopes` from `@/test-support/scopes` as the testing-library wrapper to
 mount real Plan → Recipes → Editor → Import → Settings providers. The wrapper does
 not initiate reloads: exercise store actions or mount the feature that owns the effect.
 Do not mock `use*Actions()` with partial hand-written objects.
 
 ```tsx
-import { ok } from "../test-support/ipc";
-import { AppScopes } from "../test-support/scopes";
-import { commands } from "../api";
+import { commands, ok } from "@/test-support/ipc";
+import { AppScopes } from "@/test-support/scopes";
 
 vi.mocked(commands.listRecipes).mockResolvedValue(ok([recipe()]));
 const { result } = renderHook(
@@ -34,7 +34,7 @@ There is no in-memory fake backend: configure each mutation's returned persisted
 Generated typed commands resolve `ok(data)` or `{ status: "error", error: ... }`.
 Use rejected promises for transport exceptions (`Error`), not typed backend errors.
 `supportedSites` is the generated exception: it resolves a plain array, not `ok(array)`.
-Use the existing `api/fixtures` factories and `deferred` for pending operations.
+Use the existing `@/test-support/fixtures` factories and `deferred` for pending operations.
 Override `open` / `openUrl` with `vi.mocked` for plugin failure or selection scenarios.
 `editor.tsx` provides the common editor snapshot hook and installs this same IPC setup.
 

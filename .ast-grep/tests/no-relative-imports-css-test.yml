@@ -1,0 +1,39 @@
+id: no-relative-imports-css
+valid:
+  - |
+    @import "@/theme/index.css";
+  - |
+    @import url("@/theme/fonts.css");
+  - |
+    .card { background: url("@/theme/bg.png"); }
+  - |
+    .card { background: url(data:image/png;base64,AAAA); }
+  - |
+    @import "https://example.com/styles.css";
+  - |
+    .card { background: url("https://example.com/bg.png"); }
+  - |
+    .card { background: url( @/theme/bg.png ); }
+  - |
+    .card { filter: url(#shadow); }
+  - |
+    .card { filter: url("#shadow"); }
+  - |
+    @import "custom+styles:base";
+  - |
+    .card { content: "../not-an-asset"; }
+invalid:
+  - |
+    @import "base.css";
+  - |
+    .card { background: url(bg.png); }
+  - |
+    .card { background: url("fonts/x.ttf"); }
+  - |
+    @import "./base.css";
+  - |
+    @import url('../base.css');
+  - |
+    .card { background: url(../bg.png); }
+  - |
+    .card { background: url("./bg.png"); }

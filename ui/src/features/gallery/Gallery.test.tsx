@@ -1,4 +1,4 @@
-import { ok } from "../../test-support/ipc";
+import { commands, ok } from "@/test-support/ipc";
 import {
   DndContext,
   KeyboardSensor,
@@ -12,12 +12,11 @@ import {
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
-import { commands } from "../../api";
-import { recipe } from "../../api/fixtures";
-import Planner from "../planner";
-import Editor from "../editor";
-import { AppScopes } from "../../test-support/scopes";
-import Gallery from ".";
+import { recipe } from "@/test-support/fixtures";
+import Planner from "@/features/planner";
+import Editor from "@/features/editor";
+import { AppScopes } from "@/test-support/scopes";
+import Gallery from "@/features/gallery";
 
 beforeEach(() => {
   vi.mocked(commands.listRecipes).mockResolvedValue(

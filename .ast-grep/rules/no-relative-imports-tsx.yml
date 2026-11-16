@@ -1,0 +1,27 @@
+id: no-relative-imports-tsx
+language: tsx
+severity: error
+message: "Use the @/ alias for local modules and assets instead of relative paths."
+files:
+  - "ui/src/**"
+utils:
+  relative:
+    kind: string
+    regex: '^["'']\.{1,2}(/[^"'']*)?["'']$'
+rule:
+  any:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+      has:
+        field: source
+        matches: relative
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            regex: '^(import|vi\.(mock|doMock|unmock|doUnmock|importActual|importMock))$'
+        - has:
+            field: arguments
+            has:
+              matches: relative

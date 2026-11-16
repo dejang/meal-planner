@@ -1,29 +1,15 @@
+import { commands, ok } from "@/test-support/ipc";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useDndMonitor, useDraggable, useDroppable } from "@dnd-kit/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode, useState } from "react";
 import { expect, it, vi } from "vitest";
-import App from "./App";
-import { commands, type RecipeInput } from "./api";
-import { useEditorActions, useDraftRecipe } from "./stores/EditorStore";
+import App from "@/App";
+import type { RecipeInput } from "@/api";
+import { useEditorActions, useDraftRecipe } from "@/stores/EditorStore";
 
-vi.mock("./api", async (importOriginal) => {
-  const api = await importOriginal<typeof import("./api")>();
-  return {
-    ...api,
-    commands: {
-      ...api.commands,
-      getRecipe: vi.fn(),
-      createRecipe: vi.fn(async (input: RecipeInput) => ({
-        status: "ok",
-        data: { ...input, id: "saved-recipe", image_version: null },
-      })),
-    },
-  };
-});
-
-vi.mock("./features/gallery", () => ({
+vi.mock("@/features/gallery", () => ({
   default: function Gallery() {
     const editor = useEditorActions();
     const [clicks, setClicks] = useState(0);
@@ -43,7 +29,7 @@ vi.mock("./features/gallery", () => ({
     );
   },
 }));
-vi.mock("./features/planner", () => ({
+vi.mock("@/features/planner", () => ({
   default: function Planner() {
     const drop = useDroppable({ id: "day" });
     const [dropped, setDropped] = useState<string | null>(null);
@@ -57,7 +43,7 @@ vi.mock("./features/planner", () => ({
     );
   },
 }));
-vi.mock("./features/editor", () => ({
+vi.mock("@/features/editor", () => ({
   default: function Editor() {
     const draft = useDraftRecipe();
     const editor = useEditorActions();
@@ -73,15 +59,15 @@ vi.mock("./features/editor", () => ({
     );
   },
 }));
-vi.mock("./features/shopping", () => ({
+vi.mock("@/features/shopping", () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <button onClick={onClose}>Close shopping</button>
   ),
 }));
-vi.mock("./features/import", () => ({
+vi.mock("@/features/import", () => ({
   default: () => <div>Import fixture</div>,
 }));
-vi.mock("./features/settings", () => ({
+vi.mock("@/features/settings", () => ({
   default: () => <div>Settings fixture</div>,
   Welcome: () => null,
 }));
@@ -148,6 +134,10 @@ it.each([
 );
 
 it("preserves an unsaved draft under StrictMode through repeated Escape and backdrop interaction", async () => {
+  vi.mocked(commands.createRecipe).mockImplementation(
+    async (input: RecipeInput) =>
+      ok({ ...input, id: "saved-recipe", image_version: null }),
+  );
   const user = userEvent.setup();
   render(
     <StrictMode>

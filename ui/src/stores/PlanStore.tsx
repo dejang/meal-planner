@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { createSelectorHook, Store } from "bonsai-react";
-import { commands, unwrap } from "../api";
+import { commands, unwrap } from "@/api";
 import type {
   AnalysisResponse,
   MealPosition,
   ShoppingItem,
   WeeklyPlan,
-} from "../api";
-import type { RecipeDragPayload } from "../lib/recipeDrag";
-import { createStoreContext } from "./core/context";
-import { errorMessage } from "./core/error";
+} from "@/api";
+import type { RecipeDragPayload } from "@/lib/recipeDrag";
+import { createStoreContext } from "@/stores/core/context";
+import { errorMessage } from "@/stores/core/error";
 
 export interface PlanState {
   plan: WeeklyPlan;

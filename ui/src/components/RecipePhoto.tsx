@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
-import { imageUrl, type ResizedImage } from "../api";
-import { Icon, IconName } from "./Icon";
+import type { ResizedImage } from "@/api";
+import { imageUrl } from "@/lib/imageUrl";
+import { Icon, IconName } from "@/components/Icon";
 
 export interface RecipePhotoProps {
   recipeId?: string | null;

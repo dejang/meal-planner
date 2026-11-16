@@ -1,4 +1,4 @@
-import "./ipc";
+import "@/test-support/ipc";
 import {
   useDraftRecipe,
   useEditorActions,
@@ -6,7 +6,7 @@ import {
   useEditorError,
   useEditorLoadingImage,
   useEditorSaving,
-} from "../stores/EditorStore";
+} from "@/stores/EditorStore";
 
 export function useEditor() {
   return {

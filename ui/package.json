@@ -10,6 +10,7 @@
     "test": "vitest run",
     "lint": "eslint src",
     "format": "prettier --write src",
+    "format:stdout": "prettier",
     "format:check": "prettier --check src",
     "bindings:generate": "cargo run -p meal_planner_desktop -- --export-bindings",
     "bindings:check": "cargo test -p meal_planner_desktop bindings_are_current"
@@ -17,26 +18,27 @@
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/utilities": "^3.2.2",
-    "bonsai-react": "^0.2.0",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-store": "^2",
+    "bonsai-react": "^0.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "prettier": "^3.6.0",
     "@eslint/js": "^9.39.0",
-    "eslint": "^9.39.0",
-    "typescript-eslint": "^8.46.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "jsdom": "^27.0.0",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.39.0",
+    "jsdom": "^27.0.0",
+    "prettier": "^3.6.0",
     "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0",
     "vite": "^7.2.0",
     "vitest": "^3.2.0"
   }

@@ -1,11 +1,10 @@
-import { ok } from "../test-support/ipc";
-import { AppScopes } from "../test-support/scopes";
-import { commands } from "../api";
+import { commands, ok } from "@/test-support/ipc";
+import { AppScopes } from "@/test-support/scopes";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { analysis, deferred } from "../api/fixtures";
+import { analysis, deferred } from "@/test-support/fixtures";
 import { act, renderHook } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { useEditorActions, useDraftRecipe } from "./EditorStore";
+import { useEditorActions, useDraftRecipe } from "@/stores/EditorStore";
 import {
   useImportLinkError,
   useImportActions,
@@ -14,7 +13,7 @@ import {
   useImportOpen,
   useImportSupportedSites,
   useImportUrl,
-} from "./ImportStore";
+} from "@/stores/ImportStore";
 
 function useImportSnapshot() {
   return {

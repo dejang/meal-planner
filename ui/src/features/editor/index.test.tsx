@@ -1,13 +1,12 @@
-import { useEditor } from "../../test-support/editor";
+import { useEditor } from "@/test-support/editor";
 import { act, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { open } from "@tauri-apps/plugin-dialog";
-import Editor from "./index";
-import { deferred } from "../../api/fixtures";
-import { commands } from "../../api";
-import { AppScopes } from "../../test-support/scopes";
-import { ok } from "../../test-support/ipc";
+import Editor from "@/features/editor/index";
+import { deferred } from "@/test-support/fixtures";
+import { AppScopes } from "@/test-support/scopes";
+import { commands, ok } from "@/test-support/ipc";
 
 function renderEditor() {
   return renderHook(useEditor, {

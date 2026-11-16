@@ -7,19 +7,9 @@ modules used by multiple callers. Avoid a catch-all collection of store-state he
 ## Responsibilities
 
 - Give each module a focused interface with explicit inputs and outputs.
-- Keep pure utilities independent of React, stores, pages, and organisms.
+- Keep utilities independent of React, stores, components and features.
+- `imageUrl.ts` formats versioned image URLs using Tauri's file-source conversion.
 - Keep feature state transitions in stores and desktop/backend calls in `api/`.
 
-## Reserved live transport
-
-The rules explicitly reference `ui/src/lib/live.ts`. If live updates are introduced,
-put the low-level socket or desktop-event connection there, with explicit connection,
-subscription, and cleanup operations. It is a file, not a `lib/live/` directory.
-
-Only store implementations should consume live transport. The transport must not
-import stores, routing, or runtime API values; stores coordinate those dependencies.
-Do not create a connection at import time or add a placeholder transport before it is needed.
-
-The current rules single out `live.ts`; other files here are not automatically covered
-by the same import and style filters. Follow the intended ownership rules regardless.
-See the [source overview](../README.md).
+Do not create connections at import time or add placeholder transport before it is needed.
+Stores coordinate subscriptions and their cleanup. See the [source overview](../README.md).

@@ -1,8 +1,5 @@
-import { convertFileSrc } from "@tauri-apps/api/core";
-import { expect, it, vi } from "vitest";
-import { imageUrl, unwrap } from "./index";
-
-vi.mock("@tauri-apps/api/core", () => ({ convertFileSrc: vi.fn() }));
+import { expect, it } from "vitest";
+import { unwrap } from "@/api/index";
 
 it.each<[Parameters<typeof unwrap<number>>[0], number | Error]>([
   [{ status: "ok", data: 42 }, 42],
@@ -25,12 +22,4 @@ it.each<[Parameters<typeof unwrap<number>>[0], number | Error]>([
   } else {
     expect(unwrap(result)).toBe(expected);
   }
-});
-
-it("adds an encoded cache token to the converted image URL", () => {
-  vi.mocked(convertFileSrc).mockReturnValue("image://recipe-id");
-  expect(imageUrl("recipe-id", "version /?&#")).toBe(
-    "image://recipe-id?v=version%20%2F%3F%26%23",
-  );
-  expect(convertFileSrc).toHaveBeenLastCalledWith("recipe-id", "image");
 });

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { createSelectorHook, Store } from "bonsai-react";
-import { createOpenSiteAction } from "./core/openSite";
-import { commands, unwrap, type Credentials } from "../api";
-import { createStoreContext } from "./core/context";
-import { errorMessage } from "./core/error";
+import { createOpenSiteAction } from "@/stores/core/openSite";
+import { commands, unwrap, type Credentials } from "@/api";
+import { createStoreContext } from "@/stores/core/context";
+import { errorMessage } from "@/stores/core/error";
 
 export interface SettingsState {
   credentials: Credentials;

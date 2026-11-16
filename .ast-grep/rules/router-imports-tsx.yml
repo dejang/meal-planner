@@ -1,9 +1,9 @@
 id: router-imports-tsx
 language: tsx
 severity: error
-message: "`react-router` is imported only by App.tsx, pages/** and organisms/** (L10)."
+message: "`react-router` is imported only by App.tsx, features/** and mobile/** (L10)."
 files:
-  - "ui/src/kit/**"
+  - "ui/src/components/**"
   - "ui/src/stores/**"
   - "ui/src/theme/**"
 # Covers imports, `export … from` and `import(…)`.

@@ -1,6 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
 import type { ReactNode } from "react";
-import type { MealPosition } from "../../api";
+import type { MealPosition } from "@/api";
 
 interface DropTargetProps {
   position: MealPosition;

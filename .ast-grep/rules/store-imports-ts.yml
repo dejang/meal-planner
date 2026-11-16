@@ -1,12 +1,11 @@
 id: store-imports-ts
 language: ts
 severity: error
-message: "`@/stores` is imported only by organisms/**, pages/** and App.tsx (L3)."
+message: "Stores are imported only by features/**, mobile/** and App.tsx (L3)."
 files:
-  - "ui/src/kit/**"
+  - "ui/src/components/**"
   - "ui/src/theme/**"
-  - "ui/src/lib/live.ts"
-# Covers imports, `export … from` and `import(…)`. Only the `@/` alias is matched.
+# Covers imports, `export … from` and `import(…)`, matching only the `@/` alias.
 utils:
   banned:
     kind: string

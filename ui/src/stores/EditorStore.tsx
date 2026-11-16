@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { createSelectorHook, Store } from "bonsai-react";
-import {
-  commands,
-  unwrap,
-  type ImportedRecipe,
-  type RecipeInput,
-} from "../api";
-import { createStoreContext } from "./core/context";
-import { errorMessage } from "./core/error";
-import { usePlanActions } from "./PlanStore";
-import { useRecipesActions } from "./RecipesStore";
+import { commands, unwrap, type ImportedRecipe, type RecipeInput } from "@/api";
+import { createStoreContext } from "@/stores/core/context";
+import { errorMessage } from "@/stores/core/error";
+import { usePlanActions } from "@/stores/PlanStore";
+import { useRecipesActions } from "@/stores/RecipesStore";
 
 export interface RecipeDraft extends RecipeInput {
   id: string | null;

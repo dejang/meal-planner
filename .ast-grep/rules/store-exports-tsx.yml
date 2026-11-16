@@ -7,7 +7,7 @@ files:
 ignores:
   - "ui/src/stores/core/**"
 # Only `function` declarations count as the scope and hooks: `export const useX = …` is reported.
-# A by-name re-export from `./core/` passes, for the enums and types organisms need.
+# A by-name re-export from `@/stores/core/` passes for shared enums and types.
 rule:
   kind: export_statement
   not:
@@ -17,7 +17,7 @@ rule:
           - regex: '^export\s*\{'
           - has:
               field: source
-              regex: '^["'']\./core/'
+              regex: '^["'']@/stores/core/'
       - has:
           field: declaration
           any:

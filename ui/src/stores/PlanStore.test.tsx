@@ -1,14 +1,9 @@
-import { ok } from "../test-support/ipc";
+import { commands, ok } from "@/test-support/ipc";
 import { act, renderHook } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import {
-  commands,
-  type AnalysisResponse,
-  type ShoppingItem,
-  type WeeklyPlan,
-} from "../api";
-import type { RecipeDragPayload } from "../lib/recipeDrag";
-import { AppScopes } from "../test-support/scopes";
+import type { AnalysisResponse, ShoppingItem, WeeklyPlan } from "@/api";
+import type { RecipeDragPayload } from "@/lib/recipeDrag";
+import { AppScopes } from "@/test-support/scopes";
 import {
   usePlanActions,
   usePlanDayTotals,
@@ -16,7 +11,7 @@ import {
   usePlanLoading,
   usePlanShoppingItems,
   usePlanWeeklyPlan,
-} from "./PlanStore";
+} from "@/stores/PlanStore";
 
 interface CommandCase {
   command: (typeof commands)[keyof ReturnType<typeof usePlanActions> &

@@ -1,13 +1,12 @@
 id: api-imports-ts
 language: ts
 severity: error
-message: "`@/api` is imported only by stores/**; elsewhere only `import type` is allowed. Every server write is a store hook setter (L5)."
+message: "Runtime API values are imported only by stores/**; elsewhere only `import type` is allowed. Every server write is a store hook setter (L5)."
 files:
-  - "ui/src/kit/**"
-  - "ui/src/organisms/**"
-  - "ui/src/pages/**"
+  - "ui/src/components/**"
+  - "ui/src/features/**"
+  - "ui/src/mobile/**"
   - "ui/src/theme/**"
-  - "ui/src/lib/live.ts"
 # Covers imports, `export … from` and `import(…)`. `import type` and `export type … from`
 # are allowed. Only the `@/` alias is matched.
 utils:

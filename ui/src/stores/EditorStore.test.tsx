@@ -1,12 +1,12 @@
-import { useEditor } from "../test-support/editor";
+import { useEditor } from "@/test-support/editor";
 import { act, renderHook } from "@testing-library/react";
-import { recipe, analysis, deferred } from "../api/fixtures";
+import { recipe, analysis, deferred } from "@/test-support/fixtures";
 import { expect, it, vi } from "vitest";
 import { open } from "@tauri-apps/plugin-dialog";
-import { commands, type Error as ApiError } from "../api";
-import { useRecipesError } from "./RecipesStore";
-import { AppScopes } from "../test-support/scopes";
-import { ok } from "../test-support/ipc";
+import type { Error as ApiError } from "@/api";
+import { useRecipesError } from "@/stores/RecipesStore";
+import { AppScopes } from "@/test-support/scopes";
+import { commands, ok } from "@/test-support/ipc";
 
 it.each(["", " \n "])(
   "discards an untitled new draft on close (%j)",

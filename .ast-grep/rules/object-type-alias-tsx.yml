@@ -3,11 +3,12 @@ language: tsx
 severity: error
 message: "An object shape is an `interface`, not a `type` alias (T1)."
 files:
-  - "ui/src/kit/**"
+  - "ui/src/components/**"
   - "ui/src/stores/**"
-  - "ui/src/organisms/**"
-  - "ui/src/pages/**"
+  - "ui/src/features/**"
+  - "ui/src/mobile/**"
   - "ui/src/App.tsx"
+  - "ui/src/App.test.tsx"
 # A mapped type (`{ [K in X]: Y }`) has no interface form and is allowed.
 rule:
   kind: type_alias_declaration

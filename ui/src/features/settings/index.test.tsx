@@ -1,13 +1,12 @@
-import { ok } from "../../test-support/ipc";
-import { commands } from "../../api";
+import { commands, ok } from "@/test-support/ipc";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { expect, it, vi } from "vitest";
-import { useSettingsActions } from "../../stores/SettingsStore";
-import { AppScopes } from "../../test-support/scopes";
-import Settings, { Welcome } from ".";
+import { useSettingsActions } from "@/stores/SettingsStore";
+import { AppScopes } from "@/test-support/scopes";
+import Settings, { Welcome } from "@/features/settings";
 
 function Reload() {
   const actions = useSettingsActions();

@@ -10,29 +10,29 @@ import {
 } from "@dnd-kit/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState, type Ref } from "react";
-import { Button, ButtonVariant } from "./components/Button";
-import { Icon, IconName } from "./components/Icon";
-import { DialogSize, PaperDialog } from "./components/PaperDialog";
-import Gallery from "./features/gallery";
-import Planner from "./features/planner";
-import Editor from "./features/editor";
-import Shopping from "./features/shopping";
-import Import from "./features/import";
-import Settings, { Welcome } from "./features/settings";
-import { PlanScope } from "./stores/PlanStore";
-import { RecipesScope } from "./stores/RecipesStore";
+import { Button, ButtonVariant } from "@/components/Button";
+import { Icon, IconName } from "@/components/Icon";
+import { DialogSize, PaperDialog } from "@/components/PaperDialog";
+import Gallery from "@/features/gallery";
+import Planner from "@/features/planner";
+import Editor from "@/features/editor";
+import Shopping from "@/features/shopping";
+import Import from "@/features/import";
+import Settings, { Welcome } from "@/features/settings";
+import { PlanScope } from "@/stores/PlanStore";
+import { RecipesScope } from "@/stores/RecipesStore";
 import {
   EditorScope,
   useEditorOpen,
   useEditorError,
   useEditorActions,
-} from "./stores/EditorStore";
+} from "@/stores/EditorStore";
 import {
   ImportScope,
   useImportOpen,
   useImportActions,
-} from "./stores/ImportStore";
-import { SettingsScope } from "./stores/SettingsStore";
+} from "@/stores/ImportStore";
+import { SettingsScope } from "@/stores/SettingsStore";
 
 export interface AppProps {
   plannerMin?: number;

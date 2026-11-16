@@ -1,4 +1,4 @@
-import type { MealPosition } from "../api";
+import type { MealPosition } from "@/api";
 
 export interface RecipeDragPayload {
   recipeId: string;

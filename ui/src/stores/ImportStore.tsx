@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { createOpenSiteAction } from "./core/openSite";
+import { createOpenSiteAction } from "@/stores/core/openSite";
 import { createSelectorHook, Store } from "bonsai-react";
-import { commands, unwrap, type SupportedSite } from "../api";
-import { createStoreContext } from "./core/context";
-import { errorMessage } from "./core/error";
-import { useEditorActions } from "./EditorStore";
+import { commands, unwrap, type SupportedSite } from "@/api";
+import { createStoreContext } from "@/stores/core/context";
+import { errorMessage } from "@/stores/core/error";
+import { useEditorActions } from "@/stores/EditorStore";
 
 export interface ImportState {
   open: boolean;

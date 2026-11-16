@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "lint": "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings -W clippy::all",
+    "lint": "cargo fmt --all -- --check && cargo clippy --locked --workspace --all-targets --all-features -- -D warnings -W clippy::all && pnpm --dir ui run typecheck && pnpm --dir ui run lint && pnpm --dir ui run format:check",
+    "check:fast": "pnpm run lint && cargo test --locked --workspace --all-targets --all-features && cargo test --locked --workspace --doc && pnpm --dir ui run test",
     "tauri": "tauri"
   },
   "devDependencies": {
