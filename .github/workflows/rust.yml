@@ -3,28 +3,23 @@ on: [push, pull_request, workflow_dispatch]
 name: CI
 
 env:
-  # --cfg=web_sys_unstable_apis is required to enable the web_sys clipboard API which egui_web uses
-  # https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Clipboard.html
-  # https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html
-  RUSTFLAGS: -D warnings --cfg=web_sys_unstable_apis
+  RUSTFLAGS: -D warnings
   RUSTDOCFLAGS: -D warnings
 
 jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
-    env:
-      WINIT_UNIX_BACKEND: "x11"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.95.0
+          toolchain: nightly
           components: rustfmt, clippy
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev libayatana-appindicator3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev libayatana-appindicator3-dev
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -41,43 +36,11 @@ jobs:
       - run: cargo test --locked --workspace --doc
       - run: pnpm tauri build --no-bundle --debug
 
-  check_wasm:
-    name: Check wasm32
-    runs-on: ubuntu-latest
-    env:
-      WINIT_UNIX_BACKEND: "x11"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.95.0
-          targets: wasm32-unknown-unknown
-      - run: cargo check --locked -p meal_planner --all-features --lib --target wasm32-unknown-unknown
-
-  trunk:
-    name: trunk
-    runs-on: ubuntu-latest
-    env:
-      WINIT_UNIX_BACKEND: "x11"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.95.0
-          targets: wasm32-unknown-unknown
-      - name: Download and install Trunk binary
-        run: wget -qO- https://github.com/thedodd/trunk/releases/latest/download/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
-      - name: Build
-        run: ../trunk build
-        working-directory: legacy
-
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
-    env:
-      WINIT_UNIX_BACKEND: "x11"
     strategy:
       fail-fast: false
       matrix:
@@ -85,57 +48,58 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             extension: ""
-            use_cross: false
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
             extension: ""
-            use_cross: true
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             target: armv7-unknown-linux-gnueabihf
             extension: ""
-            use_cross: true
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             extension: ""
-            use_cross: true
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             extension: .exe
-            use_cross: false
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.95.0
+          toolchain: nightly
           targets: ${{ matrix.target }}
-
-      # Use a prebuilt cross binary so project RUSTFLAGS are not applied while
-      # compiling cross itself. Native macOS and Windows builds use cargo.
-      - name: Install cross
-        if: ${{ matrix.use_cross }}
-        uses: taiki-e/install-action@cross
-        env:
-          RUSTFLAGS: ""
-
-      - name: Cross-compile
-        if: ${{ matrix.use_cross }}
-        run: cross build --locked -p meal_planner --verbose --release --target=${{ matrix.target }}
-
-      - name: Build natively
-        if: ${{ !matrix.use_cross }}
-        run: cargo build --locked -p meal_planner --verbose --release --target=${{ matrix.target }}
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux' && matrix.target != 'armv7-unknown-linux-gnueabihf'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev libayatana-appindicator3-dev
+      - name: Install armv7 cross-build dependencies
+        if: matrix.target == 'armv7-unknown-linux-gnueabihf'
+        run: |
+          sudo dpkg --add-architecture armhf
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf pkg-config libwebkit2gtk-4.1-dev:armhf libxdo-dev:armhf libssl-dev:armhf librsvg2-dev:armhf libayatana-appindicator3-dev:armhf
+          echo 'CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc' >> "$GITHUB_ENV"
+          echo 'PKG_CONFIG_ALLOW_CROSS=1' >> "$GITHUB_ENV"
+          echo 'PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig' >> "$GITHUB_ENV"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Build desktop app
+        run: pnpm tauri build --no-bundle --target ${{ matrix.target }} -- --locked
 
       - name: Package binary
         shell: bash
         run: |
-          source="target/${{ matrix.target }}/release/meal_planner${{ matrix.extension }}"
+          source="target/${{ matrix.target }}/release/meal_planner_desktop${{ matrix.extension }}"
           destination="meal_planner-${{ matrix.target }}${{ matrix.extension }}"
           cp "$source" "$destination"
 
