@@ -5,7 +5,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { PlanScope } from "./PlanStore";
 import { RecipesScope } from "./RecipesStore";
-import { EditorScope, useEditorActions, useEditorDraft } from "./EditorStore";
+import { EditorScope, useEditorActions, useDraftRecipe } from "./EditorStore";
 import {
   ImportScope,
   useImportActions,
@@ -40,7 +40,7 @@ function useImportSnapshot() {
   return {
     actions: useImportActions(),
     editor: useEditorActions(),
-    draft: useEditorDraft(),
+    draft: useDraftRecipe(),
     open: useImportOpen(),
     url: useImportUrl(),
     importing: useImportImporting(),
@@ -115,6 +115,7 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
       analysis: null,
       image: image ? { kind: "set", image } : { kind: "keep" },
       imageVersion: null,
+      imageSource: null,
     });
     expect(result.current.open).toBe(false);
     expect(result.current.url).toBe("");

@@ -15,7 +15,9 @@ it.each<[Parameters<typeof unwrap<number>>[0], number | Error]>([
   ],
   [
     { status: "error", error: { kind: "lock_poisoned" } },
-    new Error("lock_poisoned"),
+    new Error(
+      "Recipe storage is unavailable. Please restart the app and try again.",
+    ),
   ],
 ])("decodes %j", (result, expected) => {
   if (expected instanceof Error) {

@@ -5,7 +5,22 @@ import userEvent from "@testing-library/user-event";
 import { StrictMode, useState } from "react";
 import { expect, it, vi } from "vitest";
 import App from "./App";
-import { useEditorActions, useEditorDraft } from "./stores/EditorStore";
+import type { RecipeInput } from "./api";
+import { useEditorActions, useDraftRecipe } from "./stores/EditorStore";
+
+vi.mock("./api", async (importOriginal) => {
+  const api = await importOriginal<typeof import("./api")>();
+  return {
+    ...api,
+    commands: {
+      ...api.commands,
+      createRecipe: vi.fn(async (input: RecipeInput) => ({
+        status: "ok",
+        data: { ...input, id: "saved-recipe", image_version: null },
+      })),
+    },
+  };
+});
 
 vi.mock("./features/gallery", () => ({
   default: function Gallery() {
@@ -37,7 +52,7 @@ vi.mock("./features/planner", () => ({
 }));
 vi.mock("./features/editor", () => ({
   default: function Editor() {
-    const draft = useEditorDraft();
+    const draft = useDraftRecipe();
     const editor = useEditorActions();
     return (
       <>

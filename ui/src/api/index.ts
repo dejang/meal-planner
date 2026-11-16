@@ -8,7 +8,9 @@ export function unwrap<T>(
 ): T {
   if (result.status === "error") {
     throw new Error(
-      "detail" in result.error ? result.error.detail : result.error.kind,
+      result.error.kind === "lock_poisoned"
+        ? "Recipe storage is unavailable. Please restart the app and try again."
+        : result.error.detail,
     );
   }
   return result.data;
