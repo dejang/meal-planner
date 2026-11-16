@@ -1,3 +1,4 @@
+import { ok } from "../../test-support/ipc";
 import {
   DndContext,
   KeyboardSensor,
@@ -14,30 +15,13 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { commands } from "../../api";
 import { recipe } from "../../api/fixtures";
 import Planner from "../planner";
-import { useEditorActions } from "../../stores/EditorStore";
-import { PlanScope, usePlanActions } from "../../stores/PlanStore";
-import { RecipesScope } from "../../stores/RecipesStore";
+import Editor from "../editor";
+import { AppScopes } from "../../test-support/scopes";
 import Gallery from ".";
 
-vi.mock("../../api", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../api")>()),
-  commands: {
-    listRecipes: vi.fn(),
-    searchRecipes: vi.fn(),
-    deleteRecipe: vi.fn(),
-  },
-}));
-vi.mock("../../stores/PlanStore", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../stores/PlanStore")>()),
-  usePlanActions: vi.fn(),
-}));
-vi.mock("../../stores/EditorStore", () => ({ useEditorActions: vi.fn() }));
-
 beforeEach(() => {
-  vi.resetAllMocks();
-  vi.mocked(commands.listRecipes).mockResolvedValue({
-    status: "ok",
-    data: [
+  vi.mocked(commands.listRecipes).mockResolvedValue(
+    ok([
       recipe({
         id: "rice",
         title: "Rice dinner",
@@ -56,33 +40,11 @@ beforeEach(() => {
         analysis: null,
         image_version: null,
       }),
-    ],
-  });
-  vi.mocked(usePlanActions).mockReturnValue({
-    reload: vi.fn(),
-    addToDay: vi.fn(),
-    moveMeal: vi.fn(),
-    dropRecipe: vi.fn(),
-    removeFromDay: vi.fn(),
-    clearDay: vi.fn(),
-    copyPreviousDay: vi.fn(),
-  });
-  vi.mocked(useEditorActions).mockReturnValue({
-    dismissError: vi.fn(),
-    reload: vi.fn(),
-    openNew: vi.fn(),
-    openRecipe: vi.fn(),
-    assertCanImport: vi.fn(),
-    openImported: vi.fn(),
-    close: vi.fn(),
-    patchDraft: vi.fn(),
-    save: vi.fn(),
-    analyzeIngredients: vi.fn(),
-    chooseImageFile: vi.fn(),
-    setImageSource: vi.fn(),
-    loadImageFile: vi.fn(),
-    loadImageUrl: vi.fn(),
-  });
+    ]),
+  );
+  vi.mocked(commands.getRecipe).mockResolvedValue(
+    ok(recipe({ id: "rice", title: "Rice dinner" })),
+  );
 });
 
 function renderGallery(sensor: typeof PointerSensor | typeof KeyboardSensor) {
@@ -93,6 +55,7 @@ function renderGallery(sensor: typeof PointerSensor | typeof KeyboardSensor) {
       <>
         <Gallery />
         <Planner />
+        <Editor />
       </>
     );
   }
@@ -104,11 +67,9 @@ function renderGallery(sensor: typeof PointerSensor | typeof KeyboardSensor) {
     );
     return (
       <DndContext sensors={sensors}>
-        <PlanScope>
-          <RecipesScope>
-            <DragHarness />
-          </RecipesScope>
-        </PlanScope>
+        <AppScopes>
+          <DragHarness />
+        </AppScopes>
       </DndContext>
     );
   }
@@ -144,7 +105,11 @@ it("selects recipes, clears selection with Escape, and opens the editor", async 
   card.focus();
   await user.keyboard("{Enter}");
   await user.click(screen.getByRole("button", { name: "Edit" }));
-  expect(useEditorActions().openRecipe).toHaveBeenCalledWith("rice");
+  expect(commands.getRecipe).toHaveBeenCalledWith("rice");
+  expect(
+    screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Recipe title" })
+      .value,
+  ).toBe("Rice dinner");
   expect(screen.queryByRole("complementary")).toBeNull();
 });
 
@@ -202,14 +167,8 @@ it.each([
     await user.click(
       await screen.findByRole("button", { name: "Rice dinner" }),
     );
-    vi.mocked(commands.deleteRecipe).mockResolvedValue({
-      status: "ok",
-      data: null,
-    });
-    vi.mocked(commands.listRecipes).mockResolvedValue({
-      status: "ok",
-      data: [],
-    });
+    vi.mocked(commands.deleteRecipe).mockResolvedValue(ok(null));
+    vi.mocked(commands.listRecipes).mockResolvedValue(ok([]));
     deleteSelected();
     await waitFor(() =>
       expect(commands.deleteRecipe).toHaveBeenCalledExactlyOnceWith("rice"),

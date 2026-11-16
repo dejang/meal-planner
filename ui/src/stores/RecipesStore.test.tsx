@@ -1,10 +1,10 @@
+import { ok } from "../test-support/ipc";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { commands } from "../api";
 import { deferred, recipe } from "../api/fixtures";
-import { usePlanActions } from "./PlanStore";
+import { AppScopes } from "../test-support/scopes";
 import {
-  RecipesScope,
   useRecipe,
   useRecipesActions,
   useRecipesError,
@@ -13,16 +13,6 @@ import {
   useRecipesSelectedId,
   useRecipesVisibleIds,
 } from "./RecipesStore";
-
-vi.mock("../api", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../api")>()),
-  commands: {
-    listRecipes: vi.fn(),
-    searchRecipes: vi.fn(),
-    deleteRecipe: vi.fn(),
-  },
-}));
-vi.mock("./PlanStore", () => ({ usePlanActions: vi.fn() }));
 
 function useGalleryState() {
   const selectedId = useRecipesSelectedId();
@@ -38,31 +28,19 @@ function useGalleryState() {
 }
 
 beforeEach(() => {
-  vi.resetAllMocks();
-  vi.mocked(usePlanActions).mockReturnValue({
-    reload: vi.fn().mockResolvedValue(undefined),
-    addToDay: vi.fn(),
-    moveMeal: vi.fn(),
-    dropRecipe: vi.fn(),
-    removeFromDay: vi.fn(),
-    clearDay: vi.fn(),
-    copyPreviousDay: vi.fn(),
-  });
-  vi.mocked(commands.listRecipes).mockResolvedValue({
-    status: "ok",
-    data: [recipe({ id: "a", title: "a" }), recipe({ id: "b", title: "b" })],
-  });
+  vi.mocked(commands.listRecipes).mockResolvedValue(
+    ok([recipe({ id: "a", title: "a" }), recipe({ id: "b", title: "b" })]),
+  );
 });
 
 it("loads recipes, retains selection through search, and reapplies the query on reload", async () => {
-  const { result } = renderHook(useGalleryState, { wrapper: RecipesScope });
+  const { result } = renderHook(useGalleryState, { wrapper: AppScopes });
   await act(() => result.current.actions.reload());
   expect(result.current.ids).toEqual(["a", "b"]);
   act(() => result.current.actions.select("b"));
-  vi.mocked(commands.searchRecipes).mockResolvedValue({
-    status: "ok",
-    data: [recipe({ id: "a", title: "a" })],
-  });
+  vi.mocked(commands.searchRecipes).mockResolvedValue(
+    ok([recipe({ id: "a", title: "a" })]),
+  );
   await act(() => result.current.actions.setQuery("rice"));
   expect(commands.searchRecipes).toHaveBeenCalledWith("rice");
   expect(result.current.query).toBe("rice");
@@ -73,16 +51,15 @@ it("loads recipes, retains selection through search, and reapplies the query on 
   expect(result.current.ids).toEqual(["a"]);
   await act(() => result.current.actions.setQuery(""));
   expect(result.current.ids).toEqual(["a", "b"]);
-  vi.mocked(commands.listRecipes).mockResolvedValue({
-    status: "ok",
-    data: [recipe({ id: "a", title: "a" })],
-  });
+  vi.mocked(commands.listRecipes).mockResolvedValue(
+    ok([recipe({ id: "a", title: "a" })]),
+  );
   await act(() => result.current.actions.reload());
   expect(result.current.selectedId).toBeNull();
 });
 
 it("ignores stale search results without rolling back selection made during a request", async () => {
-  const { result } = renderHook(useGalleryState, { wrapper: RecipesScope });
+  const { result } = renderHook(useGalleryState, { wrapper: AppScopes });
   await act(() => result.current.actions.reload());
   const response =
     deferred<Awaited<ReturnType<typeof commands.searchRecipes>>>();
@@ -93,13 +70,12 @@ it("ignores stale search results without rolling back selection made during a re
   });
   expect(result.current.loading).toBe(true);
   act(() => result.current.actions.select("b"));
-  vi.mocked(commands.searchRecipes).mockResolvedValueOnce({
-    status: "ok",
-    data: [recipe({ id: "b", title: "b" }), recipe({ id: "a", title: "a" })],
-  });
+  vi.mocked(commands.searchRecipes).mockResolvedValueOnce(
+    ok([recipe({ id: "b", title: "b" }), recipe({ id: "a", title: "a" })]),
+  );
   await act(() => result.current.actions.setQuery("new"));
   await act(async () => {
-    response.resolve({ status: "ok", data: [] });
+    response.resolve(ok([]));
     await first;
   });
   expect(result.current.ids).toEqual(["b", "a"]);
@@ -109,22 +85,19 @@ it("ignores stale search results without rolling back selection made during a re
 });
 
 it("deletes a selected recipe and refreshes both recipe and plan caches", async () => {
-  const { result } = renderHook(useGalleryState, { wrapper: RecipesScope });
+  const { result } = renderHook(useGalleryState, { wrapper: AppScopes });
   await act(() => result.current.actions.reload());
   act(() => result.current.actions.select("b"));
-  vi.mocked(commands.deleteRecipe).mockResolvedValue({
-    status: "ok",
-    data: null,
-  });
-  vi.mocked(commands.listRecipes).mockResolvedValue({
-    status: "ok",
-    data: [recipe({ id: "a", title: "a" })],
-  });
+  vi.mocked(commands.deleteRecipe).mockResolvedValue(ok(null));
+  vi.mocked(commands.listRecipes).mockResolvedValue(
+    ok([recipe({ id: "a", title: "a" })]),
+  );
   await act(() => result.current.actions.deleteRecipe("b"));
   expect(commands.deleteRecipe).toHaveBeenCalledWith("b");
   expect(result.current.ids).toEqual(["a"]);
   expect(result.current.selectedId).toBeNull();
-  expect(usePlanActions().reload).toHaveBeenCalledOnce();
+  expect(commands.getPlan).toHaveBeenCalledOnce();
+  expect(commands.shoppingList).toHaveBeenCalledOnce();
 });
 
 it.each([
@@ -163,28 +136,23 @@ it.each([
 ])(
   "reports $operation failures and retries the failed operation",
   async ({ setup, action, verifyRetry }) => {
-    const { result } = renderHook(useGalleryState, { wrapper: RecipesScope });
+    const { result } = renderHook(useGalleryState, { wrapper: AppScopes });
     await act(() => result.current.actions.reload());
     act(() => result.current.actions.select("b"));
-    vi.mocked(commands.deleteRecipe).mockResolvedValue({
-      status: "ok",
-      data: null,
-    });
+    vi.mocked(commands.deleteRecipe).mockResolvedValue(ok(null));
     setup();
     await act(() => action(result.current.actions));
     expect(result.current.error).toBe("Unavailable");
     expect(result.current.loading).toBe(false);
     expect(result.current.ids).toEqual(["a", "b"]);
     expect(result.current.selectedId).toBe("b");
-    expect(usePlanActions().reload).not.toHaveBeenCalled();
-    vi.mocked(commands.listRecipes).mockResolvedValue({
-      status: "ok",
-      data: [recipe({ id: "a", title: "a" })],
-    });
-    vi.mocked(commands.searchRecipes).mockResolvedValue({
-      status: "ok",
-      data: [recipe({ id: "a", title: "a" })],
-    });
+    expect(commands.getPlan).not.toHaveBeenCalled();
+    vi.mocked(commands.listRecipes).mockResolvedValue(
+      ok([recipe({ id: "a", title: "a" })]),
+    );
+    vi.mocked(commands.searchRecipes).mockResolvedValue(
+      ok([recipe({ id: "a", title: "a" })]),
+    );
     await act(() => result.current.actions.retry());
     expect(result.current.error).toBeNull();
     expect(result.current.ids).toEqual(["a"]);

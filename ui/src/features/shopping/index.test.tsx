@@ -1,43 +1,33 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { ok } from "../../test-support/ipc";
+import {
+  act,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { DialogSize, PaperDialog } from "../../components/PaperDialog";
-import {
-  usePlanActions,
-  usePlanError,
-  usePlanLoading,
-  usePlanShoppingItems,
-} from "../../stores/PlanStore";
+import { usePlanActions } from "../../stores/PlanStore";
+import { commands } from "../../api";
+import { deferred } from "../../api/fixtures";
+import { AppScopes } from "../../test-support/scopes";
 import Shopping from ".";
-
-vi.mock("../../stores/PlanStore", () => ({
-  usePlanActions: vi.fn(),
-  usePlanError: vi.fn(),
-  usePlanLoading: vi.fn(),
-  usePlanShoppingItems: vi.fn(),
-}));
 
 let resize: ResizeObserverCallback;
 
 afterEach(() => vi.restoreAllMocks());
 
 beforeEach(() => {
-  vi.mocked(usePlanActions).mockReturnValue({
-    reload: vi.fn().mockResolvedValue(undefined),
-    addToDay: vi.fn(),
-    moveMeal: vi.fn(),
-    dropRecipe: vi.fn(),
-    removeFromDay: vi.fn(),
-    clearDay: vi.fn(),
-    copyPreviousDay: vi.fn(),
-  });
-  vi.mocked(usePlanError).mockReturnValue(null);
-  vi.mocked(usePlanLoading).mockReturnValue(false);
-  vi.mocked(usePlanShoppingItems).mockReturnValue(
-    Array.from({ length: 17 }, (_, index) => ({
-      food_id: String(index),
-      name: `Ingredient ${index}`,
-      weight: index + 0.5,
-    })),
+  vi.mocked(commands.shoppingList).mockResolvedValue(
+    ok(
+      Array.from({ length: 17 }, (_, index) => ({
+        food_id: String(index),
+        name: `Ingredient ${index}`,
+        weight: index + 0.5,
+      })),
+    ),
   );
   vi.stubGlobal(
     "ResizeObserver",
@@ -51,7 +41,7 @@ beforeEach(() => {
   );
 });
 
-it("loads on opening, retains column contents on height changes, and delegates closing", () => {
+it("loads on opening, retains column contents on resize and refresh, and delegates closing", async () => {
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
     function (this: HTMLElement) {
       return new DOMRect(0, 0, this.closest("dialog")?.open ? 1024 : 0, 800);
@@ -68,8 +58,16 @@ it("loads on opening, retains column contents on height changes, and delegates c
       <Shopping onClose={onClose} />
     </PaperDialog>
   );
-  const view = render(dialog);
-  expect(usePlanActions().reload).toHaveBeenCalledOnce();
+  const { result } = renderHook(usePlanActions, {
+    wrapper: ({ children }) => (
+      <AppScopes>
+        {children}
+        {dialog}
+      </AppScopes>
+    ),
+  });
+  await screen.findByText("Ingredient 16");
+  expect(commands.getPlan).toHaveBeenCalledOnce();
   expect(screen.getAllByRole("table")).toHaveLength(3);
   act(() =>
     resize(
@@ -104,10 +102,14 @@ it("loads on opening, retains column contents on height changes, and delegates c
   expect(close.getAttribute("title")).toBe("Close shopping list");
   fireEvent.click(close);
   expect(onClose).toHaveBeenCalledOnce();
-  view.unmount();
-  vi.mocked(usePlanLoading).mockReturnValue(true);
-  render(dialog);
-  expect(usePlanActions().reload).toHaveBeenCalledTimes(2);
+  const response =
+    deferred<Awaited<ReturnType<typeof commands.shoppingList>>>();
+  vi.mocked(commands.shoppingList).mockReturnValueOnce(response.promise);
+  let refreshing!: Promise<void>;
+  await act(async () => {
+    refreshing = result.current.reload();
+  });
+  expect(commands.getPlan).toHaveBeenCalledTimes(2);
   expect(screen.getAllByRole("table")).toHaveLength(3);
   expect(screen.queryByRole("status")).toBeNull();
   expect(
@@ -116,6 +118,10 @@ it("loads on opening, retains column contents on height changes, and delegates c
       .closest("[aria-busy]")
       ?.getAttribute("aria-busy"),
   ).toBe("true");
+  await act(async () => {
+    response.resolve(ok([]));
+    await refreshing;
+  });
 });
 
 it.each([
@@ -137,11 +143,22 @@ it.each([
     role: "alert",
     text: "Cannot read shopping list",
   },
-])("shows store state: $text", ({ loading, error, role, text }) => {
-  vi.mocked(usePlanShoppingItems).mockReturnValue([]);
-  vi.mocked(usePlanLoading).mockReturnValue(loading);
-  vi.mocked(usePlanError).mockReturnValue(error);
-  render(<Shopping onClose={vi.fn()} />);
+])("shows store state: $text", async ({ loading, error, role, text }) => {
+  const response =
+    deferred<Awaited<ReturnType<typeof commands.shoppingList>>>();
+  vi.mocked(commands.shoppingList).mockReturnValueOnce(response.promise);
+  render(<Shopping onClose={vi.fn()} />, { wrapper: AppScopes });
+  expect(await screen.findByRole("status")).toBeTruthy();
+  if (!loading) {
+    await act(async () => {
+      if (error)
+        response.resolve({
+          status: "error",
+          error: { kind: "storage", detail: error },
+        });
+      else response.resolve(ok([]));
+    });
+  }
   expect(screen.getByText(text)).toBeTruthy();
   expect(screen.queryAllByRole("table")).toHaveLength(0);
   if (role) expect(screen.getByRole(role).textContent).toBe(text);

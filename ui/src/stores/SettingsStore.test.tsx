@@ -1,15 +1,15 @@
-import { ImportScopes } from "../test-support/import";
+import { ok } from "../test-support/ipc";
+import { AppScopes } from "../test-support/scopes";
+import { commands } from "../api";
 import {
   useImportActions,
   useImportError,
   useImportLinkError,
 } from "./ImportStore";
-import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import {
-  SettingsScope,
   useSettingsActions,
   useSettingsCredentials,
   useSettingsError,
@@ -19,15 +19,6 @@ import {
   useSettingsSaving,
   useSettingsStartupCredentials,
 } from "./SettingsStore";
-
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
-
-vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
-
-beforeEach(() => {
-  vi.mocked(invoke).mockReset();
-  vi.mocked(openUrl).mockReset().mockResolvedValue();
-});
 
 function useSettingsSnapshot() {
   return {
@@ -43,9 +34,11 @@ function useSettingsSnapshot() {
 }
 
 it("loads, edits, saves and refreshes credentials", async () => {
-  vi.mocked(invoke).mockResolvedValue({ app_id: "app", api_key: "key" });
+  vi.mocked(commands.getCredentials).mockResolvedValue(
+    ok({ app_id: "app", api_key: "key" }),
+  );
   const { result } = renderHook(useSettingsSnapshot, {
-    wrapper: SettingsScope,
+    wrapper: AppScopes,
   });
   expect(result.current.startupCredentials).toBeNull();
   let pending: Promise<void>;
@@ -56,29 +49,30 @@ it("loads, edits, saves and refreshes credentials", async () => {
   await act(async () => pending);
   expect(result.current.loading).toBe(false);
   expect(result.current.credentials).toEqual({ app_id: "app", api_key: "key" });
-  expect(invoke).toHaveBeenCalledWith("get_credentials");
+  expect(commands.getCredentials).toHaveBeenCalledOnce();
 
   const draft = { app_id: "new-app", api_key: "new-key" };
   act(() => result.current.actions.setCredentials(draft));
   expect(result.current.credentials).toEqual(draft);
-  vi.mocked(invoke).mockResolvedValueOnce(null).mockResolvedValueOnce({
-    app_id: "persisted-app",
-    api_key: "persisted-key",
-  });
+  vi.mocked(commands.getCredentials).mockResolvedValueOnce(
+    ok({
+      app_id: "persisted-app",
+      api_key: "persisted-key",
+    }),
+  );
   act(() => {
     pending = result.current.actions.save();
     void result.current.actions.save();
   });
   expect(result.current.saving).toBe(true);
   await act(async () => pending);
-  expect(invoke).toHaveBeenCalledWith("save_credentials", {
-    credentials: draft,
-  });
-  expect(vi.mocked(invoke).mock.calls.map(([name]) => name)).toEqual([
-    "get_credentials",
-    "save_credentials",
-    "get_credentials",
-  ]);
+  expect(commands.saveCredentials).toHaveBeenCalledExactlyOnceWith(draft);
+  expect(commands.getCredentials).toHaveBeenCalledTimes(2);
+  expect(
+    vi.mocked(commands.getCredentials).mock.invocationCallOrder[1],
+  ).toBeGreaterThan(
+    vi.mocked(commands.saveCredentials).mock.invocationCallOrder[0],
+  );
   expect(result.current.credentials).toEqual({
     app_id: "persisted-app",
     api_key: "persisted-key",
@@ -96,7 +90,7 @@ it.each(
     {
       store: "settings",
       snapshot: useSettingsSnapshot,
-      wrapper: SettingsScope,
+      wrapper: AppScopes,
     },
     {
       store: "import",
@@ -107,7 +101,7 @@ it.each(
           linkError: useImportLinkError(),
         };
       },
-      wrapper: ImportScopes,
+      wrapper: AppScopes,
     },
   ].flatMap((store) =>
     [new Error("Cannot open browser"), "Cannot open browser"].map((error) => ({
@@ -119,7 +113,12 @@ it.each(
   "$store reports opener failures independently and clears them on retry: $error",
   async ({ error, snapshot, wrapper }) => {
     const { result } = renderHook(() => snapshot(), { wrapper });
-    vi.mocked(invoke).mockRejectedValueOnce(new Error("Load failed"));
+    vi.mocked(commands.getCredentials).mockRejectedValueOnce(
+      new Error("Load failed"),
+    );
+    vi.mocked(commands.supportedSites).mockRejectedValueOnce(
+      new Error("Load failed"),
+    );
     await act(() => result.current.actions.reload());
     expect(result.current.error).toBe("Load failed");
     vi.mocked(openUrl).mockRejectedValueOnce(error);
@@ -148,11 +147,16 @@ it.each([
   "preserves credentials on $operation failure and allows retry",
   async ({ operation, error, message }) => {
     const { result } = renderHook(useSettingsSnapshot, {
-      wrapper: SettingsScope,
+      wrapper: AppScopes,
     });
     const draft = { app_id: "app", api_key: "key" };
     act(() => result.current.actions.setCredentials(draft));
-    vi.mocked(invoke).mockRejectedValueOnce(error);
+    const command =
+      operation === "reload"
+        ? commands.getCredentials
+        : commands.saveCredentials;
+    if (error instanceof Error) vi.mocked(command).mockRejectedValueOnce(error);
+    else vi.mocked(command).mockResolvedValueOnce({ status: "error", error });
     await act(() => result.current.actions[operation]());
     expect(result.current.credentials).toEqual(draft);
     expect(result.current.error).toBe(message);
@@ -160,7 +164,7 @@ it.each([
     expect(result.current.loading).toBe(false);
     expect(result.current.saving).toBe(false);
     expect(result.current.startupCredentials).toBeNull();
-    vi.mocked(invoke).mockResolvedValue(draft);
+    vi.mocked(commands.getCredentials).mockResolvedValue(ok(draft));
     await act(() => result.current.actions[operation]());
     expect(result.current.error).toBeNull();
     expect(result.current.loadFailed).toBe(false);

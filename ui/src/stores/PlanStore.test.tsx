@@ -1,3 +1,4 @@
+import { ok } from "../test-support/ipc";
 import { act, renderHook } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import {
@@ -7,8 +8,8 @@ import {
   type WeeklyPlan,
 } from "../api";
 import type { RecipeDragPayload } from "../lib/recipeDrag";
+import { AppScopes } from "../test-support/scopes";
 import {
-  PlanScope,
   usePlanActions,
   usePlanDayTotals,
   usePlanError,
@@ -16,20 +17,6 @@ import {
   usePlanShoppingItems,
   usePlanWeeklyPlan,
 } from "./PlanStore";
-
-vi.mock("../api", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../api")>()),
-  commands: {
-    getPlan: vi.fn(),
-    addToDay: vi.fn(),
-    moveMeal: vi.fn(),
-    removeFromDay: vi.fn(),
-    clearDay: vi.fn(),
-    copyPreviousDay: vi.fn(),
-    dayTotals: vi.fn(),
-    shoppingList: vi.fn(),
-  },
-}));
 
 interface CommandCase {
   command: (typeof commands)[keyof ReturnType<typeof usePlanActions> &
@@ -40,7 +27,6 @@ interface CommandCase {
 }
 
 function mountPlan() {
-  vi.resetAllMocks();
   const plan: WeeklyPlan = {
     days: [["soup", "salad"], ["soup"], [], [], [], []],
   };
@@ -63,15 +49,11 @@ function mountPlan() {
     totalNutrientsKCal: {},
   };
   const shoppingItems = [{ food_id: "tomato", name: "Tomatoes", weight: 125 }];
-  vi.mocked(commands.getPlan).mockResolvedValue({ status: "ok", data: plan });
-  vi.mocked(commands.dayTotals).mockImplementation(async (day) => ({
-    status: "ok",
-    data: { ...analysis, calories: day * 100 },
-  }));
-  vi.mocked(commands.shoppingList).mockResolvedValue({
-    status: "ok",
-    data: shoppingItems,
-  });
+  vi.mocked(commands.getPlan).mockResolvedValue(ok(plan));
+  vi.mocked(commands.dayTotals).mockImplementation(async (day) =>
+    ok({ ...analysis, calories: day * 100 }),
+  );
+  vi.mocked(commands.shoppingList).mockResolvedValue(ok(shoppingItems));
   const hook = renderHook(
     () => ({
       actions: usePlanActions(),
@@ -81,7 +63,7 @@ function mountPlan() {
       loading: usePlanLoading(),
       error: usePlanError(),
     }),
-    { wrapper: PlanScope },
+    { wrapper: AppScopes },
   );
   const replacementAnalysis = { ...analysis, calories: 999 };
   const replacementShoppingItems = shoppingItems.map((item) => ({
@@ -93,18 +75,11 @@ function mountPlan() {
     await act(async () => {
       await hook.result.current.actions.reload();
     });
-    vi.mocked(commands.dayTotals).mockResolvedValue({
-      status: "ok",
-      data: replacementAnalysis,
-    });
-    vi.mocked(commands.shoppingList).mockResolvedValue({
-      status: "ok",
-      data: replacementShoppingItems,
-    });
-    vi.mocked(commands.clearDay).mockResolvedValueOnce({
-      status: "ok",
-      data: changed,
-    });
+    vi.mocked(commands.dayTotals).mockResolvedValue(ok(replacementAnalysis));
+    vi.mocked(commands.shoppingList).mockResolvedValue(
+      ok(replacementShoppingItems),
+    );
+    vi.mocked(commands.clearDay).mockResolvedValueOnce(ok(changed));
   }
   return {
     ...hook,
@@ -162,7 +137,7 @@ it.each([
   "stores command result and refreshes all projections ($args)",
   async ({ command, run, args, getPlanCalls }) => {
     const { result, plan, analysis, shoppingItems } = mountPlan();
-    vi.mocked(command).mockResolvedValue({ status: "ok", data: plan });
+    vi.mocked(command).mockResolvedValue(ok(plan));
     expect(result.current.plan.days).toEqual([[], [], [], [], [], []]);
     await act(async () => {
       await run(result.current.actions);
@@ -329,14 +304,8 @@ it.each([
   "handles $name through plan actions",
   async ({ from, target, expectedMove, expectedAdd, refreshes }) => {
     const { result, plan } = mountPlan();
-    vi.mocked(commands.addToDay).mockResolvedValue({
-      status: "ok",
-      data: plan,
-    });
-    vi.mocked(commands.moveMeal).mockResolvedValue({
-      status: "ok",
-      data: plan,
-    });
+    vi.mocked(commands.addToDay).mockResolvedValue(ok(plan));
+    vi.mocked(commands.moveMeal).mockResolvedValue(ok(plan));
     const payload: RecipeDragPayload = { recipeId: "soup", position: from };
     await act(async () => {
       await result.current.actions.dropRecipe(payload, target);
@@ -355,7 +324,7 @@ it.each([
     delay: (wait: Promise<void>, analysis: AnalysisResponse) =>
       vi.mocked(commands.dayTotals).mockImplementationOnce(async () => {
         await wait;
-        return { status: "ok", data: analysis };
+        return ok(analysis);
       }),
   },
   {
@@ -368,10 +337,7 @@ it.each([
     ) =>
       vi.mocked(commands.shoppingList).mockImplementationOnce(async () => {
         await wait;
-        return {
-          status: "ok",
-          data: shopping,
-        };
+        return ok(shopping);
       }),
   },
 ])(
@@ -427,10 +393,7 @@ it("serializes reload and mutations so an older snapshot cannot replace a mutati
   );
   vi.mocked(commands.getPlan).mockReturnValueOnce(deferred);
   const changed: WeeklyPlan = { days: [[], ["salad"], [], [], [], []] };
-  vi.mocked(commands.moveMeal).mockResolvedValueOnce({
-    status: "ok",
-    data: changed,
-  });
+  vi.mocked(commands.moveMeal).mockResolvedValueOnce(ok(changed));
   let reload: Promise<void>;
   let move: Promise<void>;
   await act(async () => {
@@ -443,7 +406,7 @@ it("serializes reload and mutations so an older snapshot cannot replace a mutati
   expect(result.current.loading).toBe(true);
   expect(commands.moveMeal).not.toHaveBeenCalled();
   await act(async () => {
-    resolvePlan({ status: "ok", data: plan });
+    resolvePlan(ok(plan));
     await reload;
     await move;
   });

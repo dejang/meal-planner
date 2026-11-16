@@ -1,33 +1,38 @@
+import { ok } from "../../test-support/ipc";
+import { AppScopes } from "../../test-support/scopes";
+import { commands } from "../../api";
+import { recipe } from "../../api/fixtures";
+import { useRecipesActions } from "../../stores/RecipesStore";
 import { DndContext } from "@dnd-kit/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, renderHook, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import MealCard from "./MealCard";
 
-const removeFromDay = vi.hoisted(() => vi.fn());
-
-vi.mock("../../stores/EditorStore", () => ({
-  useEditorActions: () => ({ openRecipe: vi.fn() }),
-}));
-vi.mock("../../stores/PlanStore", () => ({
-  usePlanActions: () => ({ removeFromDay }),
-}));
-vi.mock("../../stores/RecipesStore", () => ({
-  useRecipe: () => ({ title: "Soup" }),
-}));
-
-it("opens meal actions outside the draggable scroll column and restores focus on Escape", () => {
-  const { container } = render(
-    <DndContext>
-      <div className="planner-day-scroll">
-        <MealCard recipeId="soup" position={{ day: 1, row: 2 }} />
-      </div>
-    </DndContext>,
+it("opens meal actions outside the draggable scroll column and restores focus on Escape", async () => {
+  vi.mocked(commands.listRecipes).mockResolvedValue(
+    ok([recipe({ id: "soup" })]),
   );
+  vi.mocked(commands.removeFromDay).mockResolvedValue(
+    ok({ days: [[], [], [], [], [], []] }),
+  );
+  const { result } = renderHook(useRecipesActions, {
+    wrapper: ({ children }) => (
+      <AppScopes>
+        {children}
+        <DndContext>
+          <div className="planner-day-scroll">
+            <MealCard recipeId="soup" position={{ day: 1, row: 2 }} />
+          </div>
+        </DndContext>
+      </AppScopes>
+    ),
+  });
+  await act(() => result.current.reload());
   const card = screen.getByRole("button", { name: "Soup" });
   fireEvent.contextMenu(card, { clientX: 30, clientY: 40 });
   const menu = screen.getByRole("menu", { name: "Meal actions" });
   expect(menu.parentElement).toBe(document.body);
-  expect(container.contains(menu)).toBe(false);
+  expect(card.contains(menu)).toBe(false);
   expect(menu.closest('[role="button"]')).toBeNull();
   expect(menu.style.left).toBe("30px");
   expect(menu.style.top).toBe("40px");
@@ -57,7 +62,12 @@ it("opens meal actions outside the draggable scroll column and restores focus on
     relatedTarget: null,
   });
   fireEvent.mouseUp(removeAction);
-  fireEvent.click(removeAction);
-  expect(removeFromDay).toHaveBeenCalledExactlyOnceWith({ day: 1, row: 2 });
+  await act(async () => {
+    fireEvent.click(removeAction);
+  });
+  expect(commands.removeFromDay).toHaveBeenCalledExactlyOnceWith({
+    day: 1,
+    row: 2,
+  });
   expect(screen.queryByRole("menu")).toBeNull();
 });
