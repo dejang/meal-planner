@@ -1,0 +1,18 @@
+id: no-relative-imports-css
+language: css
+severity: error
+message: "Use the @/ alias for local stylesheets and assets instead of relative paths."
+files:
+  - "ui/src/**"
+rule:
+  any:
+    - all:
+        - kind: import_statement
+        - regex: '^@import\s+["'']'
+        - not:
+            regex: '^@import\s+["''](@/|[a-zA-Z][a-zA-Z0-9+.-]*:|#)'
+    - all:
+        - kind: call_expression
+        - regex: '(?i)^url\('
+        - not:
+            regex: '(?i)^url\(\s*["'']?(@/|[a-z][a-z0-9+.-]*:|#)'

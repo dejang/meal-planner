@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Button, ButtonVariant } from "../../components/Button";
-import { TextInput } from "../../components/TextInput";
+import { Button, ButtonVariant } from "@/components/Button";
+import { TextInput } from "@/components/TextInput";
 import {
   useImportActions,
   useImportError,
@@ -8,8 +8,8 @@ import {
   useImportImporting,
   useImportSupportedSites,
   useImportUrl,
-} from "../../stores/ImportStore";
-import "./import.css";
+} from "@/stores/ImportStore";
+import "@/features/import/import.css";
 
 export default function Import() {
   const actions = useImportActions();

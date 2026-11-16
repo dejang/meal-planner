@@ -26,9 +26,12 @@ run `pnpm tauri build`. The executable is written to `target/release/` and
 platform installers to `target/release/bundle/`. The root pnpm workspace installs
 both the desktop CLI and the frontend dependencies; Tauri starts Vite automatically.
 
-Run `./check.sh` for workspace fmt, clippy, build and tests, frontend
-typecheck and Vitest, and a Tauri build. Install the prerequisites and frontend
-dependencies first.
+Run `pnpm run check:fast` for workspace fmt, clippy and tests (including bindings
+freshness), plus frontend typecheck, ESLint, Prettier and Vitest. `./check.sh` also
+runs ast-grep tests/scanning, a workspace build and a Tauri build.
+Install the prerequisites and frontend dependencies first. The full check requires
+`ast-grep` on PATH from `@ast-grep/cli@0.41.0`, matching CI; for example, install it
+with `pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.41.0`.
 
 ## Desktop data and manual checks
 

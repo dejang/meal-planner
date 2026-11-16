@@ -1,11 +1,10 @@
-import { ok } from "../test-support/ipc";
-import { AppScopes } from "../test-support/scopes";
-import { commands } from "../api";
+import { commands, ok } from "@/test-support/ipc";
+import { AppScopes } from "@/test-support/scopes";
 import {
   useImportActions,
   useImportError,
   useImportLinkError,
-} from "./ImportStore";
+} from "@/stores/ImportStore";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { act, renderHook } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
@@ -18,7 +17,7 @@ import {
   useSettingsLinkError,
   useSettingsSaving,
   useSettingsStartupCredentials,
-} from "./SettingsStore";
+} from "@/stores/SettingsStore";
 
 function useSettingsSnapshot() {
   return {

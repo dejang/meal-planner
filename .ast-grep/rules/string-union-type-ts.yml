@@ -3,11 +3,10 @@ language: ts
 severity: error
 message: "A closed set of string values is a regular string `enum`: not a union of string literals, and never a `const enum`, as Vite transpiles one file at a time (T2)."
 files:
-  - "ui/src/kit/**"
+  - "ui/src/components/**"
   - "ui/src/stores/**"
-  - "ui/src/organisms/**"
-  - "ui/src/pages/**"
-  - "ui/src/lib/live.ts"
+  - "ui/src/features/**"
+  - "ui/src/mobile/**"
 # A union that mixes in any other type (`MenuItem | MenuSeparator`, `"a" | null`) is allowed.
 utils:
   string-member:

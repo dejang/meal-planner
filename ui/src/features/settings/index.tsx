@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button, ButtonVariant } from "../../components/Button";
-import { PaperDialog } from "../../components/PaperDialog";
-import { TextInput } from "../../components/TextInput";
+import { Button, ButtonVariant } from "@/components/Button";
+import { PaperDialog } from "@/components/PaperDialog";
+import { TextInput } from "@/components/TextInput";
 import {
   useSettingsActions,
   useSettingsCredentials,
@@ -11,8 +11,8 @@ import {
   useSettingsLinkError,
   useSettingsSaving,
   useSettingsStartupCredentials,
-} from "../../stores/SettingsStore";
-import "./settings.css";
+} from "@/stores/SettingsStore";
+import "@/features/settings/settings.css";
 
 export default function Settings() {
   const credentials = useSettingsCredentials();

@@ -3,10 +3,10 @@ language: tsx
 severity: error
 message: "Module-level `const` holding a literal value. Values come in as props or from `AppConfig` (L6)."
 files:
-  - "ui/src/kit/**"
+  - "ui/src/components/**"
   - "ui/src/stores/**"
-  - "ui/src/organisms/**"
-  - "ui/src/pages/**"
+  - "ui/src/features/**"
+  - "ui/src/mobile/**"
 # A literal seen through `as`, `satisfies` and parentheses (`[…] as const`) counts too,
 # as does a negative number.
 utils:

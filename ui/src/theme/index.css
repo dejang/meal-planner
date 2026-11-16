@@ -1,4 +1,4 @@
-@import "./fonts.css";
+@import "@/theme/fonts.css";
 
 :root {
   --paper: #f6f4eb;

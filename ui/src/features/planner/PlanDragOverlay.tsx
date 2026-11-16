@@ -1,9 +1,6 @@
 import { DragOverlay, useDndContext } from "@dnd-kit/core";
-import {
-  isGalleryRecipeDrag,
-  type RecipeDragPayload,
-} from "../../lib/recipeDrag";
-import { MealTitle } from "./MealCard";
+import { isGalleryRecipeDrag, type RecipeDragPayload } from "@/lib/recipeDrag";
+import { MealTitle } from "@/features/planner/MealCard";
 
 export function PlanDragOverlay() {
   const { active } = useDndContext();

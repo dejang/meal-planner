@@ -1,7 +1,7 @@
 id: store-imports-tsx
 valid:
   - |
-    import { Badge } from "@/kit/atoms/badge";
+    import { Badge } from "@/components/Badge";
   - |
     import { thing } from "@/storesque";
 invalid:

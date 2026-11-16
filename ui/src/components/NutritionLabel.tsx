@@ -1,10 +1,12 @@
-import type { AnalysisResponse, Nutrient } from "../api";
-import { caloriesPerServing, servingsDivisor } from "../lib/nutrition";
+import type { AnalysisResponse, Nutrient } from "@/api";
+import { caloriesPerServing, servingsDivisor } from "@/lib/nutrition";
 
 export interface NutritionLabelProps {
   analysis: AnalysisResponse;
   servings?: number;
   servingsLabel?: string;
+  rows?: NutritionRow[];
+  nutrientGroups?: string[][];
 }
 
 interface NutritionRow {
@@ -14,31 +16,6 @@ interface NutritionRow {
   daily?: boolean;
 }
 
-const rows: NutritionRow[] = [
-  { code: "FAT", label: "Total Fat", daily: true },
-  { code: "FASAT", label: "Saturated Fat", child: true, daily: true },
-  { code: "FATRN", label: "Trans Fat", child: true },
-  { code: "CHOLE", label: "Cholesterol", daily: true },
-  { code: "NA", label: "Sodium", daily: true },
-  { code: "CHOCDF", label: "Total Carbohydrate", daily: true },
-  { code: "FIBTG", label: "Dietary Fiber", child: true, daily: true },
-  { code: "SUGAR", label: "Total Sugars", child: true },
-  { code: "PROCNT", label: "Protein", daily: true },
-];
-const vitaminCodes = [
-  "VITA_RAE",
-  "THIA",
-  "RIBF",
-  "NIA",
-  "VITB6A",
-  "VITB12",
-  "VITC",
-  "VITD",
-  "TOCPHA",
-  "VITK1",
-];
-const mineralCodes = ["CA", "MG", "ZN", "FE", "P", "K", "NA", "FOLDFE"];
-
 function quantity(nutrient: Nutrient | undefined, servings: number): string {
   return `${Math.floor(Math.ceil(Math.abs(nutrient?.quantity ?? 0)) / servings)}${nutrient?.unit ?? ""}`;
 }
@@ -47,6 +24,32 @@ export function NutritionLabel({
   analysis,
   servings = 1,
   servingsLabel = "Amount per day",
+  rows = [
+    { code: "FAT", label: "Total Fat", daily: true },
+    { code: "FASAT", label: "Saturated Fat", child: true, daily: true },
+    { code: "FATRN", label: "Trans Fat", child: true },
+    { code: "CHOLE", label: "Cholesterol", daily: true },
+    { code: "NA", label: "Sodium", daily: true },
+    { code: "CHOCDF", label: "Total Carbohydrate", daily: true },
+    { code: "FIBTG", label: "Dietary Fiber", child: true, daily: true },
+    { code: "SUGAR", label: "Total Sugars", child: true },
+    { code: "PROCNT", label: "Protein", daily: true },
+  ],
+  nutrientGroups = [
+    [
+      "VITA_RAE",
+      "THIA",
+      "RIBF",
+      "NIA",
+      "VITB6A",
+      "VITB12",
+      "VITC",
+      "VITD",
+      "TOCPHA",
+      "VITK1",
+    ],
+    ["CA", "MG", "ZN", "FE", "P", "K", "NA", "FOLDFE"],
+  ],
 }: NutritionLabelProps) {
   const divisor = servingsDivisor(servings);
   return (
@@ -82,7 +85,7 @@ export function NutritionLabel({
       <hr />
       <details>
         <summary className="button">Nutrients</summary>
-        {[vitaminCodes, mineralCodes].map((codes, index) => (
+        {nutrientGroups.map((codes, index) => (
           <div key={index} className="nutrition-group">
             {codes.map((code) => (
               <div key={code} className="nutrition-row text-small">

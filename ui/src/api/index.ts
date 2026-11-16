@@ -1,7 +1,6 @@
-import { convertFileSrc } from "@tauri-apps/api/core";
-import type { Error as ApiError } from "./bindings";
+import type { Error as ApiError } from "@/api/bindings";
 
-export * from "./bindings";
+export * from "@/api/bindings";
 
 export function unwrap<T>(
   result: { status: "ok"; data: T } | { status: "error"; error: ApiError },
@@ -14,8 +13,4 @@ export function unwrap<T>(
     );
   }
   return result.data;
-}
-
-export function imageUrl(recipeId: string, version: string): string {
-  return `${convertFileSrc(recipeId, "image")}?v=${encodeURIComponent(version)}`;
 }

@@ -16,8 +16,8 @@ Use `.on-forest` on forest surfaces for contrasting buttons, focus outlines and 
 
 ## Responsibilities
 
-- Provide consistent visual tokens and styles to shared components, kit UI, features,
-  organisms, and pages.
+- Provide consistent visual tokens and styles to components, features, mobile UI
+  and the application shell.
 - Keep theme definitions independent of the current recipe, meal plan, or screen.
 - Accept any application-controlled theme choice through props or configuration
   rather than importing a store to read it.
@@ -26,10 +26,10 @@ Feature CSS belongs alongside its feature entry point; shell layout belongs in `
 
 ## Keep out
 
-- Imports of stores, organisms, pages, routing, or live transport.
+- Imports of stores, features, mobile UI or routing.
 - Runtime API calls and domain-state ownership.
-- Feature-specific UI markup that belongs in features, kit UI, or organisms.
+- UI markup that belongs in components, features or mobile UI.
 
-Relevant rules: `store-imports-*`, `api-imports-*`, `live-imports-*`, and
-`router-imports-*`. These enforce part of the intended separation; see the
-[source overview](../README.md) for current coverage limitations.
+Relevant rules: `store-imports-*`, `api-imports-*`, and `router-imports-*`.
+These enforce import boundaries; see the [source overview](../README.md)
+for the dependency direction.

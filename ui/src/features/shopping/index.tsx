@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { PaperWindowHeader } from "../../components/PaperDialog";
+import { PaperWindowHeader } from "@/components/PaperDialog";
 import {
   usePlanActions,
   usePlanError,
   usePlanLoading,
   usePlanShoppingItems,
-} from "../../stores/PlanStore";
-import { formatWeight, shoppingColumns } from "./layout";
-import "./shopping.css";
+} from "@/stores/PlanStore";
+import { formatWeight, shoppingColumns } from "@/features/shopping/layout";
+import "@/features/shopping/shopping.css";
 
 interface ShoppingProps {
   onClose: () => void;

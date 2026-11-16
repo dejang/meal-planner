@@ -1,0 +1,44 @@
+id: no-relative-imports-css
+snapshots:
+  "@import \"base.css\";\n":
+    labels:
+    - source: '@import "base.css";'
+      style: primary
+      start: 0
+      end: 19
+  ".card { background: url(bg.png); }\n":
+    labels:
+    - source: url(bg.png)
+      style: primary
+      start: 20
+      end: 31
+  ".card { background: url(\"fonts/x.ttf\"); }\n":
+    labels:
+    - source: url("fonts/x.ttf")
+      style: primary
+      start: 20
+      end: 38
+  "@import \"./base.css\";\n":
+    labels:
+    - source: '@import "./base.css";'
+      style: primary
+      start: 0
+      end: 21
+  "@import url('../base.css');\n":
+    labels:
+    - source: url('../base.css')
+      style: primary
+      start: 8
+      end: 26
+  ".card { background: url(../bg.png); }\n":
+    labels:
+    - source: url(../bg.png)
+      style: primary
+      start: 20
+      end: 34
+  ".card { background: url(\"./bg.png\"); }\n":
+    labels:
+    - source: url("./bg.png")
+      style: primary
+      start: 20
+      end: 35

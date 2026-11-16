@@ -27,14 +27,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --dir ui run typecheck
-      - run: pnpm --dir ui test
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
-      - run: cargo build --locked --workspace --all-targets --all-features
-      - run: cargo test --locked --workspace --all-targets --all-features
-      - run: cargo test --locked --workspace --doc
-      - run: pnpm tauri build --no-bundle --debug
+      - run: pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.41.0
+      - run: ./check.sh
 
   build:
     name: Build ${{ matrix.target }}

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useLayoutEffect, useRef } from "react";
 import { expect, it, vi } from "vitest";
-import { PaperDialog, PaperWindowHeader } from "./PaperDialog";
+import { PaperDialog, PaperWindowHeader } from "@/components/PaperDialog";
 
 it.each([
   { label: undefined, expected: "Close" },

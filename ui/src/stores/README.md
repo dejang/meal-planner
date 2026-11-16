@@ -29,8 +29,8 @@ with cleanup for StrictMode remounts; feature effects request initial reloads as
 - Use function declarations for exported scopes and hooks, not exported arrow values.
 - Keep store classes, instances, React contexts, and raw getters private.
 - Expose useful actions and selections rather than making callers manipulate state.
-- Call `api/` and, when needed, `lib/live.ts` here. UI callers use store hooks instead
-  of performing persistence or transport work themselves.
+- Call `api/` here. UI callers use store hooks instead of performing persistence
+  or transport work themselves.
 - Keep logic that reads or writes store state on the owning store, not in module-level
   helpers taking a store or its state as an argument.
 - Receive configuration rather than declaring module-level literal constants.

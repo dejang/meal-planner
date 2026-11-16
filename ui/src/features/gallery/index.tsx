@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Icon, IconName } from "../../components/Icon";
-import { Button } from "../../components/Button";
-import { TextInput } from "../../components/TextInput";
+import { Icon, IconName } from "@/components/Icon";
+import { Button } from "@/components/Button";
+import { TextInput } from "@/components/TextInput";
 import {
   useRecipe,
   useRecipesActions,
@@ -10,11 +10,11 @@ import {
   useRecipesQuery,
   useRecipesSelectedId,
   useRecipesVisibleIds,
-} from "../../stores/RecipesStore";
-import { RecipeCard } from "./RecipeCard";
-import { RecipeDragOverlay } from "./RecipeDragOverlay";
-import { RecipeDetail } from "./RecipeDetail";
-import "./gallery.css";
+} from "@/stores/RecipesStore";
+import { RecipeCard } from "@/features/gallery/RecipeCard";
+import { RecipeDragOverlay } from "@/features/gallery/RecipeDragOverlay";
+import { RecipeDetail } from "@/features/gallery/RecipeDetail";
+import "@/features/gallery/gallery.css";
 
 export default function Gallery() {
   const ids = useRecipesVisibleIds();

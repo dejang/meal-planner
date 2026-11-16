@@ -10,9 +10,6 @@ draft-state contract. Feature-specific state and actions remain in their owning 
   This directory is exempt from `store-exports-*`, not from all store rules.
 - UI modules must consume public store hooks rather than importing core implementations.
 - Expose types and enums needed by UI through the owning public store module.
-- The organism import rules reserve a type-only exception for `stores/core/draft`.
-  If introduced, that module holds the shared draft contract; it is not permission
-  to expose live store objects or mutation access to rendering code.
 
 ## Keep out
 

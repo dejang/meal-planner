@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
-import type { AnalysisResponse } from "../api";
-import { NutritionLabel } from "./NutritionLabel";
+import type { AnalysisResponse } from "@/api";
+import { NutritionLabel } from "@/components/NutritionLabel";
 
 it.each([
   {
@@ -13,6 +13,20 @@ it.each([
     fat: "6g",
     daily: "8%",
     vitamin: "51%",
+  },
+  {
+    name: "configured nutrient layout",
+    inputCalories: 503,
+    props: {
+      rows: [{ code: "FAT", label: "Total Fat", daily: true }],
+      nutrientGroups: [["VITC", "CA"]],
+    },
+    caption: "Amount per day",
+    calories: "503",
+    fat: "12g",
+    daily: "16%",
+    vitamin: "102%",
+    omittedRows: ["Trans Fat", "Vitamin D"],
   },
   {
     name: "day totals",
@@ -46,7 +60,16 @@ it.each([
   },
 ])(
   "renders $name with legacy rounding and collapsible micronutrients",
-  ({ props, caption, inputCalories, calories, fat, daily, vitamin }) => {
+  ({
+    props,
+    caption,
+    inputCalories,
+    calories,
+    fat,
+    daily,
+    vitamin,
+    omittedRows,
+  }) => {
     const analysis: AnalysisResponse = {
       uri: "",
       yield: 2,
@@ -70,6 +93,7 @@ it.each([
         FAT: { label: "Fat", quantity: 15.1, unit: "%" },
         VITC: { label: "Vitamin C", quantity: 101.2, unit: "%" },
         CA: { label: "Calcium", quantity: 7.2, unit: "%" },
+        VITD: { label: "Vitamin D", quantity: 5, unit: "%" },
       },
     };
     render(<NutritionLabel analysis={analysis} {...props} />);
@@ -88,6 +112,9 @@ it.each([
     expect(screen.getByText("Vitamin C")).toBeTruthy();
     expect(screen.getByText(vitamin)).toBeTruthy();
     expect(screen.getByText("Calcium")).toBeTruthy();
+    for (const label of omittedRows ?? []) {
+      expect(screen.queryByText(label)).toBeNull();
+    }
     fireEvent.click(screen.getByText("Nutrients"));
     expect(disclosure?.open).toBe(false);
   },

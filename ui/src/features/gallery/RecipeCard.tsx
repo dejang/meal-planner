@@ -1,9 +1,9 @@
 import { useDraggable } from "@dnd-kit/core";
-import { caloriesPerServing } from "../../lib/nutrition";
-import { RecipePhoto } from "../../components/RecipePhoto";
-import { Button, ButtonVariant } from "../../components/Button";
-import type { RecipeDragPayload } from "../../lib/recipeDrag";
-import { useRecipe, useRecipesActions } from "../../stores/RecipesStore";
+import { caloriesPerServing } from "@/lib/nutrition";
+import { RecipePhoto } from "@/components/RecipePhoto";
+import { Button, ButtonVariant } from "@/components/Button";
+import type { RecipeDragPayload } from "@/lib/recipeDrag";
+import { useRecipe, useRecipesActions } from "@/stores/RecipesStore";
 
 export function RecipeCard({
   id,

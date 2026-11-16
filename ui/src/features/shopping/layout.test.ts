@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import type { ShoppingItem } from "../../api";
-import { formatWeight, shoppingColumns } from "./layout";
+import type { ShoppingItem } from "@/api";
+import { formatWeight, shoppingColumns } from "@/features/shopping/layout";
 
 it.each<[number, string]>([
   [0, "0 g"],

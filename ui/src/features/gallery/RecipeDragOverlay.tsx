@@ -1,11 +1,8 @@
 import { DragOverlay, useDndContext } from "@dnd-kit/core";
 import { getEventCoordinates } from "@dnd-kit/utilities";
-import { RecipePhoto } from "../../components/RecipePhoto";
-import {
-  isGalleryRecipeDrag,
-  type RecipeDragPayload,
-} from "../../lib/recipeDrag";
-import { useRecipe } from "../../stores/RecipesStore";
+import { RecipePhoto } from "@/components/RecipePhoto";
+import { isGalleryRecipeDrag, type RecipeDragPayload } from "@/lib/recipeDrag";
+import { useRecipe } from "@/stores/RecipesStore";
 
 export function RecipeDragOverlay() {
   const { active } = useDndContext();

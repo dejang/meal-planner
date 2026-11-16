@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { RecipePhoto } from "./RecipePhoto";
+import { RecipePhoto } from "@/components/RecipePhoto";
 
 vi.mock("@tauri-apps/api/core", () => ({
   convertFileSrc: (id: string) => `image://${id}`,

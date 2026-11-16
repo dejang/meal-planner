@@ -1,9 +1,8 @@
-import { ok } from "../test-support/ipc";
+import { commands, ok } from "@/test-support/ipc";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { commands } from "../api";
-import { deferred, recipe } from "../api/fixtures";
-import { AppScopes } from "../test-support/scopes";
+import { deferred, recipe } from "@/test-support/fixtures";
+import { AppScopes } from "@/test-support/scopes";
 import {
   useRecipe,
   useRecipesActions,
@@ -12,7 +11,7 @@ import {
   useRecipesQuery,
   useRecipesSelectedId,
   useRecipesVisibleIds,
-} from "./RecipesStore";
+} from "@/stores/RecipesStore";
 
 function useGalleryState() {
   const selectedId = useRecipesSelectedId();

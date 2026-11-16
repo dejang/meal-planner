@@ -201,8 +201,9 @@ owns shell/drawer state; F-360 Explorer, F-361 recipe drawer and F-362 planner s
 the existing store contracts and the primitives in `components/mobile/`.
 Do not append exact method/state inventories to the central stores README as waves land.
 
-Use `test-support/ipc.ts` and `AppScopes` for feature/store tests. Override typed
-`commands` results (`ok(data)` or a typed error result) and plugin boundaries, not
+Import `commands` and `ok` from `@/test-support/ipc` and `AppScopes` from
+`@/test-support/scopes` for feature/store tests, not runtime values from `@/api`.
+Override typed command results (`ok(data)` or a typed error result) and plugin boundaries, not
 hand-written `use*Actions()` object literals. Test rendered states, navigation,
 drawer transitions, plan updates and errors through real scopes. Parameterize input
 variations rather than repeating tests for the same path.

@@ -15,17 +15,18 @@ clients only if the application actually needs them.
 
 - Stores are the application callers of runtime API operations. UI changes go through
   store actions rather than invoking the desktop/backend directly.
-- Other layers may use type-only contracts where their rules permit them; `kit/`
-  must stay independent of this folder, including API types.
-- Do not import stores, organisms, pages, or routing back into this layer.
+- Components, features and mobile composition may use type-only API contracts.
+- Do not import stores, UI components, features or routing back into this layer.
 - Do not own React state, optimistic updates, or cache lifetime here; those belong
   to the store coordinating the operation.
 
 `bindings.ts` is generated from the registered Tauri commands; do not edit it by hand.
-Import bindings, the versioned `imageUrl` helper, and shared `unwrap` through `index.ts`.
+Import bindings and shared `unwrap` through `index.ts`.
+Versioned image URL formatting lives in `lib/imageUrl.ts`.
 `unwrap` returns command result data on success or throws an Error with the error's
 `detail`, or a readable storage-unavailable message for `lock_poisoned`. Regeneration and
 freshness-check commands are documented in the repository README.
 
-The current `api-imports-*` rules cover selected caller paths and aliases, not every
-possible import. See the [source overview](../README.md) for that limitation.
+The `api-imports-*` rules cover components, features, mobile, theme and the TSX shell,
+checking `@/api` imports. Separate path-style rules reject relative imports throughout
+`ui/src/`. See the [source overview](../README.md).

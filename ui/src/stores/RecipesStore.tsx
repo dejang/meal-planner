@@ -4,10 +4,10 @@ import {
   createKeyedSelectorHook,
   Store,
 } from "bonsai-react";
-import { commands, unwrap, type Recipe } from "../api";
-import { createStoreContext } from "./core/context";
-import { errorMessage } from "./core/error";
-import { usePlanActions } from "./PlanStore";
+import { commands, unwrap, type Recipe } from "@/api";
+import { createStoreContext } from "@/stores/core/context";
+import { errorMessage } from "@/stores/core/error";
+import { usePlanActions } from "@/stores/PlanStore";
 
 export interface RecipesState {
   recipes: Record<string, Recipe>;

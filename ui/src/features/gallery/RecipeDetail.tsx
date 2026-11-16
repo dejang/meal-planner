@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import type { Recipe } from "../../api";
-import { Button } from "../../components/Button";
-import { NutritionLabel } from "../../components/NutritionLabel";
-import { PaperWindowHeader } from "../../components/PaperDialog";
-import { useEditorActions } from "../../stores/EditorStore";
-import { useRecipesActions } from "../../stores/RecipesStore";
+import type { Recipe } from "@/api";
+import { Button } from "@/components/Button";
+import { NutritionLabel } from "@/components/NutritionLabel";
+import { PaperWindowHeader } from "@/components/PaperDialog";
+import { useEditorActions } from "@/stores/EditorStore";
+import { useRecipesActions } from "@/stores/RecipesStore";
 
 export function RecipeDetail({ recipe }: { recipe: Recipe }) {
   const actions = useRecipesActions();
