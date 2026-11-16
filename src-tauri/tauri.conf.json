@@ -18,6 +18,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon-256.png", "icons/favicon.ico"]
+    "icon": ["icons/icon-256.png", "icons/favicon.ico"],
+    "iOS": {
+      "minimumSystemVersion": "15.0"
+    }
   }
 }

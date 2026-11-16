@@ -7,7 +7,7 @@ mod recipes;
 mod settings;
 
 #[cfg(any(debug_assertions, test))]
-pub(super) fn export<R: tauri::Runtime>(
+pub fn export<R: tauri::Runtime>(
     path: impl AsRef<std::path::Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     builder::<R>().export(specta_typescript::Typescript::default(), path)?;
