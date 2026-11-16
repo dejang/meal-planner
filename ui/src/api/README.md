@@ -8,7 +8,7 @@ clients only if the application actually needs them.
 
 - Hide transport names, payload encoding, response decoding, and transport errors
   behind a small typed interface.
-- Define the data contracts used at the desktop/backend seam.
+- Re-export generated Rust data contracts used at the desktop/backend seam.
 - Keep transport operations separate from React rendering and application-state policy.
 
 ## Callers and dependencies
@@ -21,6 +21,9 @@ clients only if the application actually needs them.
 - Do not own React state, optimistic updates, or cache lifetime here; those belong
   to the store coordinating the operation.
 
-This folder does not add an SDK, command implementation, or network connection.
+`bindings.ts` is generated from the registered Tauri commands; do not edit it by hand.
+Import bindings and the versioned `imageUrl` helper through `index.ts`. Regeneration
+and freshness-check commands are documented in the repository README.
+
 The current `api-imports-*` rules cover selected caller paths and aliases, not every
 possible import. See the [source overview](../README.md) for that limitation.

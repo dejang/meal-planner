@@ -9,6 +9,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Type, thiserror::Error)]
 #[serde(tag = "kind", content = "detail", rename_all = "snake_case")]
 pub enum Error {
+    #[error("Not implemented yet: {0}")]
+    NotImplemented(String),
     #[error("Recipe not found: {0}")]
     NotFound(Uuid),
     #[error("Invalid input: {0}")]
