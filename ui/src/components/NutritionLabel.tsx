@@ -1,4 +1,5 @@
 import type { AnalysisResponse, Nutrient } from "../api";
+import { caloriesPerServing, servingsDivisor } from "../lib/nutrition";
 
 export interface NutritionLabelProps {
   analysis: AnalysisResponse;
@@ -47,7 +48,7 @@ export function NutritionLabel({
   servings = 1,
   servingsLabel = "Amount per day",
 }: NutritionLabelProps) {
-  const divisor = Math.max(1, Math.trunc(servings) || 1);
+  const divisor = servingsDivisor(servings);
   return (
     <section className="nutrition-label" aria-label="Nutrition Facts">
       <div className="nutrition-facts">
@@ -56,7 +57,7 @@ export function NutritionLabel({
         <div className="nutrition-caption">{servingsLabel}</div>
         <div className="nutrition-row nutrition-calories">
           <span>Calories</span>
-          <span>{Math.floor(Math.max(0, analysis.calories) / divisor)}</span>
+          <span>{caloriesPerServing(analysis.calories, servings)}</span>
         </div>
         <hr />
         <div className="nutrition-caption nutrition-daily">% Daily Value*</div>

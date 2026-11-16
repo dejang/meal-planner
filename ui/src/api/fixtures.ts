@@ -1,6 +1,6 @@
 import type { AnalysisResponse, Recipe } from "./index";
 
-export function recipe(): Recipe {
+export function recipe(overrides: Partial<Recipe> = {}): Recipe {
   return {
     id: "recipe-1",
     title: "Soup",
@@ -9,6 +9,7 @@ export function recipe(): Recipe {
     servings: 2,
     analysis: null,
     image_version: "v1",
+    ...overrides,
   };
 }
 

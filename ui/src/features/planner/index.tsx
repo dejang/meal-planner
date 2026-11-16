@@ -1,5 +1,5 @@
-import { DragOverlay, useDndMonitor } from "@dnd-kit/core";
-import { useEffect, useState } from "react";
+import { useDndMonitor } from "@dnd-kit/core";
+import { useEffect } from "react";
 import type { MealPosition } from "../../api";
 import { Button, ButtonVariant } from "../../components/Button";
 import { Icon, IconName } from "../../components/Icon";
@@ -13,7 +13,8 @@ import {
   usePlanWeeklyPlan,
 } from "../../stores/PlanStore";
 import DropTarget from "./DropTarget";
-import MealCard, { MealTitle } from "./MealCard";
+import MealCard from "./MealCard";
+import { PlanDragOverlay } from "./PlanDragOverlay";
 import "./planner.css";
 
 export default function Planner() {
@@ -22,20 +23,13 @@ export default function Planner() {
   const loading = usePlanLoading();
   const error = usePlanError();
   const actions = usePlanActions();
-  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   useEffect(() => {
     void actions.reload();
   }, [actions]);
 
   useDndMonitor({
-    onDragStart: ({ active }) => {
-      const payload = active.data.current as RecipeDragPayload | undefined;
-      setDraggedId(payload?.position ? payload.recipeId : null);
-    },
-    onDragCancel: () => setDraggedId(null),
     onDragEnd: ({ active, over }) => {
-      setDraggedId(null);
       const payload = active.data.current as RecipeDragPayload | undefined;
       const target = over?.data.current?.position as MealPosition | undefined;
       if (!payload || !target) return;
@@ -100,13 +94,7 @@ export default function Planner() {
           </section>
         ))}
       </div>
-      <DragOverlay dropAnimation={null}>
-        {draggedId && (
-          <div className="planner-meal">
-            <MealTitle recipeId={draggedId} />
-          </div>
-        )}
-      </DragOverlay>
+      <PlanDragOverlay />
     </div>
   );
 }

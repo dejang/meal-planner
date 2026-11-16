@@ -4,8 +4,9 @@ import {
   createKeyedSelectorHook,
   Store,
 } from "bonsai-react";
-import type { Recipe } from "../api";
+import { commands, unwrap, type Recipe } from "../api";
 import { createStoreContext } from "./core/context";
+import { errorMessage } from "./core/error";
 import { usePlanActions } from "./PlanStore";
 
 export interface RecipesState {
@@ -18,6 +19,9 @@ export interface RecipesState {
 }
 
 class RecipesStore extends Store<RecipesState> {
+  private request = 0;
+  private retryFailed = (): Promise<void> => this.actions.reload();
+
   constructor(readonly plan: ReturnType<typeof usePlanActions>) {
     super({
       recipes: {},
@@ -29,13 +33,73 @@ class RecipesStore extends Store<RecipesState> {
     });
   }
 
+  private reportError(error: unknown, retry: () => Promise<void>): void {
+    this.retryFailed = retry;
+    this.update({
+      error: errorMessage(error),
+    });
+  }
+
+  private async load(refresh: boolean): Promise<void> {
+    const request = ++this.request;
+    const query = this.getSnapshot().query;
+    this.update({ loading: true, error: null });
+    try {
+      let recipes = this.getSnapshot().recipes;
+      if (refresh || !query) {
+        const result = await commands.listRecipes();
+        if (request !== this.request) return;
+        recipes = Object.fromEntries(
+          unwrap(result).map((recipe) => [recipe.id, recipe]),
+        );
+      }
+      let visibleIds = Object.keys(recipes);
+      if (query) {
+        const result = await commands.searchRecipes(query);
+        if (request !== this.request) return;
+        const matches = unwrap(result);
+        recipes = {
+          ...recipes,
+          ...Object.fromEntries(matches.map((recipe) => [recipe.id, recipe])),
+        };
+        visibleIds = matches.map((recipe) => recipe.id);
+      }
+      const selectedId = this.getSnapshot().selectedId;
+      this.update({
+        recipes,
+        visibleIds,
+        selectedId: selectedId && recipes[selectedId] ? selectedId : null,
+      });
+    } catch (error) {
+      if (request === this.request)
+        this.reportError(error, this.actions.reload);
+    } finally {
+      if (request === this.request) this.update({ loading: false });
+    }
+  }
+
   readonly actions = {
-    reload: async (): Promise<void> => {},
-    setQuery: async (_query: string): Promise<void> => {},
+    reload: (): Promise<void> => this.load(true),
+    retry: (): Promise<void> => this.retryFailed(),
+    setQuery: (query: string): Promise<void> => {
+      this.update({ query });
+      return this.load(false);
+    },
     select: (selectedId: string | null): void => {
       this.update({ selectedId });
     },
-    deleteRecipe: async (_id: string): Promise<void> => {},
+    deleteRecipe: async (id: string): Promise<void> => {
+      this.update({ error: null });
+      try {
+        const result = await commands.deleteRecipe(id);
+        unwrap(result);
+        if (this.getSnapshot().selectedId === id)
+          this.update({ selectedId: null });
+        await Promise.all([this.actions.reload(), this.plan.reload()]);
+      } catch (error) {
+        this.reportError(error, () => this.actions.deleteRecipe(id));
+      }
+    },
   };
 }
 

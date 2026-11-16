@@ -6,6 +6,7 @@ import { NutritionLabel } from "./NutritionLabel";
 it.each([
   {
     name: "per-serving analysis",
+    inputCalories: 503,
     props: { servings: 2, servingsLabel: "Per serving" },
     caption: "Per serving",
     calories: "251",
@@ -15,6 +16,7 @@ it.each([
   },
   {
     name: "day totals",
+    inputCalories: 503,
     props: {},
     caption: "Amount per day",
     calories: "503",
@@ -22,13 +24,33 @@ it.each([
     daily: "16%",
     vitamin: "102%",
   },
+  {
+    name: "fractional servings",
+    inputCalories: 503,
+    props: { servings: 2.9, servingsLabel: "Per serving" },
+    caption: "Per serving",
+    calories: "251",
+    fat: "6g",
+    daily: "8%",
+    vitamin: "51%",
+  },
+  {
+    name: "negative calories and zero servings",
+    inputCalories: -503,
+    props: { servings: 0 },
+    caption: "Amount per day",
+    calories: "0",
+    fat: "12g",
+    daily: "16%",
+    vitamin: "102%",
+  },
 ])(
   "renders $name with legacy rounding and collapsible micronutrients",
-  ({ props, caption, calories, fat, daily, vitamin }) => {
+  ({ props, caption, inputCalories, calories, fat, daily, vitamin }) => {
     const analysis: AnalysisResponse = {
       uri: "",
       yield: 2,
-      calories: 503,
+      calories: inputCalories,
       totalCO2Emissions: 0,
       co2EmissionsClass: "",
       totalWeight: 0,
@@ -51,7 +73,9 @@ it.each([
       },
     };
     render(<NutritionLabel analysis={analysis} {...props} />);
-    expect(screen.getByText(calories)).toBeTruthy();
+    const caloriesRow = screen.getByText("Calories").parentElement;
+    if (!caloriesRow) throw new Error("Missing calories row");
+    expect(within(caloriesRow).getByText(calories)).toBeTruthy();
     const fatRow = screen.getByText("Total Fat").parentElement;
     if (!fatRow) throw new Error("Missing fat row");
     expect(within(fatRow).getByText(fat)).toBeTruthy();
