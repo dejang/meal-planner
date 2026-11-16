@@ -1,13 +1,21 @@
 import { useState } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
 import { createSelectorHook, Store } from "bonsai-react";
-import type { ImportedRecipe, RecipeInput } from "../api";
+import {
+  commands,
+  unwrap,
+  type ImportedRecipe,
+  type RecipeInput,
+} from "../api";
 import { createStoreContext } from "./core/context";
+import { errorMessage } from "./core/error";
 import { usePlanActions } from "./PlanStore";
 import { useRecipesActions } from "./RecipesStore";
 
 export interface RecipeDraft extends RecipeInput {
   id: string | null;
   imageVersion: string | null;
+  imageSource: string | null;
 }
 
 export interface EditorState {
@@ -16,6 +24,26 @@ export interface EditorState {
   analyzing: boolean;
   loadingImage: boolean;
   error: string | null;
+}
+
+interface TrackedRequest {
+  sequence: number;
+}
+
+interface PendingRequest extends TrackedRequest {
+  task: Promise<void> | null;
+}
+
+interface ImageRequest extends PendingRequest {
+  source: string | null;
+}
+
+interface RequestOptions<T> {
+  tracking: TrackedRequest;
+  onBusy?: (busy: boolean) => void;
+  accept?: () => boolean;
+  request: () => Promise<Parameters<typeof unwrap<T>>[0]>;
+  apply: (data: T) => void;
 }
 
 class EditorStore extends Store<EditorState> {
@@ -32,24 +60,124 @@ class EditorStore extends Store<EditorState> {
     });
   }
 
+  private session = 0;
+  private openRequest: TrackedRequest = { sequence: 0 };
+  private loadedImageSource: string | null = null;
+  private imageRequest: ImageRequest = {
+    sequence: 0,
+    task: null,
+    source: null,
+  };
+  private analysisRequest: PendingRequest = { sequence: 0, task: null };
+
+  private setDraft(draft: RecipeDraft | null): void {
+    this.session += 1;
+    this.loadedImageSource = null;
+    this.imageRequest.task = null;
+    this.analysisRequest.task = null;
+    this.update({ draft, error: null, analyzing: false, loadingImage: false });
+  }
+
+  private get editableState(): EditorState | null {
+    const state = this.getSnapshot();
+    return state.saving ? null : state;
+  }
+
+  private trackRequest<T>(options: RequestOptions<T>): Promise<void> {
+    const { tracking, onBusy, accept, request, apply } = options;
+    const session = this.session;
+    const sequence = ++tracking.sequence;
+    const isCurrent = () =>
+      session === this.session && sequence === tracking.sequence;
+    const isAccepted = () => isCurrent() && (!accept || accept());
+    this.update({ error: null });
+    onBusy?.(true);
+    return (async () => {
+      try {
+        const data = unwrap(await request());
+        if (isAccepted()) apply(data);
+      } catch (error) {
+        if (isAccepted()) this.update({ error: errorMessage(error) });
+      } finally {
+        if (isCurrent()) onBusy?.(false);
+      }
+    })();
+  }
+
+  private cancelImageLoad(): void {
+    this.imageRequest.sequence += 1;
+    this.imageRequest.task = null;
+    this.update({ loadingImage: false });
+  }
+
+  private loadImage(
+    source: string,
+    request: () => ReturnType<typeof commands.loadImageFile>,
+  ): Promise<void> {
+    const state = this.editableState;
+    if (!state?.draft) return Promise.resolve();
+    this.actions.setImageSource(source);
+    if (state.loadingImage && this.imageRequest.source === source)
+      return this.imageRequest.task ?? Promise.resolve();
+    if (this.loadedImageSource === source) {
+      this.cancelImageLoad();
+      return Promise.resolve();
+    }
+    this.imageRequest.source = source;
+    this.imageRequest.task = this.trackRequest({
+      tracking: this.imageRequest,
+      onBusy: (loadingImage) => this.update({ loadingImage }),
+      request,
+      apply: (image) => {
+        this.loadedImageSource = source;
+        const draft = this.getSnapshot().draft;
+        if (draft)
+          this.update({
+            draft: {
+              ...draft,
+              image: { kind: "set", image },
+            },
+          });
+      },
+    });
+    return this.imageRequest.task;
+  }
+
   readonly actions = {
-    reload: async (): Promise<void> => {},
+    reload: async (): Promise<void> => {
+      const draft = this.getSnapshot().draft;
+      if (draft?.id) await this.actions.openRecipe(draft.id);
+    },
     openNew: (): void => {
-      this.update({
-        draft: {
-          id: null,
-          title: "",
-          ingredients: "",
-          instructions: "",
-          servings: 1,
-          analysis: null,
-          image: { kind: "keep" },
-          imageVersion: null,
-        },
-        error: null,
+      if (!this.editableState) return;
+      this.setDraft({
+        id: null,
+        title: "",
+        ingredients: "",
+        instructions: "",
+        servings: 1,
+        analysis: null,
+        image: { kind: "keep" },
+        imageVersion: null,
+        imageSource: null,
       });
     },
-    openRecipe: async (_id: string): Promise<void> => {},
+    openRecipe: async (id: string): Promise<void> => {
+      if (!this.editableState) return;
+      await this.trackRequest({
+        tracking: this.openRequest,
+        accept: () => this.editableState !== null,
+        request: () => commands.getRecipe(id),
+        apply: ({ image_version, ...recipe }) => {
+          this.setDraft({
+            ...recipe,
+            imageVersion: image_version,
+            imageSource: null,
+            image: { kind: "keep" },
+          });
+        },
+      });
+    },
     assertCanImport: (): void => {
       if (this.getSnapshot().draft !== null) {
         throw new Error(
@@ -59,33 +187,134 @@ class EditorStore extends Store<EditorState> {
     },
     openImported: (recipe: ImportedRecipe, sourceUrl: string): void => {
       this.actions.assertCanImport();
-      this.update({
-        draft: {
-          id: null,
-          title: recipe.title,
-          ingredients: recipe.ingredients.join("\n"),
-          instructions: `${recipe.instructions.join("\n")}\n\n${sourceUrl}`,
-          servings: recipe.servings,
-          analysis: null,
-          image: recipe.image
-            ? { kind: "set", image: recipe.image }
-            : { kind: "keep" },
-          imageVersion: null,
-        },
-        error: null,
+      this.setDraft({
+        id: null,
+        title: recipe.title,
+        ingredients: recipe.ingredients.join("\n"),
+        instructions: `${recipe.instructions.join("\n")}\n\n${sourceUrl}`,
+        servings: recipe.servings,
+        analysis: null,
+        image: recipe.image
+          ? { kind: "set", image: recipe.image }
+          : { kind: "keep" },
+        imageVersion: null,
+        imageSource: null,
       });
     },
-    close: (): void => {
-      this.update({ draft: null, error: null });
+    close: async (): Promise<void> => {
+      await this.actions.save();
     },
     patchDraft: (patch: Partial<RecipeInput>): void => {
-      const draft = this.getSnapshot().draft;
-      if (draft) this.update({ draft: { ...draft, ...patch } });
+      const draft = this.editableState?.draft;
+      if (draft) {
+        if (patch.image) {
+          this.loadedImageSource = null;
+          this.cancelImageLoad();
+        }
+        this.update({
+          draft: {
+            ...draft,
+            ...patch,
+            imageSource: patch.image ? null : draft.imageSource,
+          },
+        });
+      }
     },
-    save: async (): Promise<void> => {},
-    analyzeIngredients: async (): Promise<void> => {},
-    loadImageFile: async (_path: string): Promise<void> => {},
-    loadImageUrl: async (_url: string): Promise<void> => {},
+    setImageSource: (imageSource: string): void => {
+      const draft = this.editableState?.draft;
+      if (draft) this.update({ draft: { ...draft, imageSource } });
+    },
+    save: async (): Promise<void> => {
+      const editableDraft = this.editableState?.draft;
+      if (!editableDraft) return;
+      if (!editableDraft.id && !editableDraft.title.trim()) {
+        this.setDraft(null);
+        return;
+      }
+      this.update({ saving: true, error: null });
+      try {
+        await Promise.all([this.imageRequest.task, this.analysisRequest.task]);
+        const draft = this.getSnapshot().draft;
+        if (!draft) return;
+        const id = draft.id;
+        const input: RecipeInput = {
+          title: draft.title,
+          ingredients: draft.ingredients,
+          instructions: draft.instructions,
+          servings: draft.servings,
+          analysis: draft.analysis,
+          image: draft.image,
+        };
+        const saved = unwrap(
+          id
+            ? await commands.updateRecipe(id, input)
+            : await commands.createRecipe(input),
+        );
+        this.update({
+          draft: {
+            ...draft,
+            id: saved.id,
+            imageVersion: saved.image_version,
+            image: { kind: "keep" },
+          },
+        });
+        await Promise.all([this.recipes.reload(), this.plan.reload()]);
+        this.setDraft(null);
+      } catch (error) {
+        this.update({ error: errorMessage(error) });
+      } finally {
+        this.update({ saving: false });
+      }
+    },
+    analyzeIngredients: (): Promise<void> => {
+      const draft = this.editableState?.draft;
+      if (!draft) return Promise.resolve();
+      this.analysisRequest.task = this.trackRequest({
+        tracking: this.analysisRequest,
+        onBusy: (analyzing) => this.update({ analyzing }),
+        accept: () =>
+          this.getSnapshot().draft?.ingredients === draft.ingredients,
+        request: () =>
+          commands.analyzeIngredients(
+            draft.ingredients
+              .split("\n")
+              .map((line) => line.trim())
+              .filter(Boolean),
+          ),
+        apply: (analysis) => {
+          const current = this.getSnapshot().draft;
+          if (current) this.update({ draft: { ...current, analysis } });
+        },
+      });
+      return this.analysisRequest.task;
+    },
+    chooseImageFile: async (): Promise<void> => {
+      if (!this.editableState?.draft) return;
+      const session = this.session;
+      try {
+        const path = await open({
+          multiple: false,
+          filters: [
+            {
+              name: "Images",
+              extensions: ["png", "jpg", "jpeg", "gif", "webp"],
+            },
+          ],
+        });
+        if (typeof path === "string" && session === this.session)
+          await this.actions.loadImageFile(path);
+      } catch (error) {
+        if (session === this.session)
+          this.update({ error: errorMessage(error) });
+      }
+    },
+    loadImageFile: (path: string): Promise<void> => {
+      return this.loadImage(path, () => commands.loadImageFile(path));
+    },
+    loadImageUrl: (url: string): Promise<void> => {
+      if (!url.trim()) return Promise.resolve();
+      return this.loadImage(url, () => commands.loadImageUrl(url));
+    },
   };
 }
 
@@ -99,7 +328,7 @@ export function EditorScope({ children }: { children: React.ReactNode }) {
   return <context.Scope>{children}</context.Scope>;
 }
 
-export function useEditorDraft() {
+export function useDraftRecipe() {
   return context.useScopedHook((store) =>
     createSelectorHook(store, (state) => state.draft),
   )();

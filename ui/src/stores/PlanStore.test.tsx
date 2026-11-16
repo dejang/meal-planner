@@ -94,7 +94,8 @@ it.each([
   {
     command: "day_totals",
     error: { kind: "lock_poisoned" },
-    message: "lock_poisoned",
+    message:
+      "Recipe storage is unavailable. Please restart the app and try again.",
   },
   {
     command: "shopping_list",
