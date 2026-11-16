@@ -144,6 +144,9 @@ class EditorStore extends Store<EditorState> {
   }
 
   readonly actions = {
+    dismissError: (): void => {
+      this.update({ error: null });
+    },
     reload: async (): Promise<void> => {
       const draft = this.getSnapshot().draft;
       if (draft?.id) await this.actions.openRecipe(draft.id);
@@ -200,6 +203,7 @@ class EditorStore extends Store<EditorState> {
         imageVersion: null,
         imageSource: null,
       });
+      void this.actions.analyzeIngredients();
     },
     close: async (): Promise<void> => {
       await this.actions.save();

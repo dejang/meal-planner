@@ -6,6 +6,16 @@
   display: flex;
   flex-direction: column;
 }
+.shell-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 18px;
+  color: var(--error);
+  border-top: 1px solid var(--error);
+  background: var(--surface);
+}
 .menu-bar {
   flex: none;
   display: flex;

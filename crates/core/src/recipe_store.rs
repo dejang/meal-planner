@@ -35,8 +35,7 @@ impl RecipeStore {
             ImageChange::Keep => {}
             ImageChange::Remove => recipe.image_version = None,
             ImageChange::Set(image) => {
-                images.put(recipe.id, image)?;
-                recipe.image_version = Some(Uuid::new_v4());
+                recipe.image_version = Some(images.put(recipe.id, image)?);
             }
         }
         storage.update_recipe(&recipe)?;
@@ -386,7 +385,7 @@ mod tests {
     struct FailingImages;
 
     impl ImageStore for FailingImages {
-        fn put(&self, _id: Uuid, _image: &ResizedImage) -> Result<()> {
+        fn put(&self, _id: Uuid, _image: &ResizedImage) -> Result<Uuid> {
             Err(Error::Image("Put failed".into()))
         }
 

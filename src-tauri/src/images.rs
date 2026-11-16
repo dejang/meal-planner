@@ -19,7 +19,8 @@ impl LocalImages {
 }
 
 impl ImageStore for LocalImages {
-    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<()> {
+    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<Uuid> {
+        let version = Uuid::new_v4();
         self.connection
             .lock()?
             .execute(
@@ -34,11 +35,11 @@ impl ImageStore for LocalImages {
                     image.width,
                     image.height,
                     image.bytes,
-                    Uuid::new_v4().to_string(),
+                    version.to_string(),
                 ],
             )
             .map_err(Error::storage)?;
-        Ok(())
+        Ok(version)
     }
 
     fn get(&self, recipe_id: Uuid) -> Result<Option<ResizedImage>> {

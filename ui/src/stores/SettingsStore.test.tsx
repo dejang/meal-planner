@@ -1,3 +1,9 @@
+import { ImportScopes } from "../test-support/import";
+import {
+  useImportActions,
+  useImportError,
+  useImportLinkError,
+} from "./ImportStore";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { act, renderHook } from "@testing-library/react";
@@ -85,19 +91,45 @@ it("loads, edits, saves and refreshes credentials", async () => {
   });
 });
 
-it.each([new Error("Cannot open browser"), "Cannot open browser"])(
-  "reports opener failures and clears them on retry: %s",
-  async (error) => {
-    const { result } = renderHook(useSettingsSnapshot, {
+it.each(
+  [
+    {
+      store: "settings",
+      snapshot: useSettingsSnapshot,
       wrapper: SettingsScope,
-    });
+    },
+    {
+      store: "import",
+      snapshot: function useImportLinks() {
+        return {
+          actions: useImportActions(),
+          error: useImportError(),
+          linkError: useImportLinkError(),
+        };
+      },
+      wrapper: ImportScopes,
+    },
+  ].flatMap((store) =>
+    [new Error("Cannot open browser"), "Cannot open browser"].map((error) => ({
+      ...store,
+      error,
+    })),
+  ),
+)(
+  "$store reports opener failures independently and clears them on retry: $error",
+  async ({ error, snapshot, wrapper }) => {
+    const { result } = renderHook(() => snapshot(), { wrapper });
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("Load failed"));
+    await act(() => result.current.actions.reload());
+    expect(result.current.error).toBe("Load failed");
     vi.mocked(openUrl).mockRejectedValueOnce(error);
     await act(() => result.current.actions.openSite("https://www.edamam.com/"));
     expect(result.current.linkError).toBe("Cannot open browser");
+    expect(result.current.error).toBe("Load failed");
     await act(() => result.current.actions.openSite("https://www.edamam.com/"));
     expect(openUrl).toHaveBeenLastCalledWith("https://www.edamam.com/");
     expect(result.current.linkError).toBeNull();
-    expect(result.current.error).toBeNull();
+    expect(result.current.error).toBe("Load failed");
   },
 );
 

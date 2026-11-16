@@ -24,6 +24,7 @@ import { RecipesScope } from "./stores/RecipesStore";
 import {
   EditorScope,
   useEditorOpen,
+  useEditorError,
   useEditorActions,
 } from "./stores/EditorStore";
 import {
@@ -105,6 +106,7 @@ function Shell({
   const workspace = useRef<HTMLDivElement>(null);
   const dragging = useRef<number | null>(null);
   const editorOpen = useEditorOpen();
+  const editorError = useEditorError();
   const editor = useEditorActions();
   const importOpen = useImportOpen();
   const importer = useImportActions();
@@ -282,6 +284,14 @@ function Shell({
             </div>
           </section>
         </div>
+        {!editorOpen && editorError && (
+          <div role="alert" className="shell-error">
+            <span>{editorError}</span>
+            <Button variant={ButtonVariant.Quiet} onClick={editor.dismissError}>
+              Dismiss
+            </Button>
+          </div>
+        )}
         <Welcome />
         {shoppingOpen && (
           <PaperDialog

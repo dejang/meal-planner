@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { StrictMode, useState } from "react";
 import { expect, it, vi } from "vitest";
 import App from "./App";
-import type { RecipeInput } from "./api";
+import { commands, type RecipeInput } from "./api";
 import { useEditorActions, useDraftRecipe } from "./stores/EditorStore";
 
 vi.mock("./api", async (importOriginal) => {
@@ -14,6 +14,7 @@ vi.mock("./api", async (importOriginal) => {
     ...api,
     commands: {
       ...api.commands,
+      getRecipe: vi.fn(),
       createRecipe: vi.fn(async (input: RecipeInput) => ({
         status: "ok",
         data: { ...input, id: "saved-recipe", image_version: null },
@@ -24,6 +25,7 @@ vi.mock("./api", async (importOriginal) => {
 
 vi.mock("./features/gallery", () => ({
   default: function Gallery() {
+    const editor = useEditorActions();
     const [clicks, setClicks] = useState(0);
     const [started, setStarted] = useState(false);
     const drag = useDraggable({ id: "recipe" });
@@ -33,6 +35,7 @@ vi.mock("./features/gallery", () => ({
         ref={drag.setNodeRef}
         {...drag.attributes}
         {...drag.listeners}
+        onDoubleClick={() => void editor.openRecipe("missing")}
         onClick={() => setClicks(clicks + 1)}
       >
         Card clicks {clicks}; drag {started ? "started" : "idle"}
@@ -85,6 +88,23 @@ vi.mock("./features/settings", () => ({
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: vi.fn(() => ({ close: vi.fn() })),
 }));
+
+it("shows recipe-open errors outside the closed editor", async () => {
+  const user = userEvent.setup();
+  vi.mocked(commands.getRecipe).mockResolvedValueOnce({
+    status: "error",
+    error: { kind: "not_found", detail: "Recipe no longer exists" },
+  });
+  render(<App />);
+  await user.dblClick(screen.getByRole("button", { name: /Card clicks/ }));
+  expect(screen.getByRole("alert").textContent).toContain(
+    "Recipe no longer exists",
+  );
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Dismiss" }));
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
 
 it("composes the workspace and synchronizes native dialog closure", async () => {
   const user = userEvent.setup();

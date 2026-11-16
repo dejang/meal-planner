@@ -1,13 +1,12 @@
-import type { ReactNode } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { ImportScopes } from "../test-support/import";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { invoke } from "@tauri-apps/api/core";
+import { analysis } from "../api/fixtures";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { PlanScope } from "./PlanStore";
-import { RecipesScope } from "./RecipesStore";
-import { EditorScope, useEditorActions, useDraftRecipe } from "./EditorStore";
+import { useEditorActions, useDraftRecipe } from "./EditorStore";
 import {
-  ImportScope,
+  useImportLinkError,
   useImportActions,
   useImportError,
   useImportImporting,
@@ -21,20 +20,8 @@ vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
 
 beforeEach(() => {
   vi.mocked(invoke).mockReset();
-  vi.mocked(openUrl).mockReset();
+  vi.mocked(openUrl).mockReset().mockResolvedValue();
 });
-
-function Scopes({ children }: { children: ReactNode }) {
-  return (
-    <PlanScope>
-      <RecipesScope>
-        <EditorScope>
-          <ImportScope>{children}</ImportScope>
-        </EditorScope>
-      </RecipesScope>
-    </PlanScope>
-  );
-}
 
 function useImportSnapshot() {
   return {
@@ -46,20 +33,14 @@ function useImportSnapshot() {
     importing: useImportImporting(),
     error: useImportError(),
     sites: useImportSupportedSites(),
+    linkError: useImportLinkError(),
   };
 }
-
-it("opens a supported site in the browser through the opener plugin", async () => {
-  vi.mocked(openUrl).mockResolvedValueOnce(undefined);
-  const { result } = renderHook(useImportSnapshot, { wrapper: Scopes });
-  await act(() => result.current.actions.openSite("https://recipes.example/"));
-  expect(openUrl).toHaveBeenCalledExactlyOnceWith("https://recipes.example/");
-});
 
 it.each([new Error("Connection lost"), "Connection lost"])(
   "reports supported-site load failures and clears the error on retry: %s",
   async (failure) => {
-    const { result } = renderHook(useImportSnapshot, { wrapper: Scopes });
+    const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
     vi.mocked(invoke).mockRejectedValueOnce(failure);
     await act(() => result.current.actions.reload());
     expect(invoke).toHaveBeenCalledWith("supported_sites");
@@ -73,10 +54,27 @@ it.each([new Error("Connection lost"), "Connection lost"])(
   },
 );
 
+it("clears link and form errors when reopening the import dialog", async () => {
+  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
+  act(() => result.current.actions.open());
+  vi.mocked(invoke).mockRejectedValueOnce(new Error("Load failed"));
+  await act(() => result.current.actions.reload());
+  vi.mocked(openUrl).mockRejectedValueOnce(new Error("Cannot open browser"));
+  await act(() => result.current.actions.openSite("https://recipes.example/"));
+  expect(result.current.error).toBe("Load failed");
+  expect(result.current.linkError).toBe("Cannot open browser");
+  act(() => result.current.actions.close());
+  expect(result.current.open).toBe(false);
+  act(() => result.current.actions.open());
+  expect(result.current.open).toBe(true);
+  expect(result.current.error).toBeNull();
+  expect(result.current.linkError).toBeNull();
+});
+
 it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
   "imports a new editable draft with image %j without persisting it",
   async (image) => {
-    const { result } = renderHook(useImportSnapshot, { wrapper: Scopes });
+    const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
     const imported = {
       title: "Soup",
       ingredients: ["1 carrot", "2 potatoes"],
@@ -84,12 +82,15 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
       servings: 3,
       image,
     };
+    const nutrition = analysis();
     let resolveImport!: (value: typeof imported) => void;
-    vi.mocked(invoke).mockReturnValue(
-      new Promise((resolve) => {
-        resolveImport = resolve;
-      }),
-    );
+    vi.mocked(invoke)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveImport = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(nutrition);
     let pending!: Promise<void>;
     act(() => {
       result.current.actions.open();
@@ -105,14 +106,17 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
       resolveImport(imported);
       await pending;
     });
-    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenLastCalledWith("analyze_ingredients", {
+      lines: imported.ingredients,
+    });
     expect(result.current.draft).toEqual({
       id: null,
       title: "Soup",
       ingredients: "1 carrot\n2 potatoes",
       instructions: "Chop\nSimmer\n\nhttps://recipes.example/soup",
       servings: 3,
-      analysis: null,
+      analysis: nutrition,
       image: image ? { kind: "set", image } : { kind: "keep" },
       imageVersion: null,
       imageSource: null,
@@ -125,7 +129,7 @@ it.each([null, { bytes: "aW1hZ2U=", width: 640, height: 480 }])(
 );
 
 it("ignores blank input and protects an existing draft before requesting an import", async () => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: Scopes });
+  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
   act(() => {
     result.current.actions.open();
     result.current.actions.setUrl("   ");
@@ -150,7 +154,7 @@ it("ignores blank input and protects an existing draft before requesting an impo
 });
 
 it("does not replace a draft opened while the import was pending", async () => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: Scopes });
+  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
   let resolveImport!: (value: unknown) => void;
   vi.mocked(invoke).mockReturnValue(
     new Promise((resolve) => {
@@ -191,7 +195,7 @@ it.each([
   },
   { failure: new Error("Connection lost"), message: "Connection lost" },
 ])("reports $message and allows retry", async ({ failure, message }) => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: Scopes });
+  const { result } = renderHook(useImportSnapshot, { wrapper: ImportScopes });
   vi.mocked(invoke).mockRejectedValue(failure);
   act(() => {
     result.current.actions.open();

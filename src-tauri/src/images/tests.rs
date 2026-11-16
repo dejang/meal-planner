@@ -35,13 +35,15 @@ fn images_replace_persist_and_remove() -> TestResult {
             height: 3,
         },
     ] {
-        images.put(id, &image)?;
+        let version = images.put(id, &image)?;
         assert_eq!(images.get(id)?, Some(image));
-        versions.push(connection.query_row(
+        let persisted: String = connection.query_row(
             "SELECT version FROM images WHERE recipe_id = ?1",
             [id.to_string()],
-            |row| row.get::<_, String>(0),
-        )?);
+            |row| row.get(0),
+        )?;
+        assert_eq!(persisted, version.to_string());
+        versions.push(version);
     }
     assert_ne!(versions[0], versions[1]);
     let count: u32 = connection.query_row("SELECT count(*) FROM images", [], |row| row.get(0))?;

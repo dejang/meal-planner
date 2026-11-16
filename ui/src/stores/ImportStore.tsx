@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { createOpenSiteAction } from "./core/openSite";
 import { createSelectorHook, Store } from "bonsai-react";
 import { commands, unwrap, type SupportedSite } from "../api";
 import { createStoreContext } from "./core/context";
@@ -12,6 +12,7 @@ export interface ImportState {
   supportedSites: SupportedSite[];
   importing: boolean;
   error: string | null;
+  linkError: string | null;
 }
 
 class ImportStore extends Store<ImportState> {
@@ -22,13 +23,12 @@ class ImportStore extends Store<ImportState> {
       supportedSites: [],
       importing: false,
       error: null,
+      linkError: null,
     });
   }
 
   readonly actions = {
-    openSite: async (url: string): Promise<void> => {
-      await openUrl(url);
-    },
+    openSite: createOpenSiteAction((linkError) => this.update({ linkError })),
     reload: async (): Promise<void> => {
       this.update({ error: null });
       try {
@@ -41,7 +41,7 @@ class ImportStore extends Store<ImportState> {
       }
     },
     open: (): void => {
-      this.update({ open: true, error: null });
+      this.update({ open: true, error: null, linkError: null });
     },
     close: (): void => {
       this.update({ open: false });
@@ -107,6 +107,12 @@ export function useImportImporting() {
 export function useImportError() {
   return context.useScopedHook((store) =>
     createSelectorHook(store, (state) => state.error),
+  )();
+}
+
+export function useImportLinkError() {
+  return context.useScopedHook((store) =>
+    createSelectorHook(store, (state) => state.linkError),
   )();
 }
 

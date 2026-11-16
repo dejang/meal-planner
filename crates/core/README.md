@@ -9,7 +9,8 @@ Recipes load in persisted display order; inserts append and updates retain their
 position. `delete_recipe` is the application deletion entry point and removes every
 plan occurrence and the image. Storage deletes the recipe and saves the cleaned
 plan atomically. Image changes on create/update are explicit keep/remove/set values.
-Image versions are UUID cache tokens; absence means no image. Image bytes cross
+Image versions are UUID cache tokens returned by `ImageStore::put`, matching the
+persisted image version; absence means no image. Image bytes cross
 IPC as base64 JPEG strings, suitable for a `data:image/jpeg;base64,` URL.
 
 Recipe writes reach Storage before the cached snapshot changes. Setting an image

@@ -43,7 +43,7 @@
   min-height: 38px;
 }
 
-.import-form .import-error {
+.recipe-import .import-error {
   color: var(--error);
 }
 

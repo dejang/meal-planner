@@ -204,39 +204,172 @@ fn registered_commands_dispatch_against_the_desktop_state() -> TestResult {
         ),
     ];
     let url = "tauri://localhost".parse::<url::Url>()?;
-    let request = |cmd: &str, payload| InvokeRequest {
-        cmd: cmd.into(),
-        callback: CallbackFn(0),
-        error: CallbackFn(1),
-        url: url.clone(),
-        body: InvokeBody::Json(payload),
-        headers: Default::default(),
-        invoke_key: INVOKE_KEY.into(),
-    };
-    for (cmd, payload, expected) in cases {
-        let response = get_ipc_response(&window, request(cmd, payload)).map(|body| {
+    let dispatch = |window: &tauri::WebviewWindow<tauri::test::MockRuntime>, cmd: &str, payload| {
+        get_ipc_response(
+            window,
+            InvokeRequest {
+                cmd: cmd.into(),
+                callback: CallbackFn(0),
+                error: CallbackFn(1),
+                url: url.clone(),
+                body: InvokeBody::Json(payload),
+                headers: Default::default(),
+                invoke_key: INVOKE_KEY.into(),
+            },
+        )
+        .map(|body| {
             body.deserialize::<Value>()
                 .unwrap_or_else(|error| panic!("Invalid IPC response body for {cmd}: {error}"))
-        });
-        assert_eq!(response, expected, "{cmd}");
+        })
+    };
+    for (cmd, payload, expected) in cases {
+        assert_eq!(dispatch(&window, cmd, payload), expected, "{cmd}");
     }
-    let created = get_ipc_response(&window, request("create_recipe", json!({"input": input})))
-        .map_err(|error| format!("Create recipe IPC failed: {error}"))?
-        .deserialize::<meal_planner_core::Recipe>()?;
-    let storage = crate::storage::SqliteStorage::new(crate::db::open(directory.path())?);
+    let dispatch_ok =
+        |window: &tauri::WebviewWindow<tauri::test::MockRuntime>, cmd: &str, payload: Value| {
+            let context = format!("{cmd} with payload {payload}");
+            dispatch(window, cmd, payload).map_err(|error| format!("{context}: {error}"))
+        };
+    let image = dispatch_ok(
+        &window,
+        "load_image_file",
+        json!({"path": concat!(env!("CARGO_MANIFEST_DIR"), "/src/importer/fixtures/wide.png")}),
+    )?;
+    let mut analyzed_input = input.clone();
+    analyzed_input["analysis"] = serde_json::from_str(include_str!(
+        "../../crates/core/tests/fixtures/analysis.json"
+    ))?;
+    analyzed_input["image"] = json!({"kind": "set", "image": image});
+    let created = dispatch_ok(&window, "create_recipe", json!({"input": analyzed_input}))?;
+    let created_id = &created["id"];
+    assert!(created["image_version"].is_string());
     assert_eq!(
-        meal_planner_core::Storage::load_recipes(&storage)?,
-        vec![created]
+        dispatch_ok(&window, "image", json!({"recipeId": created_id}))?,
+        image
     );
-    assert!(directory.path().join("settings.json").is_file());
-    let reopened_app = mock_app()?;
-    let settings = crate::settings::Settings::new(&reopened_app, directory.path())?;
+    let second = dispatch_ok(&window, "create_recipe", json!({"input": input}))?;
+    let second_id = &second["id"];
+    analyzed_input["title"] = json!("Salmon lunch");
+    analyzed_input["image"] = json!({"kind": "keep"});
+    let updated = dispatch_ok(
+        &window,
+        "update_recipe",
+        json!({"id": created_id, "input": analyzed_input}),
+    )?;
+    assert_eq!(updated["title"], "Salmon lunch");
+    assert_eq!(updated["image_version"], created["image_version"]);
     assert_eq!(
-        settings.get_credentials()?,
-        crate::settings::Credentials {
-            app_id: "app".into(),
-            api_key: "key".into(),
-        }
+        dispatch_ok(&window, "search_recipes", json!({"query": "Salmon"}))?,
+        json!([updated])
+    );
+    let mut plan = Value::Null;
+    for (cmd, payload, days) in [
+        (
+            "add_to_day",
+            json!({"position": position, "recipeId": created_id}),
+            json!([[created_id], [], [], [], [], []]),
+        ),
+        (
+            "add_to_day",
+            json!({"position": {"day": 0, "row": 1}, "recipeId": second_id}),
+            json!([[created_id, second_id], [], [], [], [], []]),
+        ),
+        (
+            "move_meal",
+            json!({"from": {"day": 0, "row": 1}, "to": position}),
+            json!([[second_id, created_id], [], [], [], [], []]),
+        ),
+        (
+            "copy_previous_day",
+            json!({"day": 1}),
+            json!([
+                [second_id, created_id],
+                [second_id, created_id],
+                [],
+                [],
+                [],
+                []
+            ]),
+        ),
+        (
+            "move_meal",
+            json!({"from": {"day": 0, "row": 1}, "to": {"day": 2, "row": 0}}),
+            json!([
+                [second_id],
+                [second_id, created_id],
+                [created_id],
+                [],
+                [],
+                []
+            ]),
+        ),
+        (
+            "clear_day",
+            json!({"day": 0}),
+            json!([[], [second_id, created_id], [created_id], [], [], []]),
+        ),
+        (
+            "remove_from_day",
+            json!({"position": {"day": 1, "row": 0}}),
+            json!([[], [created_id], [created_id], [], [], []]),
+        ),
+    ] {
+        plan = json!({"days": days});
+        assert_eq!(dispatch_ok(&window, cmd, payload)?, plan, "{cmd}");
+    }
+    let totals = dispatch_ok(&window, "day_totals", json!({"day": 1}))?;
+    assert_eq!(totals["calories"], 63);
+    let shopping = dispatch_ok(&window, "shopping_list", json!({}))?;
+    let items: Vec<meal_planner_core::ShoppingItem> = serde_json::from_value(shopping.clone())?;
+    assert_eq!(items.len(), 7);
+    let salmon_weight = items
+        .iter()
+        .find(|item| item.name == "smoked salmon")
+        .ok_or("Missing salmon")?
+        .weight;
+    let expected_weight = 30.0_f32;
+    assert!(
+        (salmon_weight - expected_weight).abs() <= expected_weight * f32::EPSILON,
+        "Expected {expected_weight} g of salmon, got {salmon_weight} g"
+    );
+    drop(window);
+    drop(app);
+
+    let reopened_app = mock_app()?;
+    crate::setup_state(&reopened_app, directory.path())?;
+    let window = WebviewWindowBuilder::new(&reopened_app, "main", WebviewUrl::default()).build()?;
+    for (cmd, payload, expected) in [
+        ("list_recipes", json!({}), json!([updated, second])),
+        ("get_recipe", json!({"id": created_id}), updated),
+        ("get_plan", json!({}), plan),
+        ("image", json!({"recipeId": created_id}), image),
+        ("day_totals", json!({"day": 1}), totals),
+        ("shopping_list", json!({}), shopping),
+        (
+            "get_credentials",
+            json!({}),
+            json!({"app_id": "app", "api_key": "key"}),
+        ),
+    ] {
+        assert_eq!(
+            dispatch_ok(&window, cmd, payload)?,
+            expected,
+            "{cmd} after restart"
+        );
+    }
+    dispatch_ok(&window, "delete_recipe", json!({"id": created_id}))?;
+    assert_eq!(
+        dispatch_ok(&window, "get_plan", json!({}))?,
+        json!({"days": [[], [], [], [], [], []]})
+    );
+    assert_eq!(dispatch_ok(&window, "shopping_list", json!({}))?, json!([]));
+    assert_eq!(
+        dispatch_ok(&window, "list_recipes", json!({}))?,
+        json!([second])
+    );
+    assert_eq!(
+        dispatch_ok(&window, "image", json!({"recipeId": created_id}))?,
+        Value::Null
     );
     Ok(())
 }

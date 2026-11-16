@@ -40,6 +40,43 @@ Run `./check.sh` for workspace fmt, clippy, build and tests, frontend typecheck
 and Vitest, a Tauri build, and the legacy wasm/Trunk checks. Install the Linux
 packages above, frontend dependencies and Trunk first.
 
+## Comparing the desktop apps
+
+Use the [development commands above](#development) to run both apps in separate terminals.
+
+For a fresh Tauri database on Linux without deleting existing data, first run
+`export XDG_DATA_HOME="$(mktemp -d)"` in its terminal. Keep that terminal and the
+same environment for restart checks. The desktop app stores `meal_planner.sqlite`
+and `settings.json` under the `com.meal-planner.desktop` application data directory.
+The legacy app has separate storage and embeds the root `state.json`; data is not
+synchronized between the two apps. Do not commit credentials or database files.
+
+Manual acceptance checklist (requires a graphical desktop, network access and
+valid Edamam Nutrition Analysis credentials):
+
+1. On fresh startup, check the welcome screen. Open Settings, save credentials,
+   close and reopen Settings, and check that they remain saved.
+2. Create a recipe with title, ingredients, instructions and two servings. Close
+   the editor to save; search for it, open its details, edit and save again.
+3. Choose a local image, then replace it using an image URL. Reopen the recipe
+   after each save and check the photo in both editor and gallery.
+4. Analyze ingredients. Check the per-serving nutrition in the editor and details.
+   With missing credentials or a bad image URL, verify an error appears and retry.
+5. Import a recipe from a listed supported site. Check the editable draft and its
+   image/source. Nutrition analysis should start automatically, without focusing
+   the ingredients field; closing to save waits for it. Try an unsupported URL
+   and check the error.
+6. Drag at least two different recipes to a day; reorder them, move one to another
+   day, copy the previous day, remove a meal and clear a day. Verify day totals
+   and the shopping list after each change and after editing a planned recipe.
+7. Delete a planned recipe; check that its gallery card, planned meals, totals and
+   shopping ingredients disappear without requiring a restart.
+8. Quit and restart using the same data directory. Verify recipes, photos, meal
+   ordering, totals, shopping list and credentials. Welcome should not reappear
+   when credentials are present.
+9. Compare these flows with egui and inspect the Rust logs and browser developer
+   console for warnings/errors. Visual acceptance belongs to the user.
+
 ## Desktop command bindings
 
 Register commands in `src-tauri/src/commands/mod.rs`. The same tauri-specta builder

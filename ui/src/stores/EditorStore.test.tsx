@@ -29,6 +29,12 @@ it.each(["", " \n "])(
 it.each(["new", "existing", "imported"])(
   "saves a %s draft on close and refreshes both peer stores",
   async (source) => {
+    const nutrition = analysis();
+    const nutritionResult =
+      deferred<Awaited<ReturnType<typeof commands.analyzeIngredients>>>();
+    vi.mocked(commands.analyzeIngredients).mockReturnValue(
+      nutritionResult.promise,
+    );
     const { result } = renderHook(useEditor, { wrapper: EditorScope });
     if (source === "existing") {
       await act(() => result.current.actions.openRecipe("recipe-1"));
@@ -54,13 +60,30 @@ it.each(["new", "existing", "imported"])(
     expect(commands.createRecipe).not.toHaveBeenCalled();
     expect(commands.updateRecipe).not.toHaveBeenCalled();
     const draft = result.current.draft;
-    await act(() => result.current.actions.close());
+    let closing: Promise<void>;
+    act(() => {
+      closing = result.current.actions.close();
+    });
+    if (source === "imported") {
+      expect(commands.analyzeIngredients).toHaveBeenCalledExactlyOnceWith([
+        "1 onion",
+        "2 carrots",
+      ]);
+      expect(result.current.analyzing).toBe(true);
+      expect(commands.createRecipe).not.toHaveBeenCalled();
+    } else {
+      expect(commands.analyzeIngredients).not.toHaveBeenCalled();
+    }
+    await act(async () => {
+      nutritionResult.resolve({ status: "ok", data: nutrition });
+      await closing;
+    });
     const input = {
       title: "Edited soup",
       ingredients: draft?.ingredients,
       instructions: draft?.instructions,
       servings: 3,
-      analysis: null,
+      analysis: source === "imported" ? nutrition : null,
       image: draft?.image,
     };
     if (source === "existing")
