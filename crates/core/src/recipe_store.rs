@@ -55,29 +55,6 @@ impl RecipeStore {
         self.ordered().cloned().collect()
     }
 
-    fn persist_update(
-        &mut self,
-        storage: &dyn Storage,
-        images: &dyn ImageStore,
-        mut recipe: Recipe,
-        image: ImageChange,
-    ) -> Result<Recipe> {
-        match &image {
-            ImageChange::Keep => {}
-            ImageChange::Remove => recipe.image_version = None,
-            ImageChange::Set(image) => {
-                images.put(recipe.id, image)?;
-                recipe.image_version = Some(Uuid::new_v4());
-            }
-        }
-        storage.update_recipe(&recipe)?;
-        self.recipes.insert(recipe.id, recipe.clone());
-        if matches!(image, ImageChange::Remove) {
-            images.remove(recipe.id)?;
-        }
-        Ok(recipe)
-    }
-
     pub(crate) fn search(&self, query: &str) -> Vec<Recipe> {
         let query = query.to_lowercase();
         self.ordered()
