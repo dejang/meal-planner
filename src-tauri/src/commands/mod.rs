@@ -38,7 +38,7 @@ pub fn builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             images::image,
             images::load_image_file,
             images::load_image_url,
-            settings::get_credentials,
-            settings::save_credentials,
+            settings::get_credentials::<tauri::Wry>,
+            settings::save_credentials::<tauri::Wry>,
         ])
 }
