@@ -1,0 +1,163 @@
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --surface-elevated: #ffffff;
+  --scrim: rgba(27, 63, 49, 0.36);
+  --drawer-shadow: 0 -8px 40px rgba(27, 63, 49, 0.16);
+  --card-press-shadow: 0 2px 6px rgba(27, 63, 49, 0.1);
+  --hairline: 1px;
+  --hairline-color: rgba(27, 63, 49, 0.12);
+  --touch-min: 44px;
+  --radius-pill: 999px;
+  --radius-drawer: 24px;
+  --space-mobile-xs: 4px;
+  --space-mobile-sm: 8px;
+  --space-mobile-md: 12px;
+  --space-mobile-gutter: 16px;
+  --space-mobile-lg: 24px;
+  --space-mobile-xl: 32px;
+  --text-mobile-card: 18px;
+  --text-mobile-meta: var(--text-small);
+  --text-mobile-ingredient: var(--text-smallish);
+  --text-mobile-step: var(--text-body);
+  --text-mobile-input: var(--text-smallish);
+  --leading-mobile-title: 1.2;
+  --leading-mobile-body: 1.5;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 160ms;
+  --duration-normal: 280ms;
+  --duration-drawer: 340ms;
+  --press-scale: 0.98;
+}
+
+@media (min-resolution: 2dppx) {
+  :root {
+    --hairline: 0.5px;
+  }
+}
+
+:root:has(.mobile-theme) {
+  overscroll-behavior-y: none;
+}
+
+.mobile-theme {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.safe-area-top {
+  padding-top: var(--safe-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-area-sides {
+  padding-left: max(var(--space-mobile-gutter), var(--safe-left));
+  padding-right: max(var(--space-mobile-gutter), var(--safe-right));
+}
+
+.mobile-theme :is(button, summary, .mobile-chrome, .mobile-card) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.mobile-theme :is(.mobile-content, input, textarea, [contenteditable="true"]) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.mobile-theme :is(input, textarea, select) {
+  font-size: var(--text-mobile-input);
+  line-height: var(--leading-mobile-body);
+}
+
+.mobile-theme
+  :is(button, .button, input, textarea, select, .mobile-touch-target) {
+  min-height: var(--touch-min);
+}
+
+.mobile-theme :is(button, .button, .mobile-touch-target) {
+  min-width: var(--touch-min);
+}
+
+.mobile-theme .button {
+  border-radius: var(--radius-pill);
+}
+
+.mobile-theme summary.button {
+  display: flex;
+  align-items: center;
+}
+
+.mobile-theme :is(.button, .mobile-pressable) {
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    background-color var(--duration-fast) var(--ease-out-expo),
+    border-color var(--duration-fast) var(--ease-out-expo),
+    box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+
+.surface-frame.mobile-card {
+  border: var(--hairline) solid var(--hairline-color);
+}
+
+.mobile-screen-title,
+.mobile-card-title {
+  line-height: var(--leading-mobile-title);
+}
+
+.mobile-card-title {
+  margin: 0;
+  color: var(--forest);
+  font-size: var(--text-mobile-card);
+  font-weight: 600;
+}
+
+.mobile-meta {
+  color: var(--muted);
+  font-size: var(--text-mobile-meta);
+  line-height: var(--leading-mobile-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.mobile-ingredient {
+  font-size: var(--text-mobile-ingredient);
+  line-height: var(--leading-mobile-body);
+}
+
+.mobile-step {
+  font-family: var(--font-editorial);
+  font-size: var(--text-mobile-step);
+  line-height: var(--leading-mobile-body);
+}
+
+.mobile-theme
+  :is(.button, .mobile-pressable):active:not(:disabled):not(
+    [aria-disabled="true"]
+  ) {
+  transform: scale(var(--press-scale));
+}
+
+.mobile-theme
+  .mobile-card.mobile-pressable:active:not(:disabled):not(
+    [aria-disabled="true"]
+  ) {
+  box-shadow: var(--card-press-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0.01ms;
+    --duration-normal: 0.01ms;
+    --duration-drawer: 0.01ms;
+    --ease-out-expo: linear;
+    --ease-spring: linear;
+    --press-scale: 1;
+  }
+}

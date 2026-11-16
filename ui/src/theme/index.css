@@ -1,4 +1,5 @@
 @import "@/theme/fonts.css";
+@import "@/theme/mobile.css";
 
 :root {
   --paper: #f6f4eb;
@@ -20,6 +21,8 @@
   --text-body: 17px;
   --text-small: 14px;
   --text-heading: 22px;
+  --text-screen: 28px;
+  --radius-card: 16px;
   --text-button: 15px;
   --text-recipe-title: 24px;
   --text-handwriting: 32px;
@@ -165,7 +168,7 @@ details[open] > summary.button {
 .surface-frame {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   box-shadow: var(--card-shadow);
 }
 .text-input {
@@ -184,7 +187,7 @@ details[open] > summary.button {
 }
 .paper-dialog {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   padding: 16px;
   background: var(--paper);
   color: var(--ink);
@@ -210,10 +213,13 @@ details[open] > summary.button {
   gap: 12px;
   margin-bottom: 12px;
 }
-.paper-header h2 {
+.paper-header h2,
+.mobile-screen-title {
   margin: 0;
   color: var(--forest);
-  font: 28px var(--font-display);
+  font-family: var(--font-display);
+  font-size: var(--text-screen);
+  font-weight: 400;
 }
 
 .nutrition-facts {
