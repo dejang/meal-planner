@@ -17,10 +17,10 @@ fn setup_state<R: tauri::Runtime>(
     app: &tauri::App<R>,
     app_data_dir: &std::path::Path,
 ) -> meal_planner_core::Result<()> {
-    db::open(app_data_dir)?;
+    let connection = db::open(app_data_dir)?;
     let settings = Arc::new(settings::Settings::new(app, app_data_dir)?);
     app.manage(App::new(
-        Arc::new(storage::SqliteStorage),
+        Arc::new(storage::SqliteStorage::new(connection)),
         Arc::new(images::LocalImages),
         Arc::new(edamam::EdamamClient::new(settings.clone())?),
         Arc::new(importer::JsonLdExtractor),
@@ -101,11 +101,6 @@ mod tests {
         let empty_plan = json!({"days": [[], [], [], [], [], []]});
         let cases = [
             (
-                "create_recipe",
-                json!({"input": input}),
-                Err(json!({"kind":"not_implemented", "detail":"Insert recipe storage"})),
-            ),
-            (
                 "update_recipe",
                 json!({"id": id, "input": input}),
                 Err(json!({"kind":"not_found", "detail":id})),
@@ -141,12 +136,12 @@ mod tests {
             (
                 "clear_day",
                 json!({"day": 0}),
-                Err(json!({"kind":"not_implemented", "detail":"Plan storage"})),
+                Ok(json!({"days": [[], [], [], [], [], []]})),
             ),
             (
                 "copy_previous_day",
                 json!({"day": 1}),
-                Err(json!({"kind":"not_implemented", "detail":"Plan storage"})),
+                Ok(json!({"days": [[], [], [], [], [], []]})),
             ),
             (
                 "day_totals",
@@ -196,22 +191,30 @@ mod tests {
                 Ok(json!({"app_id": "app", "api_key": "key"})),
             ),
         ];
+        let request = |cmd: &str, payload| InvokeRequest {
+            cmd: cmd.into(),
+            callback: CallbackFn(0),
+            error: CallbackFn(1),
+            url: "tauri://localhost".parse().unwrap(),
+            body: InvokeBody::Json(payload),
+            headers: Default::default(),
+            invoke_key: INVOKE_KEY.into(),
+        };
         for (cmd, payload, expected) in cases {
-            let response = get_ipc_response(
-                &window,
-                InvokeRequest {
-                    cmd: cmd.into(),
-                    callback: CallbackFn(0),
-                    error: CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
-                    body: InvokeBody::Json(payload),
-                    headers: Default::default(),
-                    invoke_key: INVOKE_KEY.into(),
-                },
-            )
-            .map(|body| body.deserialize::<Value>().unwrap());
+            let response = get_ipc_response(&window, request(cmd, payload))
+                .map(|body| body.deserialize::<Value>().unwrap());
             assert_eq!(response, expected, "{cmd}");
         }
+        let created = get_ipc_response(&window, request("create_recipe", json!({"input": input})))
+            .unwrap()
+            .deserialize::<meal_planner_core::Recipe>()
+            .unwrap();
+        let storage =
+            crate::storage::SqliteStorage::new(crate::db::open(directory.path()).unwrap());
+        assert_eq!(
+            meal_planner_core::Storage::load_recipes(&storage).unwrap(),
+            vec![created]
+        );
         assert!(directory.path().join("settings.json").is_file());
         let reopened_app = mock_app();
         let settings = crate::settings::Settings::new(&reopened_app, directory.path()).unwrap();
