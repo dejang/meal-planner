@@ -1,12 +1,87 @@
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  color: #243027;
-  background: #f6f7f2;
+#root,
+.app-shell {
+  height: 100dvh;
 }
-
-main {
-  max-width: 64rem;
-  margin: 4rem auto;
-  padding: 0 2rem;
+.app-shell {
+  display: flex;
+  flex-direction: column;
+}
+.menu-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  background: var(--forest);
+  color: var(--surface);
+  flex-wrap: wrap;
+}
+.brand {
+  font-size: 19px;
+  margin-right: 20px;
+}
+.brand-icon {
+  font-size: 23px;
+  color: var(--citrus);
+}
+.menu-bar .button:hover,
+.menu-bar .button:active,
+.menu-bar .button[aria-expanded="true"] {
+  background: var(--green);
+  color: var(--citrus);
+}
+.menu-bar :focus-visible {
+  outline-color: var(--citrus);
+}
+.menu-disclosure {
+  position: relative;
+}
+.menu-popup {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  display: grid;
+  padding: 8px;
+  min-width: 180px;
+  background: var(--forest);
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+}
+.menu-popup .button {
+  text-align: left;
+  white-space: nowrap;
+}
+.workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.gallery-area {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+}
+.planner-resizer {
+  height: 8px;
+  flex: none;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.planner-resizer:hover,
+.planner-resizer:focus-visible {
+  background: var(--border);
+}
+.planner-panel {
+  flex: none;
+  min-height: 0;
+  padding: 0 12px 8px;
+}
+.planner-surface {
+  height: 100%;
+  padding: 10px;
+  overflow: auto;
 }
