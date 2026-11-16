@@ -1,10 +1,4 @@
-use std::{
-    collections::HashMap,
-    io::{Read, Write},
-    net::TcpListener,
-    thread,
-    time::{Duration, Instant},
-};
+use std::{collections::HashMap, time::Duration};
 
 use meal_planner_core::{image::resize_image, Error, ImportedRecipe, RecipeImporter, Result};
 use serde_json::{json, Value};
@@ -15,59 +9,12 @@ fn import_from_server(
     responses: impl FnOnce(u16) -> Vec<(u16, Vec<u8>)>,
     url: impl FnOnce(u16) -> String,
 ) -> Result<ImportedRecipe> {
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .unwrap_or_else(|error| panic!("bind local recipe server: {error}"));
-    let address = listener
-        .local_addr()
-        .unwrap_or_else(|error| panic!("read recipe server address: {error}"));
-    listener
-        .set_nonblocking(true)
-        .unwrap_or_else(|error| panic!("make recipe listener nonblocking: {error}"));
-    let responses = responses(address.port());
-    let server = thread::spawn(move || {
-        let mut request = Vec::new();
-        for (status, body) in responses {
-            request.clear();
-            let deadline = Instant::now() + Duration::from_secs(5);
-            let mut stream = loop {
-                match listener.accept() {
-                    Ok((stream, _)) => break stream,
-                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                        assert!(Instant::now() < deadline, "request did not arrive");
-                        thread::sleep(Duration::from_millis(5));
-                    }
-                    Err(error) => panic!("{error}"),
-                }
-            };
-            stream
-                .set_nonblocking(false)
-                .unwrap_or_else(|error| panic!("make accepted recipe socket blocking: {error}"));
-            stream
-                .set_read_timeout(Some(Duration::from_secs(5)))
-                .unwrap_or_else(|error| panic!("set recipe request read timeout: {error}"));
-            while !request.ends_with(b"\r\n\r\n") {
-                let mut byte = [0];
-                stream
-                    .read_exact(&mut byte)
-                    .unwrap_or_else(|error| panic!("read recipe HTTP request: {error}"));
-                request.push(byte[0]);
-            }
-            write!(
-                stream,
-                "HTTP/1.1 {status} Test\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-                body.len()
-            )
-            .unwrap_or_else(|error| panic!("write recipe HTTP response headers: {error}"));
-            stream
-                .write_all(&body)
-                .unwrap_or_else(|error| panic!("write recipe HTTP response body: {error}"));
-        }
-    });
+    let (address, server) = crate::tests::serve_http(responses, |_| {})
+        .unwrap_or_else(|error| panic!("start local recipe server: {error}"));
     let mut builder = reqwest::Client::builder()
         .no_proxy()
         .timeout(Duration::from_secs(3));
-    let mut importer = JsonLdExtractor::new()
-        .unwrap_or_else(|error| panic!("build local recipe importer: {error}"));
+    let mut importer = JsonLdExtractor::new(reqwest::Client::new());
     for domain in importer
         .supported_sites()
         .into_iter()
@@ -83,7 +30,8 @@ fn import_from_server(
     let result = tauri::async_runtime::block_on(importer.import(&url(address.port())));
     server
         .join()
-        .unwrap_or_else(|error| panic!("recipe server panicked: {error:?}"));
+        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+        .unwrap_or_else(|error| panic!("serve recipe HTTP response: {error}"));
     result
 }
 
@@ -102,8 +50,7 @@ fn page(schema: Value) -> Vec<u8> {
 
 #[test]
 fn rejects_invalid_and_lookalike_urls() {
-    let importer = JsonLdExtractor::new()
-        .unwrap_or_else(|error| panic!("build URL-validation importer: {error}"));
+    let importer = JsonLdExtractor::new(reqwest::Client::new());
     for (url, message) in [
         ("not a URL", "Enter a valid recipe URL"),
         (
@@ -264,8 +211,7 @@ fn imports_registered_sites_with_resized_images() {
     let expected_image =
         resize_image(image).unwrap_or_else(|error| panic!("resize wide.png fixture: {error}"));
     assert_eq!((expected_image.width, expected_image.height), (1200, 1));
-    let importer = JsonLdExtractor::new()
-        .unwrap_or_else(|error| panic!("build registered-site importer: {error}"));
+    let importer = JsonLdExtractor::new(reqwest::Client::new());
     let sites: HashMap<_, _> = importer
         .supported_sites()
         .into_iter()
@@ -324,7 +270,7 @@ fn imports_registered_sites_with_resized_images() {
                             (
                                 200,
                                 fixture
-                                    .replacen(image_domain, &format!("http://127.0.0.1:{port}"), 1)
+                                    .replacen(image_domain, &format!("http://{domain}:{port}"), 1)
                                     .into_bytes(),
                             ),
                             (200, image.to_vec()),

@@ -10,8 +10,11 @@ pub async fn load_image_file(path: String) -> Result<ResizedImage> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn load_image_url(url: String) -> Result<ResizedImage> {
-    crate::images::load_url(&url).await
+pub async fn load_image_url(
+    client: State<'_, reqwest::Client>,
+    url: String,
+) -> Result<ResizedImage> {
+    crate::images::load_url(&client, &url).await
 }
 
 #[tauri::command]
@@ -19,3 +22,6 @@ pub async fn load_image_url(url: String) -> Result<ResizedImage> {
 pub fn image(app: State<'_, App>, recipe_id: Uuid) -> Result<Option<ResizedImage>> {
     app.image(recipe_id)
 }
+
+#[cfg(test)]
+mod tests;
