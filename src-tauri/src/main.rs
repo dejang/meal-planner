@@ -8,7 +8,7 @@ mod importer;
 mod settings;
 mod storage;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use meal_planner_core::App;
 use tauri::Manager;
@@ -17,7 +17,7 @@ fn setup_state<R: tauri::Runtime>(
     app: &tauri::App<R>,
     app_data_dir: &std::path::Path,
 ) -> meal_planner_core::Result<()> {
-    let connection = db::open(app_data_dir)?;
+    let connection = Arc::new(Mutex::new(db::open(app_data_dir)?));
     let settings = Arc::new(settings::Settings::new(app, app_data_dir)?);
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -27,8 +27,8 @@ fn setup_state<R: tauri::Runtime>(
             meal_planner_core::Error::Image(format!("Cannot create download client: {error}"))
         })?;
     app.manage(App::new(
-        Arc::new(storage::SqliteStorage::new(connection)),
-        Arc::new(images::LocalImages::new(db::open(app_data_dir)?)),
+        Arc::new(storage::SqliteStorage::new(connection.clone())),
+        Arc::new(images::LocalImages::new(connection)),
         Arc::new(edamam::EdamamClient::new(settings.clone())?),
         Arc::new(importer::JsonLdExtractor::new(client.clone())),
     )?);

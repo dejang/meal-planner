@@ -1,5 +1,5 @@
 use std::error::Error as _;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use meal_planner_core::{image::resize_image, App, Error, ImageStore, ResizedImage, Result};
 use rusqlite::{params, Connection, OptionalExtension};
@@ -7,14 +7,12 @@ use tauri::{http, Manager, Runtime, UriSchemeContext, UriSchemeResponder};
 use uuid::Uuid;
 
 pub struct LocalImages {
-    connection: Mutex<Connection>,
+    connection: Arc<Mutex<Connection>>,
 }
 
 impl LocalImages {
-    pub fn new(connection: Connection) -> Self {
-        Self {
-            connection: Mutex::new(connection),
-        }
+    pub fn new(connection: Arc<Mutex<Connection>>) -> Self {
+        Self { connection }
     }
 }
 

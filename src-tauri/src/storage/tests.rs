@@ -1,4 +1,6 @@
-use meal_planner_core::{Error, Recipe, Storage, WeeklyPlan};
+use std::sync::{Arc, Mutex};
+
+use meal_planner_core::{Error, ImageStore, Recipe, ResizedImage, Storage, WeeklyPlan};
 use rusqlite::{params, Connection};
 use uuid::Uuid;
 
@@ -21,7 +23,9 @@ fn insert_image(connection: &Connection, recipe_id: Uuid, version: Uuid) -> rusq
 fn full_analysis_round_trips_and_image_versions_come_from_images(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempfile::tempdir()?;
-    let storage = SqliteStorage::new(db::open(directory.path())?);
+    let connection = Arc::new(Mutex::new(db::open(directory.path())?));
+    let storage = SqliteStorage::new(connection.clone());
+    let images = crate::images::LocalImages::new(connection.clone());
     let mut recipe = Recipe {
         title: "Soup 🥕".into(),
         ingredients: "1 carrot\nwater".into(),
@@ -41,17 +45,24 @@ fn full_analysis_round_trips_and_image_versions_come_from_images(
     recipe.image_version = None;
     assert_eq!(storage.load_recipes()?, vec![recipe.clone()]);
 
-    let connection = db::open(directory.path())?;
-    let stored: String =
-        connection.query_row("SELECT analysis FROM recipes", [], |row| row.get(0))?;
+    let stored: String = connection.lock().map_err(Error::storage)?.query_row(
+        "SELECT analysis FROM recipes",
+        [],
+        |row| row.get(0),
+    )?;
     assert_eq!(
         Some(serde_json::from_str::<meal_planner_core::AnalysisResponse>(
             &stored
         )?),
         recipe.analysis
     );
-    let version = Uuid::new_v4();
-    insert_image(&connection, recipe.id, version)?;
+    let image = ResizedImage {
+        bytes: vec![1, 2],
+        width: 2,
+        height: 1,
+    };
+    let version = images.put(recipe.id, &image)?;
+    assert_eq!(images.get(recipe.id)?, Some(image.clone()));
     recipe.image_version = Some(version);
     assert_eq!(storage.load_recipes()?, vec![recipe.clone()]);
 
@@ -63,15 +74,29 @@ fn full_analysis_round_trips_and_image_versions_come_from_images(
     recipe.image_version = Some(Uuid::new_v4());
     storage.update_recipe(&recipe)?;
     recipe.image_version = Some(version);
-    assert_eq!(storage.load_recipes()?, vec![recipe]);
-    let analysis: Option<String> =
-        connection.query_row("SELECT analysis FROM recipes", [], |row| row.get(0))?;
+    assert_eq!(storage.load_recipes()?, vec![recipe.clone()]);
+    let analysis: Option<String> = connection.lock().map_err(Error::storage)?.query_row(
+        "SELECT analysis FROM recipes",
+        [],
+        |row| row.get(0),
+    )?;
     assert_eq!(analysis, None);
     let missing = Recipe::default();
     assert_eq!(
         storage.update_recipe(&missing),
         Err(Error::NotFound(missing.id))
     );
+    drop(storage);
+    drop(images);
+    drop(connection);
+
+    let connection = Arc::new(Mutex::new(db::open(directory.path())?));
+    let storage = SqliteStorage::new(connection.clone());
+    let images = crate::images::LocalImages::new(connection);
+    assert_eq!(storage.load_recipes()?, vec![recipe.clone()]);
+    assert_eq!(images.get(recipe.id)?, Some(image));
+    storage.delete_recipe(recipe.id, &WeeklyPlan::default())?;
+    assert_eq!(images.get(recipe.id)?, None);
     Ok(())
 }
 
@@ -79,7 +104,7 @@ fn full_analysis_round_trips_and_image_versions_come_from_images(
 fn recipe_order_survives_updates_deletion_and_reopening() -> Result<(), Box<dyn std::error::Error>>
 {
     let directory = tempfile::tempdir()?;
-    let storage = SqliteStorage::new(db::open(directory.path())?);
+    let storage = SqliteStorage::new(Arc::new(Mutex::new(db::open(directory.path())?)));
     let mut recipes = [(3, "Zulu"), (1, "Alpha"), (2, "Middle")].map(|(id, title)| Recipe {
         id: Uuid::from_u128(id),
         title: title.into(),
@@ -95,7 +120,7 @@ fn recipe_order_survives_updates_deletion_and_reopening() -> Result<(), Box<dyn 
     storage.insert_recipe(&appended)?;
     drop(storage);
 
-    let reopened = SqliteStorage::new(db::open(directory.path())?);
+    let reopened = SqliteStorage::new(Arc::new(Mutex::new(db::open(directory.path())?)));
     assert_eq!(
         reopened.load_recipes()?,
         vec![recipes[0].clone(), recipes[2].clone(), appended]
@@ -107,7 +132,7 @@ fn recipe_order_survives_updates_deletion_and_reopening() -> Result<(), Box<dyn 
 fn plan_snapshots_renumber_insert_move_remove_and_roll_back_failures(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempfile::tempdir()?;
-    let storage = SqliteStorage::new(db::open(directory.path())?);
+    let storage = SqliteStorage::new(Arc::new(Mutex::new(db::open(directory.path())?)));
     let recipes = [Recipe::default(), Recipe::default(), Recipe::default()];
     for recipe in &recipes {
         storage.insert_recipe(recipe)?;
@@ -127,7 +152,7 @@ fn plan_snapshots_renumber_insert_move_remove_and_roll_back_failures(
     ] {
         plan.days = days;
         storage.save_plan(&plan)?;
-        let reopened = SqliteStorage::new(db::open(directory.path())?);
+        let reopened = SqliteStorage::new(Arc::new(Mutex::new(db::open(directory.path())?)));
         assert_eq!(reopened.load_plan()?, plan);
         let mut stored = statement.query_map([], |row| {
             Ok((
@@ -160,7 +185,7 @@ fn plan_snapshots_renumber_insert_move_remove_and_roll_back_failures(
 fn deleting_a_recipe_cascades_without_touching_other_recipes_or_images(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempfile::tempdir()?;
-    let storage = SqliteStorage::new(db::open(directory.path())?);
+    let storage = SqliteStorage::new(Arc::new(Mutex::new(db::open(directory.path())?)));
     let removed = Recipe::default();
     let mut kept = Recipe::default();
     for recipe in [&removed, &kept] {

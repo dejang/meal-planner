@@ -46,11 +46,17 @@ fn deleting_a_recipe_cascades_to_its_plan_and_image_only() -> Result<(), Box<dyn
 }
 
 #[test]
-fn unknown_plan_recipes_are_rejected_on_every_connection() -> Result<(), Box<dyn std::error::Error>>
-{
+fn concurrency_and_foreign_key_pragmas_are_active_on_every_open(
+) -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempfile::tempdir()?;
     for _ in 0..2 {
         let connection = open(directory.path())?;
+        let journal_mode: String =
+            connection.pragma_query_value(None, "journal_mode", |row| row.get(0))?;
+        let busy_timeout: u32 =
+            connection.pragma_query_value(None, "busy_timeout", |row| row.get(0))?;
+        assert_eq!(journal_mode, "wal");
+        assert_eq!(busy_timeout, 5000);
         match connection.execute(
             "INSERT INTO plan (day, position, recipe_id) VALUES (0, 0, 'unknown')",
             [],
@@ -61,6 +67,31 @@ fn unknown_plan_recipes_are_rejected_on_every_connection() -> Result<(), Box<dyn
             other => panic!("Expected a foreign-key constraint failure, got {other:?}"),
         }
     }
+    Ok(())
+}
+
+#[test]
+fn opening_waits_for_a_rollback_journal_lock_before_enabling_wal(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let connection = rusqlite::Connection::open(directory.path().join("meal_planner.sqlite"))?;
+    connection.pragma_update(None, "journal_mode", "DELETE")?;
+    connection.execute_batch(
+        "CREATE TABLE existing_data (value TEXT); BEGIN; SELECT * FROM existing_data;",
+    )?;
+    let release = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        connection.execute_batch("COMMIT")
+    });
+
+    let opened = open(directory.path());
+    release
+        .join()
+        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))?;
+    let connection = opened?;
+    let journal_mode: String =
+        connection.pragma_query_value(None, "journal_mode", |row| row.get(0))?;
+    assert_eq!(journal_mode, "wal");
     Ok(())
 }
 
