@@ -24,7 +24,7 @@ impl<R: tauri::Runtime> Settings<R> {
             .store_builder(app_data_dir.join("settings.json"))
             .disable_auto_save()
             .build()
-            .map_err(storage_error)?;
+            .map_err(Error::storage)?;
         Ok(Self {
             store: Mutex::new(store),
         })
@@ -37,13 +37,13 @@ impl<R: tauri::Runtime> Settings<R> {
             .map(serde_json::from_value)
             .transpose()
             .map(|credentials| credentials.unwrap_or_default())
-            .map_err(storage_error)
+            .map_err(Error::storage)
     }
 
     pub fn save_credentials(&self, credentials: Credentials) -> Result<()> {
         let store = self.store.lock()?;
         let key = "edamam";
-        let value = serde_json::to_value(credentials).map_err(storage_error)?;
+        let value = serde_json::to_value(credentials).map_err(Error::storage)?;
         let previous = store.get(key);
         store.set(key, value);
         if let Err(error) = store.save() {
@@ -53,12 +53,8 @@ impl<R: tauri::Runtime> Settings<R> {
                     store.delete(key);
                 }
             }
-            return Err(storage_error(error));
+            return Err(Error::storage(error));
         }
         Ok(())
     }
-}
-
-fn storage_error(error: impl std::fmt::Display) -> Error {
-    Error::Storage(error.to_string())
 }
