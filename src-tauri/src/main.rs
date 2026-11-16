@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod db;
 mod edamam;
 mod images;
 mod importer;
@@ -16,6 +17,7 @@ fn setup_state<R: tauri::Runtime>(
     app: &tauri::App<R>,
     app_data_dir: &std::path::Path,
 ) -> meal_planner_core::Result<()> {
+    db::open(app_data_dir)?;
     let settings = Arc::new(settings::Settings::new(app, app_data_dir)?);
     app.manage(App::new(
         Arc::new(storage::SqliteStorage),
@@ -86,6 +88,7 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let app = mock_app();
         crate::setup_state(&app, directory.path()).unwrap();
+        assert!(directory.path().join("meal_planner.sqlite").is_file());
         let window = WebviewWindowBuilder::new(&app, "main", WebviewUrl::default())
             .build()
             .unwrap();

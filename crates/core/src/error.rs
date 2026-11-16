@@ -1,4 +1,4 @@
-use std::sync::PoisonError;
+use std::{fmt::Display, sync::PoisonError};
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -25,6 +25,12 @@ pub enum Error {
     Import(String),
     #[error("Application state lock poisoned")]
     LockPoisoned,
+}
+
+impl Error {
+    pub fn storage(error: impl Display) -> Self {
+        Self::Storage(error.to_string())
+    }
 }
 
 impl From<image::ImageError> for Error {
