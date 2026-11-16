@@ -3,7 +3,7 @@ set -euxo pipefail
 cd "$(dirname "$0")"
 
 cargo fmt --all -- --check
-cargo clippy --locked --workspace --all-targets --all-features -- -D warnings -W clippy::all
+pnpm run lint
 cargo build --locked --workspace --all-targets --all-features
 cargo test --locked --workspace --all-targets --all-features
 cargo test --locked --workspace --doc
