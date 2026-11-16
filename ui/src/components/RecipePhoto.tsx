@@ -38,7 +38,9 @@ export function RecipePhoto({
             <Icon name={IconName.ChefHat} />
           </span>
         </span>
-        <span>A little kitchen inspiration</span>
+        <span className="recipe-photo-caption">
+          A little kitchen inspiration
+        </span>
       </div>
     );
   }

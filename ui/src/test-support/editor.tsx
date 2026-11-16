@@ -48,6 +48,7 @@ beforeEach(() => {
   vi.mocked(imageUrl).mockReturnValue("https://images.test/soup.jpg");
   vi.mocked(useRecipesActions).mockImplementation(() => ({
     reload: vi.fn().mockResolvedValue(undefined),
+    retry: vi.fn(),
     setQuery: vi.fn(),
     select: vi.fn(),
     deleteRecipe: vi.fn(),
