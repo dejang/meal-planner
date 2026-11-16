@@ -3,6 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "scripts": {
+    "lint": "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings -W clippy::all",
     "tauri": "tauri"
   },
   "devDependencies": {

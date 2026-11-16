@@ -25,6 +25,12 @@ pub enum Error {
     LockPoisoned,
 }
 
+impl From<image::ImageError> for Error {
+    fn from(error: image::ImageError) -> Self {
+        Self::Image(error.to_string())
+    }
+}
+
 impl<T> From<PoisonError<T>> for Error {
     fn from(_: PoisonError<T>) -> Self {
         Self::LockPoisoned
