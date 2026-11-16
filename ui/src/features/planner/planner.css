@@ -1,0 +1,18 @@
+.planner-days {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(160px, 1fr));
+  gap: 10px;
+  height: 100%;
+}
+.planner-day {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.planner-day h2 {
+  background: var(--forest);
+  color: var(--surface);
+  margin: 0;
+  padding: 10px;
+  font-size: var(--text-body);
+}
