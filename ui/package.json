@@ -7,9 +7,15 @@
     "dev": "vite --host 127.0.0.1",
     "build": "pnpm run typecheck && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bindings:generate": "cargo run -p meal_planner_desktop -- --export-bindings",
+    "bindings:check": "cargo test -p meal_planner_desktop bindings_are_current"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-store": "^2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

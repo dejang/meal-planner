@@ -40,6 +40,21 @@ Run `./check.sh` for workspace fmt, clippy, build and tests, frontend typecheck
 and Vitest, a Tauri build, and the legacy wasm/Trunk checks. Install the Linux
 packages above, frontend dependencies and Trunk first.
 
+## Desktop command bindings
+
+Register commands in `src-tauri/src/commands/mod.rs`. The same tauri-specta builder
+provides IPC dispatch and generates `ui/src/api/bindings.ts`; do not edit that file
+by hand. Frontend callers import the API through `ui/src/api/index.ts`.
+
+After changing a command or a boundary type, regenerate and check the bindings:
+
+```sh
+pnpm --dir ui run bindings:generate
+pnpm --dir ui run bindings:check
+```
+
+The Rust test suite also checks the generated file against the registered commands.
+
 ## Features
 
 - copy/paste a list of ingredients in the ingredients box and get immediate nutrients analysis (macros & micros) per serving
