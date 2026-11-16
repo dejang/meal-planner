@@ -17,7 +17,7 @@ import Planner from "./features/planner";
 import Editor from "./features/editor";
 import Shopping from "./features/shopping";
 import Import from "./features/import";
-import Settings from "./features/settings";
+import Settings, { Welcome } from "./features/settings";
 import { PlanScope } from "./stores/PlanStore";
 import { RecipesScope } from "./stores/RecipesStore";
 import {
@@ -265,6 +265,7 @@ function Shell({
             </div>
           </section>
         </div>
+        <Welcome />
         {shoppingOpen && (
           <PaperDialog
             title="Shopping list"

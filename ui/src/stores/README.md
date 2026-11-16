@@ -49,9 +49,10 @@ Relevant rules: `store-exports-*`, `store-helper-*`, `selector-fresh-value-*`,
 ## Final contracts and remaining TODOs
 
 PlanStore.reload loads the plan, day totals and shopping projection through IPC.
-Editor persistence, image loading and ingredient analysis are implemented. Remaining
-persistence actions are placeholders for their owning feature tickets; preserve their
-names and state shapes. Loading and error fields belong to the store performing the
+SettingsStore.reload reads credentials and save persists them, then refreshes the
+stored values. Editor persistence, image loading and ingredient analysis are implemented.
+Remaining persistence actions are placeholders for their owning feature tickets; preserve
+their names and state shapes. Loading and error fields belong to the store performing the
 operation; never put IPC orchestration in UI.
 
 | Store         | State                                                                            | Actions and backend responsibility                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -60,7 +61,7 @@ operation; never put IPC orchestration in UI.
 | PlanStore     | plan (six days), dayTotals (six analyses or null), shoppingItems, loading, error | `reload()` loads `getPlan`, `dayTotals` for every day and `shoppingList`. `addToDay(position, recipeId)`, `moveMeal(from, to)`, `removeFromDay(position)`, `clearDay(day)`, `copyPreviousDay(day)` persist mutations and refresh plan/totals.                                                                                                                                                                                                                                                                                                                                                 |
 | EditorStore   | draft or null, saving, analyzing, loadingImage, error                            | `reload()` refreshes the persisted open draft (no-op for a new draft); `openNew()`, `openRecipe(id)` (getRecipe), `assertCanImport()`, `openImported(recipe, sourceUrl)`, `close()`, `patchDraft(patch)`, `save()` (create/update), `analyzeIngredients()`, `chooseImageFile()` (opens the dialog plugin with image filters, then runs `loadImageFile`), `loadImageFile(path)`, `loadImageUrl(url)`, `setImageSource(text)` (edits the image field without loading). Draft includes nullable ID, imageVersion and imageSource plus RecipeInput. Use patchDraft for image removal/replacement. |
 | ImportStore   | open, url, supportedSites, importing, error                                      | `reload()` loads supportedSites; `open()`, `close()`, `setUrl(url)`, `importRecipe()` imports into the editor; `openSite(url)` opens a supported-site link in the browser through the opener plugin.                                                                                                                                                                                                                                                                                                                                                                                          |
-| SettingsStore | credentials, loading, saving, error                                              | `reload()` reads credentials; `setCredentials(credentials)` edits locally; `save()` persists credentials.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| SettingsStore | credentials, startupCredentials, loadFailed, loading, saving, error, linkError   | `reload()` reads credentials; `setCredentials(credentials)` edits locally; `save()` persists credentials; `openSite(url)` opens the Edamam link through the opener plugin.                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 `useDraftRecipe()` selects the React-only editor draft. Closing saves it, except for
 new drafts with a blank title, which are discarded. Failed saves leave the draft open.
@@ -72,6 +73,12 @@ Shopping and settings visibility belongs to the shell. Shopping receives `onClos
 its feature calls PlanStore.reload when opened and selects shoppingItems. PlanStore
 refreshes that projection after plan changes even if shopping remains open. Editor and shopping own their window header/content and footer.
 The import/settings shell frames supply their headers.
+
+Settings reloads on open, discarding unsaved edits. `credentials` is the editable
+draft; `startupCredentials` captures only the first successful load and remains null
+until then. Welcome uses that startup snapshot, not edits or subsequent reloads, and
+owns its session-only dismissal. `loadFailed` distinguishes load errors from save
+errors so retry loading never discards edits after a failed save.
 
 ## Dependency and reload graph
 

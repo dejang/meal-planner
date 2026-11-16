@@ -1,0 +1,29 @@
+.settings-surface {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.settings-surface label {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-surface .text-input {
+  width: 100%;
+}
+
+.settings-surface > .button {
+  justify-self: end;
+}
+
+.settings-surface [role="alert"] {
+  color: var(--error);
+}
+
+.welcome-surface h3,
+.welcome-surface p {
+  margin: 0;
+}

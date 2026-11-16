@@ -76,6 +76,7 @@ vi.mock("./features/import", () => ({
 }));
 vi.mock("./features/settings", () => ({
   default: () => <div>Settings fixture</div>,
+  Welcome: () => null,
 }));
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: vi.fn(() => ({ close: vi.fn() })),
