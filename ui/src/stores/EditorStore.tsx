@@ -50,13 +50,21 @@ class EditorStore extends Store<EditorState> {
       });
     },
     openRecipe: async (_id: string): Promise<void> => {},
-    openImported: (recipe: ImportedRecipe): void => {
+    assertCanImport: (): void => {
+      if (this.getSnapshot().draft !== null) {
+        throw new Error(
+          "Close the current new recipe before importing another one",
+        );
+      }
+    },
+    openImported: (recipe: ImportedRecipe, sourceUrl: string): void => {
+      this.actions.assertCanImport();
       this.update({
         draft: {
           id: null,
           title: recipe.title,
           ingredients: recipe.ingredients.join("\n"),
-          instructions: recipe.instructions.join("\n"),
+          instructions: `${recipe.instructions.join("\n")}\n\n${sourceUrl}`,
           servings: recipe.servings,
           analysis: null,
           image: recipe.image

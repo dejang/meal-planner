@@ -1,0 +1,94 @@
+.recipe-import {
+  padding: 0 20px 20px;
+}
+
+.import-subtitle,
+.import-form p {
+  color: var(--muted);
+}
+
+.import-form {
+  padding: 20px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.import-form label,
+.recipe-import h3 {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.import-form .text-input {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.import-form p,
+.import-sites ul {
+  font-size: var(--text-small);
+}
+
+.import-submit {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.import-submit .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+}
+
+.import-form .import-error {
+  color: var(--error);
+}
+
+.recipe-import h3 {
+  margin-top: 20px;
+}
+
+.import-sites,
+.import-sites ul {
+  list-style: none;
+  padding: 0;
+}
+
+.import-sites > li {
+  margin-top: 10px;
+}
+
+.import-sites strong {
+  color: var(--forest);
+}
+
+.import-sites ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 6px;
+}
+
+.import-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: import-spin 0.8s linear infinite;
+}
+
+@keyframes import-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .import-spinner {
+    animation: none;
+  }
+}

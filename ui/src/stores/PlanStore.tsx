@@ -8,6 +8,7 @@ import type {
 } from "../api";
 import { commands, unwrap } from "../api";
 import { createStoreContext } from "./core/context";
+import { errorMessage } from "./core/error";
 
 export interface PlanState {
   plan: WeeklyPlan;
@@ -46,7 +47,7 @@ class PlanStore extends Store<PlanState> {
       } catch (error) {
         this.update({
           loading: false,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage(error),
         });
       }
     },
