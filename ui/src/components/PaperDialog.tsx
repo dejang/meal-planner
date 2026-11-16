@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Button, ButtonVariant } from "./Button";
 import { Icon, IconName } from "./Icon";
 
@@ -19,13 +19,15 @@ export interface PaperDialogProps {
 export function PaperWindowHeader({
   title,
   onClose,
-}: Pick<PaperDialogProps, "title" | "onClose">) {
+  closeLabel = "Close",
+}: Pick<PaperDialogProps, "title" | "onClose"> & { closeLabel?: string }) {
   return (
     <header className="paper-header">
       <h2>{title}</h2>
       <Button
         variant={ButtonVariant.Quiet}
-        aria-label="Close"
+        aria-label={closeLabel}
+        title={closeLabel}
         onClick={onClose}
       >
         <Icon name={IconName.X} />
@@ -42,8 +44,10 @@ export function PaperDialog({
   showHeader = true,
 }: PaperDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  const [open, setOpen] = useState(false);
+  useLayoutEffect(() => {
     dialog.current?.showModal();
+    setOpen(true);
     function preventEscape(event: KeyboardEvent) {
       if (event.key === "Escape") event.preventDefault();
     }
@@ -62,7 +66,7 @@ export function PaperDialog({
       onClose={onClose}
     >
       {showHeader && <PaperWindowHeader title={title} onClose={onClose} />}
-      {children}
+      {open && children}
     </dialog>
   );
 }

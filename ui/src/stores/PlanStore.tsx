@@ -6,6 +6,7 @@ import type {
   ShoppingItem,
   WeeklyPlan,
 } from "../api";
+import { commands, unwrap } from "../api";
 import { createStoreContext } from "./core/context";
 
 export interface PlanState {
@@ -28,7 +29,27 @@ class PlanStore extends Store<PlanState> {
   }
 
   readonly actions = {
-    reload: async (): Promise<void> => {},
+    reload: async (): Promise<void> => {
+      this.update({ loading: true, error: null });
+      try {
+        const [plan, shopping, ...totals] = await Promise.all([
+          commands.getPlan(),
+          commands.shoppingList(),
+          ...Array.from({ length: 6 }, (_, day) => commands.dayTotals(day)),
+        ] as const);
+        this.update({
+          plan: unwrap(plan),
+          shoppingItems: unwrap(shopping),
+          dayTotals: totals.map(unwrap),
+          loading: false,
+        });
+      } catch (error) {
+        this.update({
+          loading: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    },
     addToDay: async (
       _position: MealPosition,
       _recipeId: string,

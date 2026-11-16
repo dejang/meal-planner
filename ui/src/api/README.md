@@ -22,8 +22,10 @@ clients only if the application actually needs them.
   to the store coordinating the operation.
 
 `bindings.ts` is generated from the registered Tauri commands; do not edit it by hand.
-Import bindings and the versioned `imageUrl` helper through `index.ts`. Regeneration
-and freshness-check commands are documented in the repository README.
+Import bindings, the versioned `imageUrl` helper, and shared `unwrap` through `index.ts`.
+`unwrap` returns command result data on success or throws an Error with the error's
+`detail`, falling back to `kind` when there is no detail. Regeneration and
+freshness-check commands are documented in the repository README.
 
 The current `api-imports-*` rules cover selected caller paths and aliases, not every
 possible import. See the [source overview](../README.md) for that limitation.

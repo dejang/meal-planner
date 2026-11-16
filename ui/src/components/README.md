@@ -10,8 +10,12 @@ All controls are props-driven and independent of application stores.
   Escape and backdrop clicks do not close dialogs, matching legacy windows.
   A native close event synchronizes the owner's open state through onClose.
   DialogSize supports default, editor (980×860 maximum) and shopping (1080×900).
-  Headerless dialogs retain an accessible title; their feature supplies its close
-  control. PaperWindowHeader is available separately for custom window content.
+  Children mount only after showModal(), so their layout effects measure an open dialog.
+  Headerless dialogs initially focus the dialog element rather than a child control.
+  They retain an accessible title; their feature supplies its close control.
+  PaperWindowHeader is available separately for custom window content. Its optional
+  closeLabel supplies both the close button's accessible name and native hover tooltip,
+  defaulting to "Close".
 - `NutritionLabel`: analysis plus optional servings and servingsLabel. The default
   is one serving labelled Amount per day for the backend's dayTotals response. Nutrient
   quantities preserve legacy's ceil(abs(quantity)) then integer division; calories

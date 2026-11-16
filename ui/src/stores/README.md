@@ -48,10 +48,11 @@ Relevant rules: `store-exports-*`, `store-helper-*`, `selector-fresh-value-*`,
 
 ## Final contracts and remaining TODOs
 
-All persistence actions currently resolve without IPC. Implement these bodies in the
-owning feature ticket, preserving names and state shapes. Local draft/dialog/input
-transitions are implemented so the shell can function. Loading and error fields are
-owned by the store performing the operation; never put IPC orchestration in UI.
+PlanStore.reload loads the plan, day totals and shopping projection through IPC.
+Remaining persistence actions are placeholders for their owning feature tickets;
+preserve their names and state shapes. Local draft/dialog/input transitions are
+implemented so the shell can function. Loading and error fields belong to the store
+performing the operation; never put IPC orchestration in UI.
 
 | Store         | State                                                                            | Actions and backend responsibility                                                                                                                                                                                                                                                                                                                                                    |
 | ------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
