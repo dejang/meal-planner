@@ -10,7 +10,9 @@ The desktop scale matches legacy: Geist body 17px, heading 22px semibold, small
 Recipe Display/Text, Helvetica, Inter and all Geist weights are also available via
 font-face declarations. Use the CSS variables and typography classes instead of
 repeating visual values in features. Use `.surface-frame` for shared card/panel
-surfaces and `--card-shadow` when only the shadow is needed.
+surfaces and `--card-shadow` when only the shadow is needed. Use `.popup-frame`
+for shared popup frames and left-aligned quiet button items with sage hover fills.
+Use `.on-forest` on forest surfaces for contrasting buttons, focus outlines and popups.
 
 ## Responsibilities
 

@@ -1,6 +1,7 @@
 import {
   DndContext,
   KeyboardSensor,
+  getScrollableAncestors,
   PointerSensor,
   pointerWithin,
   rectIntersection,
@@ -74,7 +75,7 @@ function MenuDropdown({
         {label}
       </Button>
       {open && (
-        <div id={id} className="menu-popup" onClick={onClose}>
+        <div id={id} className="menu-popup popup-frame" onClick={onClose}>
           {items.map((item) => (
             <Button
               key={item.label}
@@ -140,14 +141,30 @@ function Shell({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={(args) =>
-        args.pointerCoordinates ? pointerWithin(args) : rectIntersection(args)
-      }
+      collisionDetection={(args) => {
+        const pointer = args.pointerCoordinates;
+        if (!pointer) return rectIntersection(args);
+        return pointerWithin(args).filter(({ data }) => {
+          const node = data?.droppableContainer.node.current;
+          return (
+            node &&
+            getScrollableAncestors(node).every((ancestor) => {
+              const rect = ancestor.getBoundingClientRect();
+              return (
+                pointer.x >= rect.left &&
+                pointer.x <= rect.right &&
+                pointer.y >= rect.top &&
+                pointer.y <= rect.bottom
+              );
+            })
+          );
+        });
+      }}
     >
       <div className="app-shell">
         <nav
           aria-label="Main"
-          className="menu-bar"
+          className="menu-bar on-forest"
           onBlur={(event) => {
             if (!menuRoot.current?.contains(event.relatedTarget)) setMenu(null);
           }}

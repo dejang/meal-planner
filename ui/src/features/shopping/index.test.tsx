@@ -25,6 +25,7 @@ beforeEach(() => {
     reload: vi.fn().mockResolvedValue(undefined),
     addToDay: vi.fn(),
     moveMeal: vi.fn(),
+    dropRecipe: vi.fn(),
     removeFromDay: vi.fn(),
     clearDay: vi.fn(),
     copyPreviousDay: vi.fn(),

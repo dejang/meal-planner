@@ -24,34 +24,13 @@
   font-size: 23px;
   color: var(--citrus);
 }
-.menu-bar .button:hover,
-.menu-bar .button:active,
-.menu-bar .button[aria-expanded="true"] {
-  background: var(--green);
-  color: var(--citrus);
-}
-.menu-bar :focus-visible {
-  outline-color: var(--citrus);
-}
 .menu-disclosure {
   position: relative;
 }
 .menu-popup {
   position: absolute;
-  z-index: 10;
   top: 100%;
   left: 0;
-  display: grid;
-  padding: 8px;
-  min-width: 180px;
-  background: var(--forest);
-  border: 1px solid var(--green);
-  border-radius: 10px;
-  box-shadow: var(--card-shadow);
-}
-.menu-popup .button {
-  text-align: left;
-  white-space: nowrap;
 }
 .workspace {
   display: flex;

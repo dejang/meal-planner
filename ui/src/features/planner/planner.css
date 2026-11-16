@@ -1,18 +1,113 @@
+.planner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.planner-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+}
 .planner-days {
   display: grid;
   grid-template-columns: repeat(6, minmax(160px, 1fr));
-  gap: 10px;
-  height: 100%;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
 }
 .planner-day {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
-.planner-day h2 {
+.planner-day-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
   background: var(--forest);
-  color: var(--surface);
+  color: var(--citrus);
+  gap: 8px;
+}
+.planner-day-header h2 {
+  margin: 0 auto 0 0;
+  white-space: nowrap;
+}
+.planner-day-header .button {
+  padding: 5px;
+}
+.planner-day-scroll {
+  overflow-y: auto;
+  margin-top: 9px;
+  min-height: 0;
+}
+.planner-drop-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-sizing: content-box;
+  background: var(--sage);
+  border-radius: 10px;
+  padding: 6px;
+  min-height: 100px;
+}
+.planner-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+.planner-drop-zone.planner-drop-active {
+  box-shadow: inset 0 0 0 3px var(--green);
+}
+.planner-meal {
+  position: relative;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--forest);
+  cursor: grab;
+  touch-action: none;
+}
+.planner-meal h3 {
   margin: 0;
-  padding: 10px;
-  font-size: var(--text-body);
+  font-size: var(--text-smallish);
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+.planner-meal-dragging {
+  visibility: hidden;
+}
+.planner-insert-before,
+.planner-insert-after {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  pointer-events: none;
+}
+.planner-insert-before {
+  top: 0;
+}
+.planner-insert-after {
+  bottom: 0;
+}
+.planner-insert-before.planner-drop-active {
+  border-top: 3px solid var(--green);
+}
+.planner-insert-after.planner-drop-active {
+  border-bottom: 3px solid var(--green);
+}
+.planner-meal-menu {
+  position: fixed;
+}
+.planner-day-scroll > .nutrition-label {
+  margin-top: 11px;
 }

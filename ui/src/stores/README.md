@@ -48,7 +48,7 @@ Relevant rules: `store-exports-*`, `store-helper-*`, `selector-fresh-value-*`,
 
 ## Final contracts and remaining TODOs
 
-PlanStore.reload loads the plan, day totals and shopping projection through IPC.
+PlanStore implements serialized persistence and independent projection refreshes through IPC.
 SettingsStore.reload reads credentials and save persists them, then refreshes the
 stored values. Editor persistence, image loading and ingredient analysis are implemented.
 Remaining persistence actions are placeholders for their owning feature tickets; preserve
@@ -58,7 +58,7 @@ operation; never put IPC orchestration in UI.
 | Store         | State                                                                            | Actions and backend responsibility                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RecipesStore  | recipes by ID, visibleIds, query, selectedId, loading, error                     | `reload()` lists recipes and reapplies the current query; `setQuery(query)` asynchronously calls `searchRecipes` and stores the ordered result IDs; `select(id)` changes selection; `deleteRecipe(id)` deletes and refreshes caches. Do not reimplement backend search in JS.                                                                                                                                                                                                                                                                                                                 |
-| PlanStore     | plan (six days), dayTotals (six analyses or null), shoppingItems, loading, error | `reload()` loads `getPlan`, `dayTotals` for every day and `shoppingList`. `addToDay(position, recipeId)`, `moveMeal(from, to)`, `removeFromDay(position)`, `clearDay(day)`, `copyPreviousDay(day)` persist mutations and refresh plan/totals.                                                                                                                                                                                                                                                                                                                                                 |
+| PlanStore     | plan (six days), dayTotals (six analyses or null), shoppingItems, loading, error | `reload()` loads `getPlan`, `dayTotals` for every day and `shoppingList`. `addToDay(position, recipeId)`, `moveMeal(from, to)`, `removeFromDay(position)`, `clearDay(day)`, `copyPreviousDay(day)` persist mutations and refresh totals/shopping after storing the returned plan. `dropRecipe(payload, target)` handles gallery additions and plan moves, including same-day row shifts and no-op drops.                                                                                                                                                                                      |
 | EditorStore   | draft or null, saving, analyzing, loadingImage, error                            | `reload()` refreshes the persisted open draft (no-op for a new draft); `openNew()`, `openRecipe(id)` (getRecipe), `assertCanImport()`, `openImported(recipe, sourceUrl)`, `close()`, `patchDraft(patch)`, `save()` (create/update), `analyzeIngredients()`, `chooseImageFile()` (opens the dialog plugin with image filters, then runs `loadImageFile`), `loadImageFile(path)`, `loadImageUrl(url)`, `setImageSource(text)` (edits the image field without loading). Draft includes nullable ID, imageVersion and imageSource plus RecipeInput. Use patchDraft for image removal/replacement. |
 | ImportStore   | open, url, supportedSites, importing, error                                      | `reload()` loads supportedSites; `open()`, `close()`, `setUrl(url)`, `importRecipe()` imports into the editor; `openSite(url)` opens a supported-site link in the browser through the opener plugin.                                                                                                                                                                                                                                                                                                                                                                                          |
 | SettingsStore | credentials, startupCredentials, loadFailed, loading, saving, error, linkError   | `reload()` reads credentials; `setCredentials(credentials)` edits locally; `save()` persists credentials; `openSite(url)` opens the Edamam link through the opener plugin.                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -103,15 +103,16 @@ that same form. Async TODO parameters use `_` prefixes until implemented.
 ## Drag and drop
 
 The shell owns one dnd-kit context with PointerSensor (6px activation distance),
-KeyboardSensor and `pointerWithin` collision detection, falling back to
-`rectIntersection` for keyboard drags without pointer coordinates. A card remains
+KeyboardSensor and `pointerWithin` collision detection, excluding pointer hits
+outside any scroll ancestor's visible bounds. It falls back to `rectIntersection`
+for keyboard drags without pointer coordinates. A card remains
 clickable until movement crosses the threshold. Enter/Space on the drag activator
 starts a keyboard drag. Cards that also open with Enter/Space must put drag listeners
 on a separate handle using `setActivatorNodeRef`. Use `useDraggable`/`useDroppable` in
 features, and `useDndMonitor` in the planner for drop handling without editing App.tsx.
 `lib/recipeDrag.ts` defines `RecipeDragPayload` for draggable data: recipeId plus
-position (`null` from the gallery; day/row from the planner). A gallery drop invokes
-addToDay; a plan drop invokes moveMeal. Days and rows are zero-based Rust positions.
+position (`null` from the gallery; day/row from the planner). PlanStore's `dropRecipe(payload, target)` handles gallery additions, plan moves,
+same-day row shifts and no-op drops. Days and rows are zero-based Rust positions.
 
 Day totals are the API's `AnalysisResponse`, not a separate wire shape. Render them
 with `NutritionLabel analysis={totals}` (one serving, Amount per day). For recipes pass
