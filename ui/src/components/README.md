@@ -20,7 +20,10 @@ All controls are props-driven and independent of application stores.
   is one serving labelled Amount per day for the backend's dayTotals response. Optional
   rows and nutrientGroups configure the displayed nutrient layout. Nutrient
   quantities preserve legacy's ceil(abs(quantity)) then integer division; calories
-  truncate after division. Nutrients discloses vitamins/minerals from totalDaily.
+  truncate after division. Vitamins & Minerals discloses values from totalDaily with
+  a reduced-motion-aware expand/collapse transition and wrapping narrow-width rows.
+- `mobile/`: touch-native drawer, swipe pager/dots, day pills, header and portion
+  stepper. See `mobile/README.md` for controlled props and gesture contracts.
 - `RecipePhoto`: optional nullable recipeId/imageVersion, optional ResizedImage,
   alt and optional style/className. A draft image takes precedence as a JPEG data URL;
   otherwise it uses the library's versioned image:// helper. Photos cover the frame and

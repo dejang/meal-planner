@@ -90,11 +90,6 @@
   border-radius: var(--radius-pill);
 }
 
-.mobile-theme summary.button {
-  display: flex;
-  align-items: center;
-}
-
 .mobile-theme :is(.button, .mobile-pressable) {
   transition:
     transform var(--duration-fast) var(--ease-spring),
