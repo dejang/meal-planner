@@ -58,7 +58,7 @@ it.each(["new", "existing", "imported"])(
     expect(commands.createRecipe).not.toHaveBeenCalled();
     expect(commands.updateRecipe).not.toHaveBeenCalled();
     const draft = result.current.draft;
-    let closing: Promise<void>;
+    let closing: Promise<boolean>;
     act(() => {
       closing = result.current.actions.close();
     });
@@ -166,7 +166,7 @@ it.each(["image", "analysis"])(
         void result.current.actions.loadImageUrl("image-url");
       else void result.current.actions.analyzeIngredients();
     });
-    let saving: Promise<void>;
+    let saving: Promise<boolean>;
     act(() => {
       saving = result.current.actions.close();
     });
@@ -246,7 +246,7 @@ it.each<{ error: ApiError; message: string }>([
   },
 );
 
-it("waits for image and analysis before saving and ignores duplicate close requests", async () => {
+it("waits for image and analysis before saving and shares duplicate close results", async () => {
   const { result } = renderHook(useEditor, { wrapper: AppScopes });
   const image = { bytes: "jpeg", width: 20, height: 10 };
   const nutrition = analysis();
@@ -269,16 +269,20 @@ it("waits for image and analysis before saving and ignores duplicate close reque
   });
   expect(result.current.loadingImage).toBe(true);
   expect(result.current.analyzing).toBe(true);
-  let saving: Promise<void>;
+  let saving: Promise<boolean>;
   act(() => {
     saving = result.current.actions.close();
   });
-  await act(() => result.current.actions.close());
+  let repeated!: Promise<boolean>;
+  act(() => {
+    repeated = result.current.actions.close();
+  });
   expect(commands.createRecipe).not.toHaveBeenCalled();
   await act(async () => {
     imageResult.resolve(ok(image));
     analysisResult.resolve(ok(nutrition));
-    await saving;
+    expect(await saving).toBe(true);
+    expect(await repeated).toBe(true);
   });
   expect(commands.analyzeIngredients).toHaveBeenCalledWith([
     "1 onion",

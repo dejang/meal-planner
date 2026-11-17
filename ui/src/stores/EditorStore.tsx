@@ -56,6 +56,7 @@ class EditorStore extends Store<EditorState> {
   }
 
   private session = 0;
+  private saveTask: Promise<void> | null = null;
   private openRequest: TrackedRequest = { sequence: 0 };
   private loadedImageSource: string | null = null;
   private imageRequest: ImageRequest = {
@@ -200,8 +201,10 @@ class EditorStore extends Store<EditorState> {
       });
       void this.actions.analyzeIngredients();
     },
-    close: async (): Promise<void> => {
+    close: async (): Promise<boolean> => {
+      this.openRequest.sequence += 1;
       await this.actions.save();
+      return this.getSnapshot().draft === null;
     },
     patchDraft: (patch: Partial<RecipeInput>): void => {
       const draft = this.editableState?.draft;
@@ -223,47 +226,56 @@ class EditorStore extends Store<EditorState> {
       const draft = this.editableState?.draft;
       if (draft) this.update({ draft: { ...draft, imageSource } });
     },
-    save: async (): Promise<void> => {
+    save: (): Promise<void> => {
+      if (this.saveTask) return this.saveTask;
       const editableDraft = this.editableState?.draft;
-      if (!editableDraft) return;
+      if (!editableDraft) return Promise.resolve();
       if (!editableDraft.id && !editableDraft.title.trim()) {
         this.setDraft(null);
-        return;
+        return Promise.resolve();
       }
       this.update({ saving: true, error: null });
-      try {
-        await Promise.all([this.imageRequest.task, this.analysisRequest.task]);
-        const draft = this.getSnapshot().draft;
-        if (!draft) return;
-        const id = draft.id;
-        const input: RecipeInput = {
-          title: draft.title,
-          ingredients: draft.ingredients,
-          instructions: draft.instructions,
-          servings: draft.servings,
-          analysis: draft.analysis,
-          image: draft.image,
-        };
-        const saved = unwrap(
-          id
-            ? await commands.updateRecipe(id, input)
-            : await commands.createRecipe(input),
-        );
-        this.update({
-          draft: {
-            ...draft,
-            id: saved.id,
-            imageVersion: saved.image_version,
-            image: { kind: "keep" },
-          },
-        });
-        await Promise.all([this.recipes.reload(), this.plan.reload()]);
-        this.setDraft(null);
-      } catch (error) {
-        this.update({ error: errorMessage(error) });
-      } finally {
-        this.update({ saving: false });
-      }
+      this.saveTask = (async () => {
+        try {
+          await Promise.all([
+            this.imageRequest.task,
+            this.analysisRequest.task,
+          ]);
+          const draft = this.getSnapshot().draft;
+          if (!draft) return;
+          const id = draft.id;
+          const input: RecipeInput = {
+            title: draft.title,
+            ingredients: draft.ingredients,
+            instructions: draft.instructions,
+            servings: draft.servings,
+            analysis: draft.analysis,
+            image: draft.image,
+          };
+          const saved = unwrap(
+            id
+              ? await commands.updateRecipe(id, input)
+              : await commands.createRecipe(input),
+          );
+          this.update({
+            draft: {
+              ...draft,
+              id: saved.id,
+              imageVersion: saved.image_version,
+              image: { kind: "keep" },
+            },
+          });
+          await Promise.all([this.recipes.reload(), this.plan.reload()]);
+          this.setDraft(null);
+        } catch (error) {
+          this.update({ error: errorMessage(error) });
+        } finally {
+          this.update({ saving: false });
+        }
+      })().finally(() => {
+        this.saveTask = null;
+      });
+      return this.saveTask;
     },
     analyzeIngredients: (): Promise<void> => {
       const draft = this.editableState?.draft;

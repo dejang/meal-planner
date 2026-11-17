@@ -71,6 +71,21 @@ vi.mock("@/features/settings", () => ({
   default: () => <div>Settings fixture</div>,
   Welcome: () => null,
 }));
+vi.mock("@/mobile/explorer", () => ({
+  default: () => <h1>Mobile explorer fixture</h1>,
+}));
+vi.mock("@/mobile/planner", () => ({
+  default: () => <h1>Mobile planner fixture</h1>,
+}));
+vi.mock("@/mobile/shopping", () => ({
+  default: () => <h1>Mobile shopping fixture</h1>,
+}));
+vi.mock("@/mobile/settings", () => ({
+  default: () => <h1>Mobile settings fixture</h1>,
+}));
+vi.mock("@/mobile/drawer", () => ({
+  default: () => <div>Mobile drawer fixture</div>,
+}));
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: vi.fn(() => ({ close: vi.fn() })),
 }));
@@ -286,4 +301,48 @@ it("preserves card clicks below the pointer threshold and drops keyboard drags o
   expect(day.textContent).toBe("Planner fixture; dropped ");
   await user.keyboard("[ArrowRight][ArrowRight][Space]");
   expect(day.textContent).toBe("Planner fixture; dropped day");
+});
+
+it("selects the responsive shell on media changes and accepts a custom viewport query", () => {
+  const original = window.matchMedia;
+  const events = new EventTarget();
+  const media = {
+    matches: false,
+    addEventListener: vi.fn(events.addEventListener.bind(events)),
+    removeEventListener: vi.fn(events.removeEventListener.bind(events)),
+  };
+  const matchMedia = vi.fn(() => media);
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: matchMedia,
+  });
+  try {
+    const { rerender, unmount } = render(<App />);
+    expect(matchMedia).toHaveBeenCalledWith("(max-width: 768px)");
+    expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
+    act(() => {
+      media.matches = true;
+      events.dispatchEvent(new Event("change"));
+    });
+    expect(
+      screen.getByRole("heading", { name: "Mobile explorer fixture" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "File" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Quit" })).toBeNull();
+    rerender(<App mobileViewportQuery="(max-width: 600px)" />);
+    expect(matchMedia).toHaveBeenCalledWith("(max-width: 600px)");
+    act(() => {
+      media.matches = false;
+      events.dispatchEvent(new Event("change"));
+    });
+    expect(screen.getByRole("button", { name: "File" })).toBeTruthy();
+    unmount();
+    expect(media.removeEventListener).toHaveBeenCalledTimes(
+      media.addEventListener.mock.calls.length,
+    );
+  } finally {
+    if (original) window.matchMedia = original;
+    else Reflect.deleteProperty(window, "matchMedia");
+  }
 });

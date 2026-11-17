@@ -40,6 +40,11 @@ Edit and Create use that drawer in place, not separate pages or a second modal e
 Mobile adaptation must accommodate safe areas, narrow widths, touch interaction,
 scrolling content and the on-screen keyboard. Keep the desktop shell intact when
 selecting the mobile presentation; test viewport selection using mocked `matchMedia`.
+Tab screens stay mounted to retain scroll position and receive an `active` boolean prop.
+Use it to run on-open reloads for Shop and Settings rather than relying on mount effects.
+Screens own their content gutters; `MobileHeader` owns the top safe-area inset and header
+side gutters. The shell does not pad screen panels and owns only the tab bar's insets.
+Welcome renders at shell level, outside the retained screen panels.
 
 ## Visual baseline from Sketch Board 12
 
@@ -178,10 +183,10 @@ not invented backend contracts. Both belong to the target layout above.
    floor rounding and the safe integer servings divisor. Reuse `NutritionLabel` for
    detailed recipe/daily nutrition; do not duplicate its calculations.
 
-3. **F-359 MobileShell:** select `useEditorError()` and `useEditorOpen()` and render
-   closed-drawer errors with `role="alert"` and a Dismiss action calling
-   `dismissError()`, just like desktop `App.tsx`. A failed recipe load without an open
-   draft must not disappear because the drawer is closed. **F-361 URL import** must
+3. **F-359 MobileShell:** render the shared `ClosedEditorError` from `features/editor`
+   in both shells. It selects editor error/open state and renders closed-drawer errors
+   with `role="alert"` and a Dismiss action calling `dismissError()`. A failed recipe
+   load without an open draft must not disappear because the drawer is closed. **F-361 URL import** must
    preserve `openImported`'s automatic ingredient analysis and separate `linkError`
    handling described above.
 
