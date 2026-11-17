@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { Button, ButtonVariant } from "@/components/Button";
 import { Icon, IconName } from "@/components/Icon";
 
@@ -43,10 +43,9 @@ export function PaperDialog({
   size = DialogSize.Default,
   showHeader = true,
 }: PaperDialogProps) {
-  const dialog = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
-  useLayoutEffect(() => {
-    dialog.current?.showModal();
+  const openModal = useCallback((node: HTMLDialogElement) => {
+    node.showModal();
     setOpen(true);
     function preventEscape(event: KeyboardEvent) {
       if (event.key === "Escape") event.preventDefault();
@@ -57,7 +56,7 @@ export function PaperDialog({
 
   return (
     <dialog
-      ref={dialog}
+      ref={openModal}
       aria-label={title}
       className={`paper-dialog paper-dialog-${size}`}
       onCancel={(event) => {

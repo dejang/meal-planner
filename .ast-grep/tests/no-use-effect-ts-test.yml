@@ -1,0 +1,33 @@
+id: no-use-effect-ts
+valid:
+  - |
+    import { useMemo, useState } from "react";
+  - |
+    export function useTotal(items: readonly number[]) {
+      return useMemo(() => items.length, [items]);
+    }
+  - |
+    export function useRate(plan: Plan) {
+      const rate = useEffectiveRate(plan);
+      return useEffectEvent(() => rate);
+    }
+invalid:
+  - |
+    export function useLoad(load: () => void) {
+      useEffect(() => {
+        load();
+      }, [load]);
+    }
+  - |
+    export function useLoad(load: () => void) {
+      React.useEffect(() => load());
+    }
+  - |
+    import { useEffect as onMount } from "react";
+  - |
+    export function useEscape(close: () => void) {
+      useEffect(() => {
+        document.addEventListener("keydown", close);
+        return () => document.removeEventListener("keydown", close);
+      }, []);
+    }

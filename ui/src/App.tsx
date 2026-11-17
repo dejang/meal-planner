@@ -9,7 +9,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useEffect, useRef, useState, type Ref } from "react";
+import { useCallback, useRef, useState, type Ref } from "react";
 import { Button, ButtonVariant } from "@/components/Button";
 import { Icon, IconName } from "@/components/Icon";
 import { DialogSize, PaperDialog } from "@/components/PaperDialog";
@@ -106,7 +106,7 @@ function Shell({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menu, setMenu] = useState<Dropdown | null>(null);
   const [plannerHeight, setPlannerHeight] = useState(plannerDefault);
-  const menuRoot = useRef<HTMLDivElement>(null);
+  const menuRoot = useRef<HTMLDivElement | null>(null);
   const workspace = useRef<HTMLDivElement>(null);
   const dragging = useRef<number | null>(null);
   const editorOpen = useEditorOpen();
@@ -120,12 +120,10 @@ function Shell({
     useSensor(KeyboardSensor),
   );
 
-  useEffect(() => {
+  const dismissible = useCallback((node: HTMLDivElement) => {
+    menuRoot.current = node;
     function outside(event: PointerEvent) {
-      if (
-        event.target instanceof Node &&
-        !menuRoot.current?.contains(event.target)
-      )
+      if (event.target instanceof Node && !node.contains(event.target))
         setMenu(null);
     }
     function escape(event: KeyboardEvent) {
@@ -134,6 +132,7 @@ function Shell({
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
     return () => {
+      menuRoot.current = null;
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("keydown", escape);
     };
@@ -180,7 +179,7 @@ function Shell({
             label="File"
             id="file-dropdown"
             open={menu === Dropdown.File}
-            rootRef={menu === Dropdown.File ? menuRoot : undefined}
+            rootRef={menu === Dropdown.File ? dismissible : undefined}
             onToggle={() =>
               setMenu(menu === Dropdown.File ? null : Dropdown.File)
             }
@@ -198,7 +197,7 @@ function Shell({
             label="New Recipe ▾"
             id="recipe-dropdown"
             open={menu === Dropdown.Recipe}
-            rootRef={menu === Dropdown.Recipe ? menuRoot : undefined}
+            rootRef={menu === Dropdown.Recipe ? dismissible : undefined}
             onToggle={() =>
               setMenu(menu === Dropdown.Recipe ? null : Dropdown.Recipe)
             }

@@ -1,0 +1,57 @@
+id: no-use-effect-tsx
+snapshots:
+  "export function Panel() {\n  useEffect(() => {\n    document.addEventListener(\"keydown\", close);\n    return () => document.removeEventListener(\"keydown\", close);\n  }, []);\n  return <div />;\n}\n":
+    labels:
+    - source: |-
+        useEffect(() => {
+            document.addEventListener("keydown", close);
+            return () => document.removeEventListener("keydown", close);
+          }, [])
+      style: primary
+      start: 28
+      end: 168
+    - source: useEffect
+      style: secondary
+      start: 28
+      end: 37
+  "export function Panel({ load }: PanelProps) {\n  React.useEffect(() => load());\n  return <div />;\n}\n":
+    labels:
+    - source: React.useEffect(() => load())
+      style: primary
+      start: 48
+      end: 77
+    - source: useEffect
+      style: secondary
+      start: 54
+      end: 63
+    - source: React.useEffect
+      style: secondary
+      start: 48
+      end: 63
+  "export function Panel({ load }: PanelProps) {\n  useEffect(() => {\n    load();\n  }, [load]);\n  return <div />;\n}\n":
+    labels:
+    - source: |-
+        useEffect(() => {
+            load();
+          }, [load])
+      style: primary
+      start: 48
+      end: 90
+    - source: useEffect
+      style: secondary
+      start: 48
+      end: 57
+  "import { useEffect as onMount } from \"react\";\n":
+    labels:
+    - source: useEffect as onMount
+      style: primary
+      start: 9
+      end: 29
+    - source: useEffect
+      style: secondary
+      start: 9
+      end: 18
+    - source: onMount
+      style: secondary
+      start: 22
+      end: 29

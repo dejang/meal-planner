@@ -1,0 +1,27 @@
+id: no-use-effect-tsx
+language: tsx
+severity: error
+message: "`useEffect` is banned. Derive values during render, run reactions in the event handler that causes them, and attach DOM work through a ref callback that returns its cleanup."
+# Reports every `useEffect(…)` and `<namespace>.useEffect(…)` call, plus an aliased import
+# (`import { useEffect as onMount }`), whose calls would otherwise escape the call match.
+# `useEffectEvent` and other `useEffect*` names are not matched.
+rule:
+  any:
+    - kind: call_expression
+      has:
+        field: function
+        any:
+          - kind: identifier
+            regex: '^useEffect$'
+          - kind: member_expression
+            has:
+              field: property
+              regex: '^useEffect$'
+    - kind: import_specifier
+      all:
+        - has:
+            field: name
+            regex: '^useEffect$'
+        - has:
+            field: alias
+            kind: identifier

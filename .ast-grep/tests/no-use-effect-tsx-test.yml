@@ -1,0 +1,51 @@
+id: no-use-effect-tsx
+valid:
+  - |
+    import { useMemo, useState } from "react";
+  - |
+    export function Total({ items }: TotalProps) {
+      const total = useMemo(() => items.length, [items]);
+      return <span>{total}</span>;
+    }
+  - |
+    export function Dialog({ title }: DialogProps) {
+      return (
+        <dialog
+          ref={(node) => {
+            node?.showModal();
+            return () => node?.close();
+          }}
+        >
+          {title}
+        </dialog>
+      );
+    }
+  - |
+    export function Rate({ plan }: RateProps) {
+      const rate = useEffectiveRate(plan);
+      const onTick = useEffectEvent(() => rate);
+      return <span onClick={onTick}>{rate}</span>;
+    }
+invalid:
+  - |
+    export function Panel({ load }: PanelProps) {
+      useEffect(() => {
+        load();
+      }, [load]);
+      return <div />;
+    }
+  - |
+    export function Panel({ load }: PanelProps) {
+      React.useEffect(() => load());
+      return <div />;
+    }
+  - |
+    import { useEffect as onMount } from "react";
+  - |
+    export function Panel() {
+      useEffect(() => {
+        document.addEventListener("keydown", close);
+        return () => document.removeEventListener("keydown", close);
+      }, []);
+      return <div />;
+    }

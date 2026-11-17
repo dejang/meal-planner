@@ -1,0 +1,57 @@
+id: no-use-effect-ts
+snapshots:
+  "export function useEscape(close: () => void) {\n  useEffect(() => {\n    document.addEventListener(\"keydown\", close);\n    return () => document.removeEventListener(\"keydown\", close);\n  }, []);\n}\n":
+    labels:
+    - source: |-
+        useEffect(() => {
+            document.addEventListener("keydown", close);
+            return () => document.removeEventListener("keydown", close);
+          }, [])
+      style: primary
+      start: 49
+      end: 189
+    - source: useEffect
+      style: secondary
+      start: 49
+      end: 58
+  "export function useLoad(load: () => void) {\n  React.useEffect(() => load());\n}\n":
+    labels:
+    - source: React.useEffect(() => load())
+      style: primary
+      start: 46
+      end: 75
+    - source: useEffect
+      style: secondary
+      start: 52
+      end: 61
+    - source: React.useEffect
+      style: secondary
+      start: 46
+      end: 61
+  "export function useLoad(load: () => void) {\n  useEffect(() => {\n    load();\n  }, [load]);\n}\n":
+    labels:
+    - source: |-
+        useEffect(() => {
+            load();
+          }, [load])
+      style: primary
+      start: 46
+      end: 88
+    - source: useEffect
+      style: secondary
+      start: 46
+      end: 55
+  "import { useEffect as onMount } from \"react\";\n":
+    labels:
+    - source: useEffect as onMount
+      style: primary
+      start: 9
+      end: 29
+    - source: useEffect
+      style: secondary
+      start: 9
+      end: 18
+    - source: onMount
+      style: secondary
+      start: 22
+      end: 29
