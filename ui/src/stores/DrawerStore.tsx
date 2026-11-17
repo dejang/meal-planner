@@ -46,6 +46,12 @@ class DrawerStore extends Store<DrawerState> {
     switchToView: (recipeId: string): Promise<void> => {
       return this.actions.openRecipe(recipeId);
     },
+    cancel: (): void => {
+      const { recipeId } = this.getSnapshot();
+      if (!this.editor.discard()) return;
+      this.transition += 1;
+      this.update({ open: recipeId !== null, mode: DrawerMode.View, recipeId });
+    },
     close: async (): Promise<void> => {
       if (await this.leaveDraft())
         this.update({ open: false, mode: DrawerMode.View, recipeId: null });

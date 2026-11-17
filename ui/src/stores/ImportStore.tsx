@@ -50,16 +50,16 @@ class ImportStore extends Store<ImportState> {
     setUrl: (url: string): void => {
       this.update({ url });
     },
-    importRecipe: async (): Promise<void> => {
+    importRecipe: async (target: "new" | "draft" = "new"): Promise<void> => {
       const { url, importing } = this.getSnapshot();
       const sourceUrl = url.trim();
       if (importing || !sourceUrl) return;
       this.update({ error: null });
       try {
-        this.editor.assertCanImport();
+        const apply = this.editor.prepareImport(target);
         this.update({ importing: true });
         const recipe = unwrap(await commands.importRecipe(sourceUrl));
-        this.editor.openImported(recipe, sourceUrl);
+        apply(recipe, sourceUrl);
         this.update({ open: false, url: "" });
       } catch (error) {
         this.update({

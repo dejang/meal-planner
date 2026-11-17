@@ -89,7 +89,7 @@ class RecipesStore extends Store<RecipesState> {
     select: (selectedId: string | null): void => {
       this.update({ selectedId });
     },
-    deleteRecipe: async (id: string): Promise<void> => {
+    deleteRecipe: async (id: string): Promise<boolean> => {
       this.update({ error: null });
       try {
         const result = await commands.deleteRecipe(id);
@@ -97,8 +97,10 @@ class RecipesStore extends Store<RecipesState> {
         if (this.getSnapshot().selectedId === id)
           this.update({ selectedId: null });
         await Promise.all([this.actions.reload(), this.plan.reload()]);
+        return true;
       } catch (error) {
-        this.reportError(error, () => this.actions.deleteRecipe(id));
+        this.reportError(error, async () => { await this.actions.deleteRecipe(id); });
+        return false;
       }
     },
   };

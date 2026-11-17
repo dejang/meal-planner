@@ -142,7 +142,7 @@ it.each([
     act(() => result.current.actions.select("b"));
     vi.mocked(commands.deleteRecipe).mockResolvedValue(ok(null));
     setup();
-    await act(() => action(result.current.actions));
+    await act(async () => { await action(result.current.actions); });
     expect(result.current.error).toBe("Unavailable");
     expect(result.current.loading).toBe(false);
     expect(result.current.ids).toEqual(["a", "b"]);

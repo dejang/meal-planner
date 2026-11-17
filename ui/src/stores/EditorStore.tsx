@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { open } from "@tauri-apps/plugin-dialog";
 import { createSelectorHook, Store } from "bonsai-react";
 import { commands, unwrap, type ImportedRecipe, type RecipeInput } from "@/api";
@@ -56,7 +57,7 @@ class EditorStore extends Store<EditorState> {
   }
 
   private session = 0;
-  private saveTask: Promise<void> | null = null;
+  private saveTask: Promise<boolean> | null = null;
   private openRequest: TrackedRequest = { sequence: 0 };
   private loadedImageSource: string | null = null;
   private imageRequest: ImageRequest = {
@@ -184,10 +185,23 @@ class EditorStore extends Store<EditorState> {
         );
       }
     },
-    openImported: (recipe: ImportedRecipe, sourceUrl: string): void => {
-      this.actions.assertCanImport();
+    prepareImport: (target: "new" | "draft"): ((recipe: ImportedRecipe, url: string) => void) => {
+      if (target === "new") this.actions.assertCanImport();
+      if (!this.editableState || (target === "draft" && !this.getSnapshot().draft))
+        throw new Error("No editable recipe is open");
+      const session = this.session;
+      return (recipe, url) => {
+        if (target === "draft" && (session !== this.session || !this.editableState))
+          throw new Error("The recipe changed while importing");
+        this.actions.openImported(recipe, url, target);
+      };
+    },
+    openImported: (recipe: ImportedRecipe, sourceUrl: string, target: "new" | "draft" = "new"): void => {
+      if (target === "new") this.actions.assertCanImport();
+      const current = this.editableState?.draft;
+      if (target === "draft" && !current) return;
       this.setDraft({
-        id: null,
+        id: target === "draft" ? current?.id ?? null : null,
         title: recipe.title,
         ingredients: recipe.ingredients.join("\n"),
         instructions: `${recipe.instructions.join("\n")}\n\n${sourceUrl}`,
@@ -196,7 +210,7 @@ class EditorStore extends Store<EditorState> {
         image: recipe.image
           ? { kind: "set", image: recipe.image }
           : { kind: "keep" },
-        imageVersion: null,
+        imageVersion: target === "draft" ? current?.imageVersion ?? null : null,
         imageSource: null,
       });
       void this.actions.analyzeIngredients();
@@ -205,6 +219,24 @@ class EditorStore extends Store<EditorState> {
       this.openRequest.sequence += 1;
       await this.actions.save();
       return this.getSnapshot().draft === null;
+    },
+    deleteRecipe: async (): Promise<boolean> => {
+      const draft = this.editableState?.draft;
+      if (!draft?.id) return false;
+      this.update({ saving: true });
+      try {
+        if (!(await this.recipes.deleteRecipe(draft.id))) return false;
+        this.setDraft(null);
+        return true;
+      } finally {
+        this.update({ saving: false });
+      }
+    },
+    discard: (): boolean => {
+      if (!this.editableState) return false;
+      this.openRequest.sequence += 1;
+      this.setDraft(null);
+      return true;
     },
     patchDraft: (patch: Partial<RecipeInput>): void => {
       const draft = this.editableState?.draft;
@@ -226,13 +258,13 @@ class EditorStore extends Store<EditorState> {
       const draft = this.editableState?.draft;
       if (draft) this.update({ draft: { ...draft, imageSource } });
     },
-    save: (): Promise<void> => {
+    save: (): Promise<boolean> => {
       if (this.saveTask) return this.saveTask;
       const editableDraft = this.editableState?.draft;
-      if (!editableDraft) return Promise.resolve();
+      if (!editableDraft) return Promise.resolve(true);
       if (!editableDraft.id && !editableDraft.title.trim()) {
         this.setDraft(null);
-        return Promise.resolve();
+        return Promise.resolve(true);
       }
       this.update({ saving: true, error: null });
       this.saveTask = (async () => {
@@ -242,7 +274,7 @@ class EditorStore extends Store<EditorState> {
             this.analysisRequest.task,
           ]);
           const draft = this.getSnapshot().draft;
-          if (!draft) return;
+          if (!draft) return true;
           const id = draft.id;
           const input: RecipeInput = {
             title: draft.title,
@@ -267,8 +299,10 @@ class EditorStore extends Store<EditorState> {
           });
           await Promise.all([this.recipes.reload(), this.plan.reload()]);
           this.setDraft(null);
+          return true;
         } catch (error) {
           this.update({ error: errorMessage(error) });
+          return false;
         } finally {
           this.update({ saving: false });
         }
