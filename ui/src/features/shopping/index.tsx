@@ -6,6 +6,7 @@ import {
   usePlanShoppingItems,
 } from "@/stores/PlanStore";
 import { formatWeight, shoppingColumns } from "@/features/shopping/layout";
+import { ShoppingState } from "@/features/shopping/ShoppingState";
 import "@/features/shopping/shopping.css";
 
 interface ShoppingProps {
@@ -47,16 +48,12 @@ export default function Shopping({
       <div className="shopping-surface" aria-busy={loading}>
         <div className="shopping-scroll">
           <div ref={sheet}>
-            {loading && items.length === 0 && (
-              <p role="status">Loading shopping list…</p>
-            )}
-            {error && <p role="alert">{error}</p>}
-            {!loading && !error && items.length === 0 && (
-              <div className="shopping-empty">
-                <p>Your shopping list is empty.</p>
-                <p>Add meals to your planner to get started.</p>
-              </div>
-            )}
+            <ShoppingState
+              loading={loading}
+              error={error}
+              itemCount={items.length}
+              emptyClassName="shopping-empty"
+            />
             <div
               className="shopping-columns"
               style={{

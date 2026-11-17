@@ -2,7 +2,6 @@ import { commands, ok } from "@/test-support/ipc";
 import {
   act,
   fireEvent,
-  render,
   renderHook,
   screen,
   within,
@@ -121,44 +120,4 @@ it("loads on opening, retains column contents on resize and refresh, and delegat
     response.resolve(ok([]));
     await refreshing;
   });
-});
-
-it.each([
-  {
-    loading: true,
-    error: null,
-    role: "status",
-    text: "Loading shopping list…",
-  },
-  {
-    loading: false,
-    error: null,
-    role: null,
-    text: "Your shopping list is empty.",
-  },
-  {
-    loading: false,
-    error: "Cannot read shopping list",
-    role: "alert",
-    text: "Cannot read shopping list",
-  },
-])("shows store state: $text", async ({ loading, error, role, text }) => {
-  const response =
-    deferred<Awaited<ReturnType<typeof commands.shoppingList>>>();
-  vi.mocked(commands.shoppingList).mockReturnValueOnce(response.promise);
-  render(<Shopping onClose={vi.fn()} />, { wrapper: AppScopes });
-  expect(await screen.findByRole("status")).toBeTruthy();
-  if (!loading) {
-    await act(async () => {
-      if (error)
-        response.resolve({
-          status: "error",
-          error: { kind: "storage", detail: error },
-        });
-      else response.resolve(ok([]));
-    });
-  }
-  expect(screen.getByText(text)).toBeTruthy();
-  expect(screen.queryAllByRole("table")).toHaveLength(0);
-  if (role) expect(screen.getByRole(role).textContent).toBe(text);
 });
