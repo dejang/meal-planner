@@ -1,9 +1,9 @@
-import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ComponentProps, TextareaHTMLAttributes } from "react";
 
 export function TextInput({
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement>) {
+}: ComponentProps<"input">) {
   return <input {...props} className={`text-input ${className}`} />;
 }
 

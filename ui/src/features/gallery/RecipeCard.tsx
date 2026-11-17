@@ -1,5 +1,5 @@
 import { useDraggable } from "@dnd-kit/core";
-import { caloriesPerServing } from "@/lib/nutrition";
+import { caloriesPerServingLabel } from "@/lib/nutrition";
 import { RecipePhoto } from "@/components/RecipePhoto";
 import { Button, ButtonVariant } from "@/components/Button";
 import type { RecipeDragPayload } from "@/lib/recipeDrag";
@@ -41,9 +41,7 @@ export function RecipeCard({
         />
         <span className="gallery-card-details">
           <strong>
-            {recipe.analysis
-              ? `${caloriesPerServing(recipe.analysis.calories, recipe.servings)} kcal`
-              : "Nutrition not available"}
+            {caloriesPerServingLabel(recipe.analysis, recipe.servings)}
           </strong>
           <span>{recipe.servings} servings</span>
         </span>
