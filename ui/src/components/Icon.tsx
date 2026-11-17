@@ -7,6 +7,7 @@ export enum IconName {
   Settings = "\ue157",
   Trash2 = "\ue18d",
   ClipboardPaste = "\ue3eb",
+  ShoppingCart = "\ue15f",
   Pencil = "\ue1f8",
   Check = "\ue070",
   Search = "\ue154",

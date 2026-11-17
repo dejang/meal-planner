@@ -4,6 +4,7 @@ import { RecipesScope } from "@/stores/RecipesStore";
 import { EditorScope } from "@/stores/EditorStore";
 import { ImportScope } from "@/stores/ImportStore";
 import { SettingsScope } from "@/stores/SettingsStore";
+import { DrawerScope } from "@/stores/DrawerStore";
 
 export function AppScopes({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +12,9 @@ export function AppScopes({ children }: { children: ReactNode }) {
       <RecipesScope>
         <EditorScope>
           <ImportScope>
-            <SettingsScope>{children}</SettingsScope>
+            <SettingsScope>
+              <DrawerScope>{children}</DrawerScope>
+            </SettingsScope>
           </ImportScope>
         </EditorScope>
       </RecipesScope>

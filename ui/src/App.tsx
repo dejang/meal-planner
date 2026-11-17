@@ -16,6 +16,7 @@ import { DialogSize, PaperDialog } from "@/components/PaperDialog";
 import Gallery from "@/features/gallery";
 import Planner from "@/features/planner";
 import Editor from "@/features/editor";
+import { ClosedEditorError } from "@/features/editor/ClosedEditorError";
 import Shopping from "@/features/shopping";
 import Import from "@/features/import";
 import Settings, { Welcome } from "@/features/settings";
@@ -24,7 +25,6 @@ import { RecipesScope } from "@/stores/RecipesStore";
 import {
   EditorScope,
   useEditorOpen,
-  useEditorError,
   useEditorActions,
 } from "@/stores/EditorStore";
 import {
@@ -33,12 +33,16 @@ import {
   useImportActions,
 } from "@/stores/ImportStore";
 import { SettingsScope } from "@/stores/SettingsStore";
+import { DrawerScope } from "@/stores/DrawerStore";
+import MobileShell from "@/mobile/MobileShell";
+import { useIsMobileViewport } from "@/mobile/useIsMobileViewport";
 
 export interface AppProps {
   plannerMin?: number;
   plannerMax?: number;
   plannerDefault?: number;
   dragDistance?: number;
+  mobileViewportQuery?: string;
 }
 
 enum Dropdown {
@@ -106,7 +110,6 @@ function Shell({
   const workspace = useRef<HTMLDivElement>(null);
   const dragging = useRef<number | null>(null);
   const editorOpen = useEditorOpen();
-  const editorError = useEditorError();
   const editor = useEditorActions();
   const importOpen = useImportOpen();
   const importer = useImportActions();
@@ -284,14 +287,7 @@ function Shell({
             </div>
           </section>
         </div>
-        {!editorOpen && editorError && (
-          <div role="alert" className="shell-error">
-            <span>{editorError}</span>
-            <Button variant={ButtonVariant.Quiet} onClick={editor.dismissError}>
-              Dismiss
-            </Button>
-          </div>
-        )}
+        <ClosedEditorError />
         <Welcome />
         {shoppingOpen && (
           <PaperDialog
@@ -329,13 +325,16 @@ function Shell({
 }
 
 export default function App(props: AppProps) {
+  const isMobile = useIsMobileViewport(props.mobileViewportQuery);
   return (
     <PlanScope>
       <RecipesScope>
         <EditorScope>
           <ImportScope>
             <SettingsScope>
-              <Shell {...props} />
+              <DrawerScope>
+                {isMobile ? <MobileShell /> : <Shell {...props} />}
+              </DrawerScope>
             </SettingsScope>
           </ImportScope>
         </EditorScope>
