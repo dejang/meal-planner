@@ -1,16 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { SwipePager } from "@/components/mobile/SwipePager";
 
-beforeEach(() => {
-  Object.defineProperty(HTMLElement.prototype, "scrollTo", {
-    configurable: true,
-    value: vi.fn(),
-  });
-});
 afterEach(() => {
-  Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });

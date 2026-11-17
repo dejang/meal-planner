@@ -12,7 +12,9 @@ function Harness() {
   const drawer = useDrawerActions();
   return (
     <>
-      <button onClick={() => drawer.openRecipe("recipe-1")}>Inspect recipe</button>
+      <button onClick={() => drawer.openRecipe("recipe-1")}>
+        Inspect recipe
+      </button>
       <button onClick={drawer.openCreate}>Create recipe</button>
       <RecipeDrawer />
     </>
@@ -38,14 +40,18 @@ it("shows recipe details, numbered nonempty steps and confirms planning only aft
   expect(within(dialog).getByText("Step 1")).toBeTruthy();
   expect(within(dialog).getByText("Step 2")).toBeTruthy();
   expect(within(dialog).queryByText("Step 3")).toBeNull();
-  expect(within(dialog).getByRole("region", { name: "Nutrition Facts" })).toBeTruthy();
+  expect(
+    within(dialog).getByRole("region", { name: "Nutrition Facts" }),
+  ).toBeTruthy();
   await user.click(within(dialog).getByRole("button", { name: "D3" }));
   expect(commands.addToDay).toHaveBeenCalledExactlyOnceWith(
     { day: 2, row: 0 },
     "recipe-1",
   );
   expect(screen.queryByText("Added to D3")).toBeNull();
-  await act(async () => response.resolve(ok({ days: [[], [], ["recipe-1"], [], [], []] })));
+  await act(async () =>
+    response.resolve(ok({ days: [[], [], ["recipe-1"], [], [], []] })),
+  );
   expect(await screen.findByText("Added to D3")).toBeTruthy();
 });
 
@@ -68,9 +74,14 @@ it("discards edits on Cancel, preserves failed saves, saves explicitly, and conf
     error: { kind: "storage", detail: "Save failed" },
   });
   await user.click(screen.getByRole("button", { name: "Save" }));
-  expect(await screen.findByRole("alert")).toHaveProperty("textContent", "Save failed");
+  expect(await screen.findByRole("alert")).toHaveProperty(
+    "textContent",
+    "Save failed",
+  );
   expect(commands.updateRecipe).toHaveBeenCalledTimes(1);
-  vi.mocked(commands.listRecipes).mockResolvedValue(ok([recipe({ title: "Dinner" })]));
+  vi.mocked(commands.listRecipes).mockResolvedValue(
+    ok([recipe({ title: "Dinner" })]),
+  );
   await user.click(screen.getByRole("button", { name: "Save" }));
   expect(await screen.findByRole("dialog", { name: "Dinner" })).toBeTruthy();
   expect(commands.updateRecipe).toHaveBeenLastCalledWith(
@@ -85,7 +96,9 @@ it("discards edits on Cancel, preserves failed saves, saves explicitly, and conf
   vi.mocked(commands.listRecipes).mockResolvedValue(ok([]));
   await user.click(screen.getByRole("button", { name: "Confirm delete" }));
   expect(commands.deleteRecipe).toHaveBeenCalledExactlyOnceWith("recipe-1");
-  await waitFor(() => expect(screen.queryByRole("textbox", { name: "Title" })).toBeNull());
+  await waitFor(() =>
+    expect(screen.queryByRole("textbox", { name: "Title" })).toBeNull(),
+  );
   expect(commands.getPlan).toHaveBeenCalledTimes(3);
 });
 
@@ -94,13 +107,15 @@ it("imports into a new draft, updates photo and nutrition, and persists only on 
   vi.mocked(commands.supportedSites).mockResolvedValue([
     { name: "Example recipes", domains: ["recipes.example"] },
   ]);
-  vi.mocked(commands.importRecipe).mockResolvedValue(ok({
-    title: "Imported soup",
-    ingredients: ["1 carrot"],
-    instructions: ["Boil"],
-    servings: 4,
-    image: null,
-  }));
+  vi.mocked(commands.importRecipe).mockResolvedValue(
+    ok({
+      title: "Imported soup",
+      ingredients: ["1 carrot"],
+      instructions: ["Boil"],
+      servings: 4,
+      image: null,
+    }),
+  );
   vi.mocked(open).mockResolvedValue("/photos/soup.jpg");
   const image = { bytes: "aW1hZ2U=", width: 20, height: 10 };
   vi.mocked(commands.loadImageFile).mockResolvedValue(ok(image));
@@ -109,29 +124,55 @@ it("imports into a new draft, updates photo and nutrition, and persists only on 
   await user.click(screen.getByRole("button", { name: "Create recipe" }));
   await user.click(screen.getByText("Supported sites"));
   expect(screen.getByText("Example recipes")).toBeTruthy();
-  await user.type(screen.getByRole("textbox", { name: "Recipe URL" }), "https://recipes.example/soup");
+  await user.type(
+    screen.getByRole("textbox", { name: "Recipe URL" }),
+    "https://recipes.example/soup",
+  );
   await user.click(screen.getByRole("button", { name: "Import" }));
   expect(await screen.findByDisplayValue("Imported soup")).toBeTruthy();
-  expect(screen.getByRole("textbox", { name: "Ingredients" })).toHaveProperty("value", "1 carrot");
+  expect(screen.getByRole("textbox", { name: "Ingredients" })).toHaveProperty(
+    "value",
+    "1 carrot",
+  );
   expect(screen.getByRole("region", { name: "Nutrition Facts" })).toBeTruthy();
   expect(commands.createRecipe).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Choose recipe photo" }));
   expect(commands.loadImageFile).toHaveBeenCalledWith("/photos/soup.jpg");
   await user.clear(screen.getByRole("textbox", { name: "Image URL" }));
-  await user.type(screen.getByRole("textbox", { name: "Image URL" }), "https://images.example/soup.jpg");
+  await user.type(
+    screen.getByRole("textbox", { name: "Image URL" }),
+    "https://images.example/soup.jpg",
+  );
   await user.tab();
-  expect(commands.loadImageUrl).toHaveBeenCalledWith("https://images.example/soup.jpg");
+  expect(commands.loadImageUrl).toHaveBeenCalledWith(
+    "https://images.example/soup.jpg",
+  );
   await user.click(screen.getByRole("button", { name: "Increase Portions" }));
-  await user.type(screen.getByRole("textbox", { name: "Ingredients" }), "\n2 onions");
+  await user.type(
+    screen.getByRole("textbox", { name: "Ingredients" }),
+    "\n2 onions",
+  );
   await user.tab();
-  expect(commands.analyzeIngredients).toHaveBeenLastCalledWith(["1 carrot", "2 onions"]);
+  expect(commands.analyzeIngredients).toHaveBeenLastCalledWith([
+    "1 carrot",
+    "2 onions",
+  ]);
   await user.click(screen.getByRole("button", { name: "Save" }));
-  expect(commands.createRecipe).toHaveBeenCalledWith(expect.objectContaining({
-    title: "Imported soup", servings: 5, image: { kind: "set", image },
-  }));
-  await waitFor(() => expect(screen.queryByRole("textbox", { name: "Title" })).toBeNull());
+  expect(commands.createRecipe).toHaveBeenCalledWith(
+    expect.objectContaining({
+      title: "Imported soup",
+      servings: 5,
+      image: { kind: "set", image },
+    }),
+  );
+  await waitFor(() =>
+    expect(screen.queryByRole("textbox", { name: "Title" })).toBeNull(),
+  );
   await user.click(screen.getByRole("button", { name: "Create recipe" }));
-  await user.type(screen.getByRole("textbox", { name: "Title" }), "Discard new draft");
+  await user.type(
+    screen.getByRole("textbox", { name: "Title" }),
+    "Discard new draft",
+  );
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(screen.queryByRole("textbox", { name: "Title" })).toBeNull();
   expect(commands.createRecipe).toHaveBeenCalledTimes(1);

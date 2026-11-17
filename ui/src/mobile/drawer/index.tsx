@@ -71,11 +71,7 @@ export default function RecipeDrawer() {
     >
       {open && (
         <div className="recipe-drawer-content" key={`${mode}-${recipeId}`}>
-          {viewing ? (
-            <RecipeView recipeId={recipeId ?? ""} />
-          ) : (
-            <RecipeForm />
-          )}
+          {viewing ? <RecipeView recipeId={recipeId ?? ""} /> : <RecipeForm />}
         </div>
       )}
     </BottomDrawer>

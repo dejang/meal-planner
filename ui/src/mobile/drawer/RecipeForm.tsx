@@ -133,7 +133,9 @@ export default function RecipeForm() {
             Title
             <TextInput
               value={draft.title}
-              onChange={(event) => editor.patchDraft({ title: event.target.value })}
+              onChange={(event) =>
+                editor.patchDraft({ title: event.target.value })
+              }
             />
           </label>
           <Stepper

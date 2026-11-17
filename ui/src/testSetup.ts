@@ -15,6 +15,9 @@ Object.defineProperty(HTMLDialogElement.prototype, "close", {
     setTimeout(() => this.dispatchEvent(new Event("close")), 0);
   },
 });
+Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+  value: vi.fn(),
+});
 Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
   value: vi.fn(),
 });

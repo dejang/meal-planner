@@ -1,0 +1,121 @@
+.mobile-planner,
+.mobile-planner .swipe-pager {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mobile-plan-controls {
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.mobile-plan-error {
+  padding-block: var(--space-mobile-sm);
+}
+
+.mobile-plan-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-mobile-xs);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mobile-planner .pager-viewport {
+  flex: 1;
+  min-height: 0;
+}
+
+.mobile-planner .pager-page {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.mobile-plan-day {
+  display: grid;
+  gap: var(--space-mobile-md);
+  padding-top: var(--space-mobile-sm);
+  padding-bottom: var(--space-mobile-gutter);
+}
+
+.mobile-plan-meals,
+.mobile-plan-picker ul {
+  display: grid;
+  gap: var(--space-mobile-sm);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-plan-meal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-mobile-xs);
+  padding: var(--space-mobile-xs);
+}
+
+.mobile-plan-recipe {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-mobile-sm);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.mobile-plan-recipe .recipe-photo {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--radius-card);
+}
+
+.mobile-plan-recipe .recipe-photo-caption {
+  display: none;
+}
+
+.mobile-plan-recipe .recipe-photo-plate {
+  width: 44px;
+  height: 44px;
+}
+
+.mobile-plan-recipe .recipe-photo-plate > span {
+  width: 32px;
+  height: 32px;
+}
+
+.mobile-plan-recipe-text {
+  display: grid;
+  gap: var(--space-mobile-xs);
+  overflow-wrap: anywhere;
+}
+
+.mobile-plan-reorder {
+  display: grid;
+}
+
+.mobile-plan-empty {
+  display: grid;
+  gap: var(--space-mobile-sm);
+  padding: var(--space-mobile-md);
+}
+
+.mobile-plan-picker,
+.mobile-plan-picker label {
+  display: grid;
+  gap: var(--space-mobile-sm);
+}
+
+.mobile-plan-picker input {
+  width: 100%;
+}
+
+.mobile-plan-picker li .button {
+  width: 100%;
+}

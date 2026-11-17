@@ -2,14 +2,24 @@ import { render, screen } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 
-it("renders the screen title and optional action", () => {
+it("groups navigation around the title separately from optional actions", () => {
   const { rerender } = render(
-    <MobileHeader title="Recipe" action={<button>Save</button>} />,
+    <MobileHeader
+      title="Recipe"
+      leading={<button>Previous</button>}
+      trailing={<button>Next</button>}
+      action={<button>Save</button>}
+    />,
   );
+  const title = screen.getByRole("heading", { level: 1, name: "Recipe" });
+  expect(Array.from(title.parentElement!.children)).toEqual([
+    screen.getByRole("button", { name: "Previous" }),
+    title,
+    screen.getByRole("button", { name: "Next" }),
+  ]);
   expect(
-    screen.getByRole("heading", { level: 1, name: "Recipe" }),
-  ).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Save" })).toBeTruthy();
+    title.parentElement!.contains(screen.getByRole("button", { name: "Save" })),
+  ).toBe(false);
   rerender(<MobileHeader title="Planner" />);
   expect(
     screen.getByRole("heading", { level: 1, name: "Planner" }),

@@ -99,7 +99,9 @@ class RecipesStore extends Store<RecipesState> {
         await Promise.all([this.actions.reload(), this.plan.reload()]);
         return true;
       } catch (error) {
-        this.reportError(error, async () => { await this.actions.deleteRecipe(id); });
+        this.reportError(error, async () => {
+          await this.actions.deleteRecipe(id);
+        });
         return false;
       }
     },

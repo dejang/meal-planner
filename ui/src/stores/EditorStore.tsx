@@ -185,23 +185,35 @@ class EditorStore extends Store<EditorState> {
         );
       }
     },
-    prepareImport: (target: "new" | "draft"): ((recipe: ImportedRecipe, url: string) => void) => {
+    prepareImport: (
+      target: "new" | "draft",
+    ): ((recipe: ImportedRecipe, url: string) => void) => {
       if (target === "new") this.actions.assertCanImport();
-      if (!this.editableState || (target === "draft" && !this.getSnapshot().draft))
+      if (
+        !this.editableState ||
+        (target === "draft" && !this.getSnapshot().draft)
+      )
         throw new Error("No editable recipe is open");
       const session = this.session;
       return (recipe, url) => {
-        if (target === "draft" && (session !== this.session || !this.editableState))
+        if (
+          target === "draft" &&
+          (session !== this.session || !this.editableState)
+        )
           throw new Error("The recipe changed while importing");
         this.actions.openImported(recipe, url, target);
       };
     },
-    openImported: (recipe: ImportedRecipe, sourceUrl: string, target: "new" | "draft" = "new"): void => {
+    openImported: (
+      recipe: ImportedRecipe,
+      sourceUrl: string,
+      target: "new" | "draft" = "new",
+    ): void => {
       if (target === "new") this.actions.assertCanImport();
       const current = this.editableState?.draft;
       if (target === "draft" && !current) return;
       this.setDraft({
-        id: target === "draft" ? current?.id ?? null : null,
+        id: target === "draft" ? (current?.id ?? null) : null,
         title: recipe.title,
         ingredients: recipe.ingredients.join("\n"),
         instructions: `${recipe.instructions.join("\n")}\n\n${sourceUrl}`,
@@ -210,7 +222,8 @@ class EditorStore extends Store<EditorState> {
         image: recipe.image
           ? { kind: "set", image: recipe.image }
           : { kind: "keep" },
-        imageVersion: target === "draft" ? current?.imageVersion ?? null : null,
+        imageVersion:
+          target === "draft" ? (current?.imageVersion ?? null) : null,
         imageSource: null,
       });
       void this.actions.analyzeIngredients();
