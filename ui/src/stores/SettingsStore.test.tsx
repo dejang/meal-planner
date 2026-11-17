@@ -16,14 +16,14 @@ import {
   useSettingsLoading,
   useSettingsLinkError,
   useSettingsSaving,
-  useSettingsStartupCredentials,
+  useSettingsConfigured,
 } from "@/stores/SettingsStore";
 
 function useSettingsSnapshot() {
   return {
     actions: useSettingsActions(),
     credentials: useSettingsCredentials(),
-    startupCredentials: useSettingsStartupCredentials(),
+    configured: useSettingsConfigured(),
     loadFailed: useSettingsLoadFailed(),
     loading: useSettingsLoading(),
     saving: useSettingsSaving(),
@@ -39,8 +39,8 @@ it("loads, edits, saves and refreshes credentials", async () => {
   const { result } = renderHook(useSettingsSnapshot, {
     wrapper: AppScopes,
   });
-  expect(result.current.startupCredentials).toBeNull();
-  let pending: Promise<void>;
+  expect(result.current.configured).toBeNull();
+  let pending: Promise<void | boolean>;
   act(() => {
     pending = result.current.actions.reload();
   });
@@ -78,10 +78,7 @@ it("loads, edits, saves and refreshes credentials", async () => {
   });
   expect(result.current.saving).toBe(false);
   expect(result.current.error).toBeNull();
-  expect(result.current.startupCredentials).toEqual({
-    app_id: "app",
-    api_key: "key",
-  });
+  expect(result.current.configured).toBe(true);
 });
 
 it.each(
@@ -161,17 +158,21 @@ it.each([
         : commands.saveCredentials;
     if (error instanceof Error) vi.mocked(command).mockRejectedValueOnce(error);
     else vi.mocked(command).mockResolvedValueOnce({ status: "error", error });
-    await act(() => result.current.actions[operation]());
+    await act(async () => {
+      await result.current.actions[operation]();
+    });
     expect(result.current.credentials).toEqual(draft);
     expect(result.current.error).toBe(message);
     expect(result.current.loadFailed).toBe(operation === "reload");
     expect(result.current.loading).toBe(false);
     expect(result.current.saving).toBe(false);
-    expect(result.current.startupCredentials).toBeNull();
+    expect(result.current.configured).toBeNull();
     vi.mocked(commands.getCredentials).mockResolvedValue(ok(draft));
-    await act(() => result.current.actions[operation]());
+    await act(async () => {
+      await result.current.actions[operation]();
+    });
     expect(result.current.error).toBeNull();
     expect(result.current.loadFailed).toBe(false);
-    expect(result.current.startupCredentials).toEqual(draft);
+    expect(result.current.configured).toBe(true);
   },
 );

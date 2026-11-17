@@ -1,7 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { Icon, IconName } from "@/components/Icon";
 import { ClosedEditorError } from "@/features/editor/ClosedEditorError";
-import { Welcome } from "@/features/settings";
 import Explorer from "@/mobile/explorer";
 import Planner from "@/mobile/planner";
 import Shopping from "@/mobile/shopping";
@@ -36,7 +35,6 @@ export default function MobileShell() {
         ))}
       </main>
       <ClosedEditorError />
-      <Welcome />
       <nav className="mobile-tabs safe-area-sides" aria-label="Main">
         <div
           className="mobile-tab-track"

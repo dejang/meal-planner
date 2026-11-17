@@ -7,6 +7,7 @@ import { errorMessage } from "@/stores/core/error";
 
 export interface SettingsState {
   credentials: Credentials;
+  persistedCredentials: Credentials | null;
   startupCredentials: Credentials | null;
   loadFailed: boolean;
   loading: boolean;
@@ -19,6 +20,7 @@ class SettingsStore extends Store<SettingsState> {
   constructor() {
     super({
       credentials: { app_id: "", api_key: "" },
+      persistedCredentials: null,
       startupCredentials: null,
       loadFailed: false,
       loading: false,
@@ -38,6 +40,7 @@ class SettingsStore extends Store<SettingsState> {
         const credentials = unwrap(await commands.getCredentials());
         this.update({
           credentials,
+          persistedCredentials: credentials,
           startupCredentials:
             this.getSnapshot().startupCredentials ?? credentials,
         });
@@ -53,17 +56,20 @@ class SettingsStore extends Store<SettingsState> {
     setCredentials: (credentials: Credentials): void => {
       this.update({ credentials });
     },
-    save: async (): Promise<void> => {
+    save: async (): Promise<boolean> => {
       const { credentials, loading, saving } = this.getSnapshot();
-      if (loading || saving) return;
+      if (loading || saving) return false;
       this.update({ saving: true, loadFailed: false, error: null });
       try {
         unwrap(await commands.saveCredentials(credentials));
+        this.update({ persistedCredentials: credentials });
         await this.actions.reload();
+        return this.getSnapshot().error === null;
       } catch (error) {
         this.update({
           error: errorMessage(error),
         });
+        return false;
       } finally {
         this.update({ saving: false });
       }
@@ -85,9 +91,25 @@ export function useSettingsCredentials() {
   )();
 }
 
-export function useSettingsStartupCredentials() {
+function credentialsConfigured(credentials: Credentials | null) {
+  return credentials
+    ? Boolean(credentials.app_id && credentials.api_key)
+    : null;
+}
+
+export function useSettingsConfigured() {
   return context.useScopedHook((store) =>
-    createSelectorHook(store, (state) => state.startupCredentials),
+    createSelectorHook(store, (state) =>
+      credentialsConfigured(state.persistedCredentials),
+    ),
+  )();
+}
+
+export function useSettingsStartupConfigured() {
+  return context.useScopedHook((store) =>
+    createSelectorHook(store, (state) =>
+      credentialsConfigured(state.startupCredentials),
+    ),
   )();
 }
 
