@@ -1,5 +1,5 @@
 import { commands, ok } from "@/test-support/ipc";
-import { AppScopes } from "@/test-support/scopes";
+import { AppScopes, settleScopeLoads } from "@/test-support/scopes";
 import {
   useImportActions,
   useImportError,
@@ -112,6 +112,7 @@ it.each(
   "$store reports opener failures independently and clears them on retry: $error",
   async ({ error, snapshot, wrapper }) => {
     const { result } = renderHook(() => snapshot(), { wrapper });
+    await settleScopeLoads();
     vi.mocked(commands.getCredentials).mockRejectedValueOnce(
       new Error("Load failed"),
     );
@@ -145,9 +146,13 @@ it.each([
 ] as const)(
   "preserves credentials on $operation failure and allows retry",
   async ({ operation, error, message }) => {
+    vi.mocked(commands.getCredentials).mockRejectedValueOnce(
+      new Error("Startup load failed"),
+    );
     const { result } = renderHook(useSettingsSnapshot, {
       wrapper: AppScopes,
     });
+    await settleScopeLoads();
     const draft = { app_id: "app", api_key: "key" };
     act(() => result.current.actions.setCredentials(draft));
     const command =

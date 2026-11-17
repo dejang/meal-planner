@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -41,7 +40,6 @@ export function BottomDrawer({
 }: BottomDrawerProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
-  const body = useRef<HTMLDivElement>(null);
   const gesture = useRef<{ y: number; time: number } | null>(null);
   const dragged = useRef(false);
   const [entered, setEntered] = useState(false);
@@ -124,65 +122,67 @@ export function BottomDrawer({
     ],
   );
 
-  useEffect(() => {
-    const element = body.current;
-    if (!element || !open) return;
-    let pending: { x: number; y: number; time: number } | null = null;
-    function start(event: TouchEvent) {
-      pending = null;
-      if (event.touches.length !== 1) return;
-      let target = event.target instanceof Element ? event.target : null;
-      while (target && element?.contains(target)) {
-        if (target.scrollTop > 0) return;
-        target = target.parentElement;
+  const listenForDrag = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (!element || !open) return;
+      let pending: { x: number; y: number; time: number } | null = null;
+      function start(event: TouchEvent) {
+        pending = null;
+        if (event.touches.length !== 1) return;
+        let target = event.target instanceof Element ? event.target : null;
+        while (target && element?.contains(target)) {
+          if (target.scrollTop > 0) return;
+          target = target.parentElement;
+        }
+        const touch = event.touches[0];
+        pending = { x: touch.clientX, y: touch.clientY, time: event.timeStamp };
       }
-      const touch = event.touches[0];
-      pending = { x: touch.clientX, y: touch.clientY, time: event.timeStamp };
-    }
-    function move(event: TouchEvent) {
-      if (event.touches.length !== 1) {
-        cancel();
-        return;
-      }
-      const touch = event.touches[0];
-      if (pending) {
-        const dx = touch.clientX - pending.x;
-        const dy = touch.clientY - pending.y;
-        if (Math.max(Math.abs(dx), Math.abs(dy)) <= dragSlop) return;
-        if (dy <= Math.abs(dx)) {
-          pending = null;
+      function move(event: TouchEvent) {
+        if (event.touches.length !== 1) {
+          cancel();
           return;
         }
-        startDrag(pending.y, pending.time);
+        const touch = event.touches[0];
+        if (pending) {
+          const dx = touch.clientX - pending.x;
+          const dy = touch.clientY - pending.y;
+          if (Math.max(Math.abs(dx), Math.abs(dy)) <= dragSlop) return;
+          if (dy <= Math.abs(dx)) {
+            pending = null;
+            return;
+          }
+          startDrag(pending.y, pending.time);
+          pending = null;
+        }
+        if (!gesture.current) return;
+        if (!event.cancelable) {
+          cancel();
+          return;
+        }
+        event.preventDefault();
+        moveDrag(touch.clientY);
+      }
+      function end(event: TouchEvent) {
         pending = null;
+        finishDrag(event.changedTouches[0]?.clientY, event.timeStamp);
       }
-      if (!gesture.current) return;
-      if (!event.cancelable) {
-        cancel();
-        return;
+      function cancel() {
+        pending = null;
+        finishDrag();
       }
-      event.preventDefault();
-      moveDrag(touch.clientY);
-    }
-    function end(event: TouchEvent) {
-      pending = null;
-      finishDrag(event.changedTouches[0]?.clientY, event.timeStamp);
-    }
-    function cancel() {
-      pending = null;
-      finishDrag();
-    }
-    element.addEventListener("touchstart", start, { passive: true });
-    element.addEventListener("touchmove", move, { passive: false });
-    element.addEventListener("touchend", end);
-    element.addEventListener("touchcancel", cancel);
-    return () => {
-      element.removeEventListener("touchstart", start);
-      element.removeEventListener("touchmove", move);
-      element.removeEventListener("touchend", end);
-      element.removeEventListener("touchcancel", cancel);
-    };
-  }, [open, dragSlop, startDrag, moveDrag, finishDrag]);
+      element.addEventListener("touchstart", start, { passive: true });
+      element.addEventListener("touchmove", move, { passive: false });
+      element.addEventListener("touchend", end);
+      element.addEventListener("touchcancel", cancel);
+      return () => {
+        element.removeEventListener("touchstart", start);
+        element.removeEventListener("touchmove", move);
+        element.removeEventListener("touchend", end);
+        element.removeEventListener("touchcancel", cancel);
+      };
+    },
+    [open, dragSlop, startDrag, moveDrag, finishDrag],
+  );
 
   return (
     <dialog
@@ -268,7 +268,10 @@ export function BottomDrawer({
             </>
           )}
         </header>
-        <div ref={body} className="drawer-body mobile-content safe-area-sides">
+        <div
+          ref={listenForDrag}
+          className="drawer-body mobile-content safe-area-sides"
+        >
           {children}
         </div>
       </div>

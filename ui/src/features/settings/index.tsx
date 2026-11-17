@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, ButtonVariant } from "@/components/Button";
 import { PaperDialog } from "@/components/PaperDialog";
 import { TextInput } from "@/components/TextInput";
@@ -22,10 +22,6 @@ export default function Settings() {
   const actions = useSettingsActions();
   const loadFailed = useSettingsLoadFailed();
   const busy = loading || saving;
-
-  useEffect(() => {
-    void actions.reload();
-  }, [actions]);
 
   return (
     <form
@@ -82,10 +78,6 @@ export function Welcome() {
   const actions = useSettingsActions();
   const [dismissed, setDismissed] = useState(false);
   const linkError = useSettingsLinkError();
-
-  useEffect(() => {
-    void actions.reload();
-  }, [actions]);
 
   if (
     !credentials ||

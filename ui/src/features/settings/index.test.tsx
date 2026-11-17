@@ -173,14 +173,15 @@ it("preserves edits on save failure and persists them on retry", async () => {
   expect((app as HTMLInputElement).value).toBe("new-app");
 });
 
-it("reloads saved credentials when Settings reopens without Welcome", async () => {
+it("restores saved credentials over unsaved edits on reload", async () => {
   vi.mocked(commands.getCredentials).mockResolvedValue(
     ok({ app_id: "app", api_key: "saved-key" }),
   );
   const user = userEvent.setup();
-  const { rerender } = render(
+  render(
     <AppScopes>
       <Settings />
+      <Reload />
     </AppScopes>,
   );
   await waitFor(() =>
@@ -190,12 +191,7 @@ it("reloads saved credentials when Settings reopens without Welcome", async () =
   );
   await user.clear(screen.getByLabelText("Edamam API Key"));
   await user.type(screen.getByLabelText("Edamam API Key"), "unsaved-key");
-  rerender(<AppScopes>{null}</AppScopes>);
-  rerender(
-    <AppScopes>
-      <Settings />
-    </AppScopes>,
-  );
+  await user.click(screen.getByRole("button", { name: "Reload credentials" }));
   await waitFor(() =>
     expect(
       (screen.getByLabelText("Edamam API Key") as HTMLInputElement).value,

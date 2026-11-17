@@ -31,6 +31,7 @@ class RecipesStore extends Store<RecipesState> {
       loading: false,
       error: null,
     });
+    void this.actions.reload();
   }
 
   private reportError(error: unknown, retry: () => Promise<void>): void {

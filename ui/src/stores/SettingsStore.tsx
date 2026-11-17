@@ -26,6 +26,7 @@ class SettingsStore extends Store<SettingsState> {
       error: null,
       linkError: null,
     });
+    void this.actions.reload();
   }
 
   readonly actions = {

@@ -5,13 +5,14 @@ import { expect, it, vi } from "vitest";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { Error as ApiError } from "@/api";
 import { useRecipesError } from "@/stores/RecipesStore";
-import { AppScopes } from "@/test-support/scopes";
+import { AppScopes, settleScopeLoads } from "@/test-support/scopes";
 import { commands, ok } from "@/test-support/ipc";
 
 it.each(["", " \n "])(
   "discards an untitled new draft on close (%j)",
   async (title) => {
     const { result } = renderHook(useEditor, { wrapper: AppScopes });
+    await settleScopeLoads();
     act(() => {
       result.current.actions.openNew();
       result.current.actions.patchDraft({ title, ingredients: "1 onion" });
@@ -34,6 +35,7 @@ it.each(["new", "existing", "imported"])(
       nutritionResult.promise,
     );
     const { result } = renderHook(useEditor, { wrapper: AppScopes });
+    await settleScopeLoads();
     if (source === "existing") {
       await act(() => result.current.actions.openRecipe("recipe-1"));
     } else {
@@ -146,6 +148,7 @@ it.each(["image", "analysis"])(
   "saves despite a pending %s failure and reports the error",
   async (source) => {
     const { result } = renderHook(useEditor, { wrapper: AppScopes });
+    await settleScopeLoads();
     const response = deferred<{ status: "error"; error: ApiError }>();
     if (source === "image")
       vi.mocked(commands.loadImageUrl).mockReturnValueOnce(response.promise);
@@ -228,6 +231,7 @@ it.each<{ error: ApiError; message: string }>([
   "retains a failed save for retry without refreshing peers ($error.kind)",
   async ({ error, message }) => {
     const { result } = renderHook(useEditor, { wrapper: AppScopes });
+    await settleScopeLoads();
     act(() => {
       result.current.actions.openNew();
       result.current.actions.patchDraft({ title: "Soup" });

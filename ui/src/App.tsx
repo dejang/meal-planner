@@ -32,7 +32,7 @@ import {
   useImportOpen,
   useImportActions,
 } from "@/stores/ImportStore";
-import { SettingsScope } from "@/stores/SettingsStore";
+import { SettingsScope, useSettingsActions } from "@/stores/SettingsStore";
 import { DrawerScope } from "@/stores/DrawerStore";
 import MobileShell from "@/mobile/MobileShell";
 import { useIsMobileViewport } from "@/mobile/useIsMobileViewport";
@@ -113,6 +113,7 @@ function Shell({
   const editor = useEditorActions();
   const importOpen = useImportOpen();
   const importer = useImportActions();
+  const settings = useSettingsActions();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: dragDistance },
@@ -215,7 +216,10 @@ function Shell({
           </Button>
           <Button
             variant={ButtonVariant.Quiet}
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => {
+              setSettingsOpen(true);
+              void settings.reload();
+            }}
           >
             Settings
           </Button>

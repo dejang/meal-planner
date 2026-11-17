@@ -1,5 +1,5 @@
 import { commands, ok } from "@/test-support/ipc";
-import { AppScopes } from "@/test-support/scopes";
+import { AppScopes, settleScopeLoads } from "@/test-support/scopes";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { analysis, deferred } from "@/test-support/fixtures";
 import { act, renderHook } from "@testing-library/react";
@@ -33,6 +33,7 @@ it.each([new Error("Connection lost"), "Connection lost"])(
   "reports supported-site load failures and clears the error on retry: %s",
   async (failure) => {
     const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
+    await settleScopeLoads();
     vi.mocked(commands.supportedSites).mockRejectedValueOnce(failure);
     await act(() => result.current.actions.reload());
     expect(commands.supportedSites).toHaveBeenCalledOnce();

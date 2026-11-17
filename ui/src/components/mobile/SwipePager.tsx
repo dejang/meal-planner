@@ -1,6 +1,6 @@
 import {
   Children,
-  useEffect,
+  useCallback,
   useRef,
   type PointerEvent,
   type ReactNode,
@@ -44,7 +44,7 @@ export function SwipePager({
   renderControls,
 }: SwipePagerProps) {
   const pages = Children.toArray(children);
-  const viewport = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement | null>(null);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -56,27 +56,30 @@ export function SwipePager({
   const activePage = useRef(active);
   const interacting = useRef(false);
 
-  useEffect(() => {
-    const unchanged = activePage.current === active;
-    activePage.current = active;
-    const element = viewport.current;
-    if (
-      !element ||
-      (unchanged && element.scrollLeft === active * element.clientWidth)
-    )
-      return;
-    const reduced = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    element.scrollTo({
-      left: active * element.clientWidth,
-      behavior: reduced ? "instant" : "smooth",
-    });
-  }, [active]);
+  const scrollToActivePage = useCallback(
+    (page: HTMLDivElement | null) => {
+      if (!page) return;
+      const unchanged = activePage.current === active;
+      activePage.current = active;
+      const element = page.parentElement;
+      if (
+        !element ||
+        (unchanged && element.scrollLeft === active * element.clientWidth)
+      )
+        return;
+      const reduced = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      element.scrollTo({
+        left: active * element.clientWidth,
+        behavior: reduced ? "instant" : "smooth",
+      });
+    },
+    [active],
+  );
 
-  useEffect(() => {
-    const element = viewport.current;
-    if (!element) return;
+  const observeViewport = useCallback((element: HTMLDivElement) => {
+    viewport.current = element;
     const observer =
       typeof ResizeObserver !== "undefined"
         ? new ResizeObserver(() => {
@@ -88,6 +91,7 @@ export function SwipePager({
         : undefined;
     observer?.observe(element);
     return () => {
+      viewport.current = null;
       observer?.disconnect();
       clearTimeout(settleTimer.current);
     };
@@ -175,7 +179,7 @@ export function SwipePager({
         </div>
       )}
       <div
-        ref={viewport}
+        ref={observeViewport}
         className="pager-viewport"
         onScroll={scheduleSettle}
         onTouchStart={hold}
@@ -202,6 +206,7 @@ export function SwipePager({
       >
         {pages.map((page, index) => (
           <div
+            ref={index === active ? scrollToActivePage : undefined}
             className="pager-page"
             role="group"
             aria-label={pageGroupLabel(index, pages.length)}

@@ -121,6 +121,18 @@ it("composes the workspace and synchronizes native dialog closure", async () => 
   expect(screen.getByRole("dialog", { name: "Shopping list" })).toBeTruthy();
 });
 
+it("loads credentials once on startup and reloads them each time Settings opens", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  expect(commands.getCredentials).toHaveBeenCalledOnce();
+  await user.click(screen.getByRole("button", { name: "Settings" }));
+  expect(commands.getCredentials).toHaveBeenCalledTimes(2);
+  await user.click(screen.getByRole("button", { name: "Close" }));
+  await user.click(screen.getByRole("button", { name: "Settings" }));
+  expect(commands.getCredentials).toHaveBeenCalledTimes(3);
+});
+
 it.each([
   { path: ["Shopping List"], title: "Shopping list", close: "Close shopping" },
   { path: ["Settings"], title: "Settings", close: "Close" },

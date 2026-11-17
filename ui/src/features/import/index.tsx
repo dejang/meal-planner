@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Button, ButtonVariant } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
 import {
@@ -18,10 +17,6 @@ export default function Import() {
   const error = useImportError();
   const linkError = useImportLinkError();
   const supportedSites = useImportSupportedSites();
-
-  useEffect(() => {
-    void actions.reload();
-  }, [actions]);
 
   return (
     <section className="recipe-import" aria-label="Import">

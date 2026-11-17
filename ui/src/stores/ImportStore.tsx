@@ -25,6 +25,7 @@ class ImportStore extends Store<ImportState> {
       error: null,
       linkError: null,
     });
+    void this.actions.reload();
   }
 
   readonly actions = {

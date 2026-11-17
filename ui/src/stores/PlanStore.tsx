@@ -28,6 +28,7 @@ class PlanStore extends Store<PlanState> {
       loading: false,
       error: null,
     });
+    void this.actions.reload();
   }
 
   private pending = Promise.resolve();

@@ -1,7 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { PaperWindowHeader } from "@/components/PaperDialog";
 import {
-  usePlanActions,
   usePlanError,
   usePlanLoading,
   usePlanShoppingItems,
@@ -23,14 +22,9 @@ export default function Shopping({
   const items = usePlanShoppingItems();
   const loading = usePlanLoading();
   const error = usePlanError();
-  const actions = usePlanActions();
   const sheet = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const layout = shoppingColumns(items, width, minimumColumnWidth, columnGap);
-
-  useEffect(() => {
-    void actions.reload();
-  }, [actions]);
 
   useLayoutEffect(() => {
     const element = sheet.current;

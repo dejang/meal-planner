@@ -1,5 +1,4 @@
 import { useDndMonitor } from "@dnd-kit/core";
-import { useEffect } from "react";
 import type { MealPosition } from "@/api";
 import { Button, ButtonVariant } from "@/components/Button";
 import { Icon, IconName } from "@/components/Icon";
@@ -23,10 +22,6 @@ export default function Planner() {
   const loading = usePlanLoading();
   const error = usePlanError();
   const actions = usePlanActions();
-
-  useEffect(() => {
-    void actions.reload();
-  }, [actions]);
 
   useDndMonitor({
     onDragEnd: ({ active, over }) => {

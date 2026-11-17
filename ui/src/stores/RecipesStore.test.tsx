@@ -2,7 +2,7 @@ import { commands, ok } from "@/test-support/ipc";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { deferred, recipe } from "@/test-support/fixtures";
-import { AppScopes } from "@/test-support/scopes";
+import { AppScopes, settleScopeLoads } from "@/test-support/scopes";
 import {
   useRecipe,
   useRecipesActions,
@@ -85,6 +85,7 @@ it("ignores stale search results without rolling back selection made during a re
 
 it("deletes a selected recipe and refreshes both recipe and plan caches", async () => {
   const { result } = renderHook(useGalleryState, { wrapper: AppScopes });
+  await settleScopeLoads();
   await act(() => result.current.actions.reload());
   act(() => result.current.actions.select("b"));
   vi.mocked(commands.deleteRecipe).mockResolvedValue(ok(null));
@@ -136,6 +137,7 @@ it.each([
   "reports $operation failures and retries the failed operation",
   async ({ setup, action, verifyRetry }) => {
     const { result } = renderHook(useGalleryState, { wrapper: AppScopes });
+    await settleScopeLoads();
     await act(() => result.current.actions.reload());
     act(() => result.current.actions.select("b"));
     vi.mocked(commands.deleteRecipe).mockResolvedValue(ok(null));

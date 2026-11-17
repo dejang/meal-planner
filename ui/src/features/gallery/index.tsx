@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Icon, IconName } from "@/components/Icon";
 import { Button } from "@/components/Button";
 import { TextInput } from "@/components/TextInput";
@@ -24,10 +23,6 @@ export default function Gallery() {
   const loading = useRecipesLoading();
   const error = useRecipesError();
   const actions = useRecipesActions();
-
-  useEffect(() => {
-    void actions.reload();
-  }, [actions]);
 
   return (
     <section aria-label="Gallery" className="gallery">

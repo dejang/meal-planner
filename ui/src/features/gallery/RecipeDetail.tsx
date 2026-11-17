@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback } from "react";
 import type { Recipe } from "@/api";
 import { Button } from "@/components/Button";
 import { NutritionLabel } from "@/components/NutritionLabel";
@@ -9,7 +9,7 @@ import { useRecipesActions } from "@/stores/RecipesStore";
 export function RecipeDetail({ recipe }: { recipe: Recipe }) {
   const actions = useRecipesActions();
   const editor = useEditorActions();
-  useEffect(() => {
+  const listenForShortcuts = useCallback(() => {
     function keydown(event: KeyboardEvent) {
       if (
         document.querySelector("dialog[open]") ||
@@ -28,7 +28,11 @@ export function RecipeDetail({ recipe }: { recipe: Recipe }) {
     return () => document.removeEventListener("keydown", keydown);
   }, [actions, recipe.id]);
   return (
-    <aside className="gallery-detail surface-frame" aria-label="Recipe details">
+    <aside
+      ref={listenForShortcuts}
+      className="gallery-detail surface-frame"
+      aria-label="Recipe details"
+    >
       <PaperWindowHeader
         title={recipe.title}
         onClose={() => actions.select(null)}
