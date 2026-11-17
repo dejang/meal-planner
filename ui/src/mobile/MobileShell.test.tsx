@@ -10,9 +10,6 @@ import {
   useDrawerRecipeId,
 } from "@/stores/DrawerStore";
 
-vi.mock("@/features/settings", () => ({
-  Welcome: () => <div>Welcome fixture</div>,
-}));
 vi.mock("@/mobile/explorer", () => ({
   default: function Explorer({ active }: { active: boolean }) {
     const drawer = useDrawerActions();
@@ -86,10 +83,6 @@ it("switches all four screens while retaining panels and shares one recipe drawe
     expect(screen.getByRole("heading").getAttribute("data-active")).toBe(
       "true",
     );
-    expect(screen.getByText("Welcome fixture").closest("[inert]")).toBeNull();
-    expect(
-      screen.getByText("Welcome fixture").closest('[aria-hidden="true"]'),
-    ).toBeNull();
     expect(
       screen
         .getAllByRole("heading", { hidden: true })

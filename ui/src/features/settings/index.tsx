@@ -10,7 +10,7 @@ import {
   useSettingsLoading,
   useSettingsLinkError,
   useSettingsSaving,
-  useSettingsStartupCredentials,
+  useSettingsStartupConfigured,
 } from "@/stores/SettingsStore";
 import "@/features/settings/settings.css";
 
@@ -74,17 +74,12 @@ export default function Settings() {
 }
 
 export function Welcome() {
-  const credentials = useSettingsStartupCredentials();
+  const configured = useSettingsStartupConfigured();
   const actions = useSettingsActions();
   const [dismissed, setDismissed] = useState(false);
   const linkError = useSettingsLinkError();
 
-  if (
-    !credentials ||
-    dismissed ||
-    (credentials.api_key !== "" && credentials.app_id !== "")
-  )
-    return null;
+  if (configured !== false || dismissed) return null;
 
   return (
     <PaperDialog title="Welcome" onClose={() => setDismissed(true)}>

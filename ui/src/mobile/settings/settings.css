@@ -1,0 +1,53 @@
+.mobile-settings {
+  display: grid;
+  gap: var(--space-mobile-gutter);
+  padding-top: var(--space-mobile-sm);
+  padding-bottom: var(--space-mobile-lg);
+}
+
+.mobile-settings-card,
+.mobile-settings-welcome {
+  padding: var(--space-mobile-gutter);
+  border: var(--hairline) solid var(--hairline-color);
+  border-radius: var(--radius-card);
+  background: var(--surface-elevated);
+}
+
+.mobile-settings-card {
+  display: grid;
+  gap: var(--space-mobile-md);
+  min-width: 0;
+}
+
+.mobile-settings-card label {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.mobile-settings-card .text-input {
+  width: 100%;
+}
+
+.mobile-settings-key {
+  display: flex;
+  align-items: center;
+  gap: var(--space-mobile-sm);
+}
+
+.mobile-settings-key .text-input {
+  flex: 1;
+}
+
+.mobile-settings-welcome {
+  background: var(--sage);
+  line-height: var(--leading-mobile-body);
+}
+
+.mobile-settings-welcome p:last-child,
+.mobile-settings-card p {
+  margin-bottom: 0;
+}
+
+.mobile-settings [role="alert"] {
+  color: var(--error);
+}
