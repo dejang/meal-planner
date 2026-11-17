@@ -106,7 +106,7 @@ a {
 }
 .button:active:not(:disabled),
 .button[aria-pressed="true"],
-details[open] > summary.button {
+.nutrition-disclosure[aria-expanded="true"] {
   background: var(--citrus);
   color: var(--forest);
   border-color: var(--green);
@@ -266,15 +266,37 @@ details[open] > summary.button {
   border: 0;
   border-top: 1px solid var(--border);
 }
-.nutrition-label details {
-  margin-top: 8px;
+.nutrition-label {
+  min-width: 0;
+  max-width: 100%;
 }
-.nutrition-label summary {
-  width: fit-content;
-  list-style: none;
+.nutrition-label .nutrition-row > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-.nutrition-label summary::-webkit-details-marker {
-  display: none;
+.nutrition-label .nutrition-row > :not(:first-child) {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.nutrition-label .nutrition-disclosure {
+  margin-top: var(--space-mobile-sm);
+  max-width: 100%;
+}
+.nutrition-disclosure-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--duration-normal) var(--ease-out-expo),
+    opacity var(--duration-normal) var(--ease-out-expo);
+}
+.nutrition-disclosure-body[data-expanded="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.nutrition-disclosure-body > div {
+  min-height: 0;
+  overflow: hidden;
 }
 .recipe-photo {
   display: block;

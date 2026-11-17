@@ -1,4 +1,6 @@
+import { useId, useState } from "react";
 import type { AnalysisResponse, Nutrient } from "@/api";
+import { Button } from "@/components/Button";
 import { caloriesPerServing, servingsDivisor } from "@/lib/nutrition";
 
 export interface NutritionLabelProps {
@@ -52,6 +54,8 @@ export function NutritionLabel({
   ],
 }: NutritionLabelProps) {
   const divisor = servingsDivisor(servings);
+  const [expanded, setExpanded] = useState(false);
+  const disclosureId = useId();
   return (
     <section className="nutrition-label" aria-label="Nutrition Facts">
       <div className="nutrition-facts">
@@ -83,19 +87,33 @@ export function NutritionLabel({
         ))}
       </div>
       <hr />
-      <details>
-        <summary className="button">Nutrients</summary>
-        {nutrientGroups.map((codes, index) => (
-          <div key={index} className="nutrition-group">
-            {codes.map((code) => (
-              <div key={code} className="nutrition-row text-small">
-                <span>{analysis.totalDaily[code]?.label ?? ""}</span>
-                <span>{quantity(analysis.totalDaily[code], divisor)}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </details>
+      <Button
+        className="nutrition-disclosure"
+        aria-expanded={expanded}
+        aria-controls={disclosureId}
+        onClick={() => setExpanded(!expanded)}
+      >
+        Vitamins &amp; Minerals
+      </Button>
+      <div
+        id={disclosureId}
+        className="nutrition-disclosure-body"
+        data-expanded={expanded}
+        aria-hidden={!expanded}
+      >
+        <div>
+          {nutrientGroups.map((codes, index) => (
+            <div key={index} className="nutrition-group">
+              {codes.map((code) => (
+                <div key={code} className="nutrition-row text-small">
+                  <span>{analysis.totalDaily[code]?.label ?? ""}</span>
+                  <span>{quantity(analysis.totalDaily[code], divisor)}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

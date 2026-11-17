@@ -105,17 +105,24 @@ it.each([
     expect(within(fatRow).getByText(fat)).toBeTruthy();
     expect(within(fatRow).getByText(daily)).toBeTruthy();
     expect(screen.getByText(caption)).toBeTruthy();
-    const disclosure = screen.getByText("Nutrients").closest("details");
-    expect(disclosure?.open).toBe(false);
-    fireEvent.click(screen.getByText("Nutrients"));
-    expect(disclosure?.open).toBe(true);
+    const disclosure = screen.getByRole("button", {
+      name: "Vitamins & Minerals",
+    });
+    expect(disclosure.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(disclosure);
+    expect(disclosure.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByText("Vitamin C")).toBeTruthy();
     expect(screen.getByText(vitamin)).toBeTruthy();
     expect(screen.getByText("Calcium")).toBeTruthy();
     for (const label of omittedRows ?? []) {
       expect(screen.queryByText(label)).toBeNull();
     }
-    fireEvent.click(screen.getByText("Nutrients"));
-    expect(disclosure?.open).toBe(false);
+    fireEvent.click(disclosure);
+    expect(disclosure.getAttribute("aria-expanded")).toBe("false");
+    expect(
+      document
+        .getElementById(disclosure.getAttribute("aria-controls") ?? "")
+        ?.getAttribute("aria-hidden"),
+    ).toBe("true");
   },
 );

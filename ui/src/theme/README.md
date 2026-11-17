@@ -33,8 +33,8 @@ application composition. No mobile layout or drawer state lives in the theme.
   the shared frame owns the surface, radius and shadow.
 - `--touch-min` is 44px. Mobile buttons (including `.button` disclosures), form
   controls and `.mobile-touch-target` get minimum height; buttons, `.button` and
-  explicit touch targets also get minimum width. Summary button labels are vertically
-  centered. Give non-button interactive elements proper keyboard behavior and semantics.
+  explicit touch targets also get minimum width. Give non-button interactive elements
+  proper keyboard behavior and semantics.
 - `--radius-pill`, `--radius-card` (16px), and `--radius-drawer` (24px) are shared
   shapes. Mobile `.button` uses the pill radius; `.surface-frame` and `.paper-dialog`
   use the card radius.
