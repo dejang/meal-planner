@@ -315,6 +315,27 @@ it("preserves card clicks below the pointer threshold and drops keyboard drags o
   expect(day.textContent).toBe("Planner fixture; dropped day");
 });
 
+it.each(["ios", "android"])(
+  "keeps the mobile shell on wide %s devices",
+  (platform) => {
+    vi.stubEnv("TAURI_ENV_PLATFORM", platform);
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    try {
+      render(<App />);
+      expect(
+        screen.getByRole("heading", { name: "Mobile explorer fixture" }),
+      ).toBeTruthy();
+    } finally {
+      vi.unstubAllEnvs();
+      vi.unstubAllGlobals();
+    }
+  },
+);
+
 it("selects the responsive shell on media changes and accepts a custom viewport query", () => {
   const original = window.matchMedia;
   const events = new EventTarget();

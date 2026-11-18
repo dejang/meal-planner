@@ -10,7 +10,9 @@ export function useIsMobileViewport(query = "(max-width: 768px)") {
     [query],
   );
   const getSnapshot = useCallback(
-    () => window.matchMedia?.(query).matches ?? false,
+    () =>
+      /^(ios|android|androideabi)$/.test(import.meta.env.TAURI_ENV_PLATFORM) ||
+      (window.matchMedia?.(query).matches ?? false),
     [query],
   );
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
