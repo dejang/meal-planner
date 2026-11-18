@@ -41,16 +41,27 @@ export default function RecipeDrawer() {
       onClose={viewing ? drawer.close : drawer.cancel}
       header={
         viewing ? (
-          <>
+          <div className="recipe-drawer-toolbar recipe-drawer-toolbar-view">
             <h2 className="mobile-screen-title">{title}</h2>
             {recipe && (
-              <Button onClick={() => drawer.openEdit(recipe.id)}>Edit</Button>
+              <Button
+                variant={ButtonVariant.Quiet}
+                onClick={() => drawer.openEdit(recipe.id)}
+              >
+                Edit
+              </Button>
             )}
-            <Button onClick={drawer.close}>Close</Button>
-          </>
+            <Button variant={ButtonVariant.Quiet} onClick={drawer.close}>
+              Close
+            </Button>
+          </div>
         ) : (
-          <>
-            <Button disabled={saving} onClick={drawer.cancel}>
+          <div className="recipe-drawer-toolbar recipe-drawer-toolbar-form">
+            <Button
+              variant={ButtonVariant.Quiet}
+              disabled={saving}
+              onClick={drawer.cancel}
+            >
               Cancel
             </Button>
             <h2 className="mobile-screen-title">{title}</h2>
@@ -65,7 +76,7 @@ export default function RecipeDrawer() {
             >
               {saving ? "Saving…" : "Save"}
             </Button>
-          </>
+          </div>
         )
       }
     >

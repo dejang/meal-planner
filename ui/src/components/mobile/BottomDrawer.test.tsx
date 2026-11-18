@@ -99,7 +99,7 @@ it.each(["handle", "body"])(
     const sheet = dialog.querySelector(".drawer-sheet")!;
     expect(sheet.getAttribute("data-entered")).toBe("true");
     if (source === "handle") {
-      const handle = screen.getByRole("button", { name: "Expand drawer" });
+      const handle = dialog.querySelector(".drawer-grip")!;
       fireEvent.pointerDown(handle, { clientY: 100 });
       fireEvent.pointerMove(handle, { clientY: 140 });
     } else {
@@ -116,7 +116,7 @@ it.each(["handle", "body"])(
     expect(sheet.getAttribute("data-dragging")).toBe("false");
     expect(sheet.getAttribute("data-entered")).toBe("false");
     expect(dialog.open).toBe(false);
-    const handle = dialog.querySelector("button")!;
+    const handle = dialog.querySelector(".drawer-grip")!;
     fireEvent.pointerDown(handle, { clientY: 100 });
     fireEvent.pointerMove(handle, { clientY: 140 });
     expect(sheet.getAttribute("data-dragging")).toBe("false");
@@ -156,9 +156,9 @@ it.each(["backdrop", "Escape", "close control"])(
 
 it.each([
   { distance: 30, elapsed: 10 },
-  { distance: 150, elapsed: 500 },
+  { distance: 200, elapsed: 500 },
 ])(
-  "snaps between heights and dismisses a $distance px swipe in $elapsed ms",
+  "springs back from short or upward drags and dismisses a $distance px swipe in $elapsed ms",
   ({ distance, elapsed }) => {
     const onClose = vi.fn();
     const onAction = vi.fn();
@@ -169,12 +169,14 @@ it.each([
     );
     const action = screen.getByRole("button", { name: "Add meal" });
     action.closest(".drawer-body")!.scrollTop = 40;
-    const handle = screen.getByRole("button", { name: "Expand drawer" });
-    for (const [start, end, expanded] of [
-      [200, 100, "true"],
-      [100, 250, "false"],
-      [100, 100 + distance, "false"],
-    ]) {
+    const dialog = screen.getByRole("dialog") as HTMLDialogElement;
+    const sheet = dialog.querySelector(".drawer-sheet")!;
+    const handle = dialog.querySelector(".drawer-grip")!;
+    for (const [start, end, offset, closes] of [
+      [200, 100, "-20px", 0],
+      [100, 115, "15px", 0],
+      [100, 100 + distance, `${distance}px`, 1],
+    ] as const) {
       const down = createEvent.pointerDown(handle, {
         clientY: start,
         pointerId: 1,
@@ -184,8 +186,12 @@ it.each([
       Object.defineProperty(up, "timeStamp", { value: elapsed });
       fireEvent(handle, down);
       fireEvent.pointerMove(handle, { clientY: end, pointerId: 1 });
+      expect(sheet.getAttribute("data-dragging")).toBe("true");
+      expect(dialog.style.getPropertyValue("--drawer-drag")).toBe(offset);
       fireEvent(handle, up);
-      expect(handle.getAttribute("aria-expanded")).toBe(expanded);
+      expect(sheet.getAttribute("data-dragging")).toBe("false");
+      expect(dialog.style.getPropertyValue("--drawer-drag")).toBe("");
+      expect(onClose).toHaveBeenCalledTimes(closes);
       fireEvent.touchStart(action, { touches: [{ clientX: 0, clientY: 100 }] });
       fireEvent.touchEnd(action, {
         changedTouches: [{ clientX: 0, clientY: 100 }],
@@ -193,27 +199,29 @@ it.each([
       fireEvent.click(action);
     }
     expect(onAction).toHaveBeenCalledTimes(3);
-    expect(onClose).toHaveBeenCalledOnce();
   },
 );
 
-it("leaves short or cancelled drags open and supports keyboard-accessible expansion", () => {
+it("focuses the sheet instead of a control and leaves short or cancelled drags open", () => {
   const onClose = vi.fn();
   render(
     <BottomDrawer open title="Recipe" onClose={onClose}>
       Body
     </BottomDrawer>,
   );
-  const handle = screen.getByRole("button", { name: "Expand drawer" });
+  const dialog = screen.getByRole("dialog");
+  const sheet = dialog.querySelector(".drawer-sheet")!;
+  expect(document.activeElement).toBe(sheet);
+  const handle = dialog.querySelector(".drawer-grip")!;
+  expect(handle.getAttribute("aria-hidden")).toBe("true");
   fireEvent.pointerDown(handle, { clientY: 100 });
   fireEvent.pointerMove(handle, { clientY: 110 });
   fireEvent.pointerUp(handle, { clientY: 110 });
   fireEvent.pointerDown(handle, { clientY: 100 });
   fireEvent.pointerMove(handle, { clientY: 300 });
   fireEvent.pointerCancel(handle);
+  expect(sheet.getAttribute("data-dragging")).toBe("false");
   expect(onClose).not.toHaveBeenCalled();
-  fireEvent.click(handle);
-  expect(handle.getAttribute("aria-expanded")).toBe("true");
 });
 
 it.each([

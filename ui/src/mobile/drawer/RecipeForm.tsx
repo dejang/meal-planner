@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/Button";
+import { Button, ButtonVariant } from "@/components/Button";
 import { TextArea, TextInput } from "@/components/TextInput";
 import { RecipePhoto } from "@/components/RecipePhoto";
 import { NutritionLabel } from "@/components/NutritionLabel";
@@ -39,16 +39,24 @@ export default function RecipeForm() {
   const drawer = useDrawerActions();
   const recipeError = useRecipesError();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const hasPhoto =
+    draft?.image.kind === "set" ||
+    (draft?.image.kind === "keep" && draft.imageVersion !== null);
   return (
     <>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="recipe-drawer-error" role="alert">
+          {error}
+        </p>
+      )}
       {!draft ? (
         <p role="status">Loading recipe…</p>
       ) : (
         <fieldset className="recipe-drawer-form" disabled={saving || importing}>
-          <details open={!draft.id}>
+          <details className="recipe-drawer-import" open={!draft.id}>
             <summary>Import from URL</summary>
             <form
+              className="recipe-drawer-import-form"
               onSubmit={(event) => {
                 event.preventDefault();
                 void importer.importRecipe("draft");
@@ -59,17 +67,24 @@ export default function RecipeForm() {
                 Recipe URL
                 <TextInput
                   type="url"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
                   value={url}
                   onChange={(event) => importer.setUrl(event.target.value)}
                   placeholder="https://…"
                 />
               </label>
-              <Button type="submit" disabled={importing || !url.trim()}>
+              <Button
+                type="submit"
+                variant={ButtonVariant.Primary}
+                disabled={importing || !url.trim()}
+              >
                 {importing ? "Importing…" : "Import"}
               </Button>
               {importError && <p role="alert">{importError}</p>}
             </form>
-            <details>
+            <details className="recipe-drawer-sites">
               <summary>Supported sites</summary>
               <ul>
                 {sites.map((site) => (
@@ -96,42 +111,53 @@ export default function RecipeForm() {
             </details>
             {linkError && <p role="alert">{linkError}</p>}
           </details>
-          <Button
-            className="recipe-drawer-photo-picker"
-            aria-label="Choose recipe photo"
-            onClick={editor.chooseImageFile}
-            disabled={loadingImage}
-          >
-            <RecipePhoto
-              className="recipe-drawer-photo"
-              recipeId={draft.id}
-              imageVersion={
-                draft.image.kind === "keep" ? draft.imageVersion : null
-              }
-              image={draft.image.kind === "set" ? draft.image.image : null}
-              alt={draft.title || "Recipe photo"}
-            />
-            Choose photo
-          </Button>
-          <label>
-            Image URL
-            <TextInput
-              value={draft.imageSource ?? ""}
-              onChange={(event) => editor.setImageSource(event.target.value)}
-              onBlur={() => void editor.loadImageUrl(draft.imageSource ?? "")}
-              onPaste={(event) => {
-                const pasted = event.clipboardData.getData("text").trim();
-                if (pasted) {
-                  event.preventDefault();
-                  void editor.loadImageUrl(pasted);
+          <div className="recipe-drawer-group">
+            <Button
+              className="recipe-drawer-photo-picker"
+              aria-label="Choose recipe photo"
+              onClick={editor.chooseImageFile}
+              disabled={loadingImage}
+            >
+              <RecipePhoto
+                className="recipe-drawer-photo-preview"
+                recipeId={draft.id}
+                imageVersion={
+                  draft.image.kind === "keep" ? draft.imageVersion : null
                 }
-              }}
-            />
-          </label>
-          {loadingImage && <p role="status">Loading image…</p>}
+                image={draft.image.kind === "set" ? draft.image.image : null}
+                alt={draft.title || "Recipe photo"}
+              />
+              <span className="recipe-drawer-photo-action" aria-hidden="true">
+                {hasPhoto ? "Change photo" : "Choose photo"}
+              </span>
+            </Button>
+            <label>
+              Image URL
+              <TextInput
+                type="url"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                placeholder="Or paste an image link"
+                value={draft.imageSource ?? ""}
+                onChange={(event) => editor.setImageSource(event.target.value)}
+                onBlur={() => void editor.loadImageUrl(draft.imageSource ?? "")}
+                onPaste={(event) => {
+                  const pasted = event.clipboardData.getData("text").trim();
+                  if (pasted) {
+                    event.preventDefault();
+                    void editor.loadImageUrl(pasted);
+                  }
+                }}
+              />
+            </label>
+            {loadingImage && <p role="status">Loading image…</p>}
+          </div>
           <label>
             Title
             <TextInput
+              className="recipe-drawer-title-input"
+              placeholder="What are you cooking?"
               value={draft.title}
               onChange={(event) =>
                 editor.patchDraft({ title: event.target.value })
@@ -143,31 +169,11 @@ export default function RecipeForm() {
             max={4294967295}
             onChange={(servings) => editor.patchDraft({ servings })}
           />
-          {draft.id && (
-            <div>
-              <Button onClick={() => setConfirmDelete(true)}>Delete</Button>
-              {confirmDelete && (
-                <div role="group" aria-label="Confirm deletion">
-                  <p>Delete this recipe? This cannot be undone.</p>
-                  <Button onClick={() => setConfirmDelete(false)}>
-                    Keep recipe
-                  </Button>
-                  <Button
-                    onClick={async () => {
-                      if (await editor.deleteRecipe()) await drawer.close();
-                    }}
-                  >
-                    Confirm delete
-                  </Button>
-                </div>
-              )}
-              {recipeError && <p role="alert">{recipeError}</p>}
-            </div>
-          )}
           <label>
             Ingredients
             <TextArea
               rows={7}
+              placeholder="One ingredient per line"
               value={draft.ingredients}
               onChange={(event) =>
                 editor.patchDraft({ ingredients: event.target.value })
@@ -179,22 +185,56 @@ export default function RecipeForm() {
             Cooking Instructions
             <TextArea
               rows={7}
+              placeholder="One step per line"
               value={draft.instructions}
               onChange={(event) =>
                 editor.patchDraft({ instructions: event.target.value })
               }
             />
           </label>
-          {analyzing && <p role="status">Analyzing ingredients…</p>}
-          <h3>Live nutrition preview</h3>
-          {draft.analysis ? (
-            <NutritionLabel
-              analysis={draft.analysis}
-              servings={draft.servings}
-              servingsLabel="Calories per portion"
-            />
-          ) : (
-            <p>No nutrition analysis yet.</p>
+          <section
+            className="recipe-drawer-nutrition"
+            aria-label="Live nutrition preview"
+          >
+            <h3>Live nutrition preview</h3>
+            {analyzing && <p role="status">Analyzing ingredients…</p>}
+            {draft.analysis ? (
+              <NutritionLabel
+                analysis={draft.analysis}
+                servings={draft.servings}
+                servingsLabel="Calories per portion"
+              />
+            ) : (
+              !analyzing && <p>No nutrition analysis yet.</p>
+            )}
+          </section>
+          {draft.id && (
+            <div className="recipe-drawer-danger">
+              {confirmDelete ? (
+                <div role="group" aria-label="Confirm deletion">
+                  <p>Delete this recipe? This cannot be undone.</p>
+                  <Button onClick={() => setConfirmDelete(false)}>
+                    Keep recipe
+                  </Button>
+                  <Button
+                    className="recipe-drawer-delete"
+                    onClick={async () => {
+                      if (await editor.deleteRecipe()) await drawer.close();
+                    }}
+                  >
+                    Confirm delete
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="recipe-drawer-delete"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete
+                </Button>
+              )}
+              {recipeError && <p role="alert">{recipeError}</p>}
+            </div>
           )}
         </fieldset>
       )}
