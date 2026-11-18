@@ -46,12 +46,6 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm tauri ios init --ci
-      - uses: actions/upload-artifact@v4
-        with:
-          name: meal-planner-xcode-project
-          path: src-tauri/gen/apple/
-          if-no-files-found: error
       - run: pnpm tauri ios build --target aarch64-sim
 
   build:
