@@ -7,31 +7,16 @@ A pet project that I am using on a weekly basis. It has helped me save money, lo
 
 ## Development
 
-Use the pinned Rust toolchain, Node.js 22 and **pnpm** (version in the root `package.json`).
-On Linux, install Tauri v2 prerequisites: `libwebkit2gtk-4.1-dev`, `build-essential`,
-`curl`, `wget`, `file`, `libxdo-dev`, `libssl-dev`, `librsvg2-dev`,
-and `libayatana-appindicator3-dev` (Debian/Ubuntu package names).
-On macOS and Windows, install the platform's
-[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) first.
-
-From the repository root, start the Tauri app and its Vite/React frontend:
+Install the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/), the
+pinned Rust toolchain, Node.js 22 and pnpm (version in `package.json`).
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm tauri dev
+pnpm tauri dev              # desktop app with the Vite frontend
+pnpm tauri build            # release build and installers under target/release
+pnpm run check:fast         # Rust and frontend lint and tests
+./check.sh                  # everything, needs @ast-grep/cli@0.51.0 on PATH
 ```
-
-The frontend dev server uses `http://127.0.0.1:1420`. To build the desktop app,
-run `pnpm tauri build`. The executable is written to `target/release/` and
-platform installers to `target/release/bundle/`. The root pnpm workspace installs
-both the desktop CLI and the frontend dependencies; Tauri starts Vite automatically.
-
-Run `pnpm run check:fast` for workspace fmt, clippy and tests (including bindings
-freshness), plus frontend typecheck, ESLint, Prettier and Vitest. `./check.sh` also
-runs ast-grep tests/scanning, a workspace build and a Tauri build.
-Install the prerequisites and frontend dependencies first. The full check requires
-`ast-grep` on PATH from `@ast-grep/cli@0.51.0`, matching CI; for example, install it
-with `pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.51.0`.
 
 ## iOS development
 
