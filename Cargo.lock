@@ -2400,6 +2400,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "image",
+ "indexmap 2.14.1",
  "pollster",
  "serde",
  "serde_json",

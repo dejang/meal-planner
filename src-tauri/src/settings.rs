@@ -58,3 +58,39 @@ impl<R: tauri::Runtime> Settings<R> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Credentials, Settings};
+    use crate::test_support::{mock_app, TestResult};
+
+    #[test]
+    fn failed_credential_saves_preserve_the_previous_value() -> TestResult {
+        for previous in [
+            None,
+            Some(Credentials {
+                app_id: "old-app".into(),
+                api_key: "old-key".into(),
+            }),
+        ] {
+            let directory = tempfile::tempdir()?;
+            let app = mock_app()?;
+            let settings = Settings::new(&app, directory.path())?;
+            let path = directory.path().join("settings.json");
+            if let Some(credentials) = previous.clone() {
+                settings.save_credentials(credentials)?;
+                std::fs::remove_file(&path)?;
+            }
+            std::fs::create_dir(&path)?;
+            assert!(matches!(
+                settings.save_credentials(Credentials {
+                    app_id: "new-app".into(),
+                    api_key: "new-key".into(),
+                }),
+                Err(meal_planner_core::Error::Storage(_))
+            ));
+            assert_eq!(settings.get_credentials()?, previous.unwrap_or_default());
+        }
+        Ok(())
+    }
+}

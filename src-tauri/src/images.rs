@@ -1,74 +1,8 @@
 use std::error::Error as _;
-use std::sync::{Arc, Mutex};
 
-use meal_planner_core::{image::resize_image, App, Error, ImageStore, ResizedImage, Result};
-use rusqlite::{params, Connection, OptionalExtension};
+use meal_planner_core::{image::resize_image, App, Error, ResizedImage, Result};
 use tauri::{http, Manager, Runtime, UriSchemeContext, UriSchemeResponder};
 use uuid::Uuid;
-
-pub struct LocalImages {
-    connection: Arc<Mutex<Connection>>,
-}
-
-impl LocalImages {
-    pub fn new(connection: Arc<Mutex<Connection>>) -> Self {
-        Self { connection }
-    }
-}
-
-impl ImageStore for LocalImages {
-    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<Uuid> {
-        let version = Uuid::new_v4();
-        self.connection
-            .lock()?
-            .execute(
-                "INSERT INTO images (id, recipe_id, width, height, data, version)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-             ON CONFLICT(recipe_id) DO UPDATE SET
-             width = excluded.width, height = excluded.height,
-             data = excluded.data, version = excluded.version",
-                params![
-                    Uuid::new_v4().to_string(),
-                    recipe_id.to_string(),
-                    image.width,
-                    image.height,
-                    image.bytes,
-                    version.to_string(),
-                ],
-            )
-            .map_err(Error::storage)?;
-        Ok(version)
-    }
-
-    fn get(&self, recipe_id: Uuid) -> Result<Option<ResizedImage>> {
-        self.connection
-            .lock()?
-            .query_row(
-                "SELECT data, width, height FROM images WHERE recipe_id = ?1",
-                [recipe_id.to_string()],
-                |row| {
-                    Ok(ResizedImage {
-                        bytes: row.get(0)?,
-                        width: row.get(1)?,
-                        height: row.get(2)?,
-                    })
-                },
-            )
-            .optional()
-            .map_err(Error::storage)
-    }
-
-    fn remove(&self, recipe_id: Uuid) -> Result<()> {
-        self.connection
-            .lock()?
-            .execute(
-                "DELETE FROM images WHERE recipe_id = ?1",
-                [recipe_id.to_string()],
-            )
-            .map_err(Error::storage)?;
-        Ok(())
-    }
-}
 
 pub async fn load_file(path: &str) -> Result<ResizedImage> {
     let bytes = tokio::fs::read(path)
@@ -154,4 +88,64 @@ fn protocol_response(app: &App, request: &http::Request<Vec<u8>>) -> http::Respo
 }
 
 #[cfg(test)]
-mod tests;
+mod tests {
+    use super::protocol_response;
+    use crate::{storage::SqliteStorage, test_support::TestResult};
+    use meal_planner_core::{ImageChange, Recipe, ResizedImage, Storage};
+    use tauri::{http, Manager};
+    use uuid::Uuid;
+
+    #[test]
+    fn protocol_serves_platform_urls_and_reports_missing_images_and_storage_errors() -> TestResult {
+        let directory = tempfile::tempdir()?;
+        let app = crate::test_support::mock_app()?;
+        crate::setup_state(&app, directory.path())?;
+        let connection = crate::db::open(directory.path())?;
+        let storage = SqliteStorage::new(crate::db::open(directory.path())?);
+        let recipe = Recipe {
+            image_version: Some(Uuid::new_v4()),
+            ..Recipe::default()
+        };
+        let id = recipe.id;
+        let image = ResizedImage {
+            bytes: vec![255, 216, 255],
+            width: 1,
+            height: 1,
+        };
+        storage.insert_recipe(&recipe, &ImageChange::Set(image.clone()))?;
+        for origin in [
+            "image://localhost",
+            "http://image.localhost",
+            "https://image.localhost",
+        ] {
+            for (path, status) in [
+                (format!("{id}?v=ignored"), http::StatusCode::OK),
+                (Uuid::new_v4().to_string(), http::StatusCode::NOT_FOUND),
+                ("invalid".into(), http::StatusCode::NOT_FOUND),
+            ] {
+                let request = http::Request::builder()
+                    .uri(format!("{origin}/{path}"))
+                    .body(Vec::new())?;
+                let response =
+                    protocol_response(app.state::<meal_planner_core::App>().inner(), &request);
+                assert_eq!(response.status(), status);
+                if status == http::StatusCode::OK {
+                    assert_eq!(response.headers()[http::header::CONTENT_TYPE], "image/jpeg");
+                    assert_eq!(response.body(), &image.bytes);
+                }
+            }
+        }
+        connection.execute("DROP TABLE images", [])?;
+        let request = http::Request::builder()
+            .uri(format!("image://localhost/{id}"))
+            .body(Vec::new())?;
+        let response = protocol_response(app.state::<meal_planner_core::App>().inner(), &request);
+        assert_eq!(response.status(), http::StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(
+            response.headers()[http::header::CONTENT_TYPE],
+            "text/plain; charset=utf-8"
+        );
+        assert!(String::from_utf8(response.into_body())?.contains("no such table"));
+        Ok(())
+    }
+}

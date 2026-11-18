@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::{
-    AnalysisResponse, Error, ImageStore, ImportedRecipe, NutritionalAnalyzer, Recipe,
+    AnalysisResponse, Error, ImageChange, ImportedRecipe, NutritionalAnalyzer, Recipe,
     RecipeImporter, ResizedImage, Result, Storage, SupportedSite, WeeklyPlan,
 };
 
@@ -17,6 +17,7 @@ pub struct FakeStorage {
 struct StoredState {
     recipes: Vec<Recipe>,
     plan: WeeklyPlan,
+    images: HashMap<Uuid, ResizedImage>,
 }
 
 impl Storage for FakeStorage {
@@ -24,16 +25,17 @@ impl Storage for FakeStorage {
         Ok(self.state.lock()?.recipes.clone())
     }
 
-    fn insert_recipe(&self, recipe: &Recipe) -> Result<()> {
+    fn insert_recipe(&self, recipe: &Recipe, image: &ImageChange) -> Result<()> {
         let mut state = self.state.lock()?;
         if state.recipes.iter().any(|stored| stored.id == recipe.id) {
             return Err(Error::Storage(format!("Duplicate recipe: {}", recipe.id)));
         }
+        state.apply_image(recipe.id, image);
         state.recipes.push(recipe.clone());
         Ok(())
     }
 
-    fn update_recipe(&self, recipe: &Recipe) -> Result<()> {
+    fn update_recipe(&self, recipe: &Recipe, image: &ImageChange) -> Result<()> {
         let mut state = self.state.lock()?;
         let stored = state
             .recipes
@@ -41,10 +43,11 @@ impl Storage for FakeStorage {
             .find(|stored| stored.id == recipe.id)
             .ok_or(Error::NotFound(recipe.id))?;
         *stored = recipe.clone();
+        state.apply_image(recipe.id, image);
         Ok(())
     }
 
-    fn delete_recipe(&self, id: Uuid, plan: &WeeklyPlan) -> Result<()> {
+    fn delete_recipe(&self, id: Uuid) -> Result<()> {
         let mut state = self.state.lock()?;
         let index = state
             .recipes
@@ -52,8 +55,13 @@ impl Storage for FakeStorage {
             .position(|recipe| recipe.id == id)
             .ok_or(Error::NotFound(id))?;
         state.recipes.remove(index);
-        state.plan = plan.clone();
+        state.plan.drop_recipe(id);
+        state.images.remove(&id);
         Ok(())
+    }
+
+    fn load_image(&self, id: Uuid) -> Result<Option<ResizedImage>> {
+        Ok(self.state.lock()?.images.get(&id).cloned())
     }
 
     fn load_plan(&self) -> Result<WeeklyPlan> {
@@ -66,24 +74,17 @@ impl Storage for FakeStorage {
     }
 }
 
-#[derive(Default)]
-pub struct FakeImageStore {
-    images: Mutex<HashMap<Uuid, ResizedImage>>,
-}
-
-impl ImageStore for FakeImageStore {
-    fn put(&self, recipe_id: Uuid, image: &ResizedImage) -> Result<Uuid> {
-        self.images.lock()?.insert(recipe_id, image.clone());
-        Ok(Uuid::new_v4())
-    }
-
-    fn get(&self, recipe_id: Uuid) -> Result<Option<ResizedImage>> {
-        Ok(self.images.lock()?.get(&recipe_id).cloned())
-    }
-
-    fn remove(&self, recipe_id: Uuid) -> Result<()> {
-        self.images.lock()?.remove(&recipe_id);
-        Ok(())
+impl StoredState {
+    fn apply_image(&mut self, id: Uuid, image: &ImageChange) {
+        match image {
+            ImageChange::Keep => {}
+            ImageChange::Remove => {
+                self.images.remove(&id);
+            }
+            ImageChange::Set(image) => {
+                self.images.insert(id, image.clone());
+            }
+        }
     }
 }
 
@@ -169,7 +170,6 @@ mod tests {
     #[test]
     fn fake_storage_and_images_preserve_mutations() {
         let storage = FakeStorage::default();
-        let images = FakeImageStore::default();
         let mut first = Recipe {
             title: "First".into(),
             ..Recipe::default()
@@ -178,14 +178,14 @@ mod tests {
             title: "Second".into(),
             ..Recipe::default()
         };
-        storage.insert_recipe(&first).unwrap();
-        storage.insert_recipe(&second).unwrap();
+        storage.insert_recipe(&first, &ImageChange::Keep).unwrap();
+        storage.insert_recipe(&second, &ImageChange::Keep).unwrap();
         assert!(matches!(
-            storage.insert_recipe(&first),
+            storage.insert_recipe(&first, &ImageChange::Keep),
             Err(Error::Storage(_))
         ));
         first.title = "Updated".into();
-        storage.update_recipe(&first).unwrap();
+        storage.update_recipe(&first, &ImageChange::Keep).unwrap();
         assert_eq!(
             storage.load_recipes().unwrap(),
             vec![first.clone(), second.clone()]
@@ -196,29 +196,17 @@ mod tests {
         storage.save_plan(&plan).unwrap();
         assert_eq!(storage.load_plan().unwrap(), plan);
         plan.drop_recipe(first.id);
-        storage.delete_recipe(first.id, &plan).unwrap();
+        storage.delete_recipe(first.id).unwrap();
         assert_eq!(storage.load_recipes().unwrap(), vec![second]);
         assert_eq!(storage.load_plan().unwrap(), plan);
         for result in [
-            storage.update_recipe(&first),
-            storage.delete_recipe(first.id, &WeeklyPlan::default()),
+            storage.update_recipe(&first, &ImageChange::Keep),
+            storage.delete_recipe(first.id),
         ] {
             assert_eq!(result, Err(Error::NotFound(first.id)));
         }
         assert_eq!(storage.load_plan().unwrap(), plan);
 
-        assert_eq!(images.get(first.id).unwrap(), None);
-        for bytes in [vec![1, 2], vec![3, 4, 5]] {
-            let image = ResizedImage {
-                bytes,
-                width: 2,
-                height: 1,
-            };
-            images.put(first.id, &image).unwrap();
-            assert_eq!(images.get(first.id).unwrap(), Some(image));
-        }
-        images.remove(first.id).unwrap();
-        images.remove(first.id).unwrap();
-        assert_eq!(images.get(first.id).unwrap(), None);
+        assert_eq!(storage.load_image(first.id).unwrap(), None);
     }
 }

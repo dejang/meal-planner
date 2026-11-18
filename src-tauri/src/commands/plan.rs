@@ -15,7 +15,7 @@ pub fn add_to_day(
     position: MealPosition,
     recipe_id: Uuid,
 ) -> Result<WeeklyPlan> {
-    app.add_to_day(position, recipe_id)
+    app.add_recipe_to_plan(position, recipe_id)
 }
 
 #[tauri::command]

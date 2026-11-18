@@ -9,6 +9,7 @@ fakes = []
 [dependencies]
 async-trait = "0.1"
 base64 = "0.22"
+indexmap = "2"
 image = { version = "0.25.4", default-features = false, features = ["jpeg", "png", "webp", "gif"] }
 serde = { version = "1", features = ["derive"] }
 specta = { version = "=2.0.0-rc.24", features = ["derive", "uuid"] }
