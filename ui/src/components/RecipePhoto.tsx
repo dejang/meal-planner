@@ -31,6 +31,7 @@ export function RecipePhoto({
       <div
         role="img"
         aria-label={alt}
+        aria-hidden={alt === ""}
         className={`recipe-photo recipe-photo-placeholder ${className}`}
         style={style}
       >

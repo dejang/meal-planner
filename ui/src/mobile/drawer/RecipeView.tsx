@@ -13,7 +13,7 @@ import {
   usePlanLoading,
   usePlanError,
 } from "@/stores/PlanStore";
-import { caloriesPerServing } from "@/lib/nutrition";
+import { caloriesPerServingLabel } from "@/lib/nutrition";
 
 export default function RecipeView({ recipeId }: { recipeId: string }) {
   const recipe = useRecipe(recipeId);
@@ -41,10 +41,8 @@ export default function RecipeView({ recipeId }: { recipeId: string }) {
         alt={recipe.title}
       />
       <p className="recipe-drawer-summary">
-        {recipe.analysis
-          ? `${caloriesPerServing(recipe.analysis.calories, recipe.servings)} kcal per portion`
-          : "Nutrition not analyzed"}{" "}
-        · {recipe.servings} portions
+        {caloriesPerServingLabel(recipe.analysis, recipe.servings)} ·{" "}
+        {recipe.servings} portions
       </p>
       <section aria-label="Add to Plan">
         <h3>Add to Plan</h3>
@@ -54,7 +52,10 @@ export default function RecipeView({ recipeId }: { recipeId: string }) {
           confirmedDay={confirmed ? addedDay : undefined}
           onSelect={async (day) => {
             setAddedDay(undefined);
-            await actions.addToDay({ day, row: plan.days[day].length }, recipe.id);
+            await actions.addToDay(
+              { day, row: plan.days[day].length },
+              recipe.id,
+            );
             setAddedDay(day);
           }}
         />

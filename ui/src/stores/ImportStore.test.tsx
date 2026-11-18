@@ -147,42 +147,45 @@ it("ignores blank input and protects an existing draft before requesting an impo
   expect(result.current.importing).toBe(false);
 });
 
-it.each(["new", "draft"] as const)("does not replace a draft opened while a %s import was pending", async (target) => {
-  const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
-  const response =
-    deferred<Awaited<ReturnType<typeof commands.importRecipe>>>();
-  vi.mocked(commands.importRecipe).mockReturnValueOnce(response.promise);
-  let pending!: Promise<void>;
-  act(() => {
-    if (target === "draft") result.current.editor.openNew();
-    result.current.actions.open();
-    result.current.actions.setUrl("https://recipes.example/soup");
-    pending = result.current.actions.importRecipe(target);
-    result.current.editor.openNew();
-    result.current.editor.patchDraft({ title: "Keep me" });
-  });
-  const draft = result.current.draft;
-  await act(async () => {
-    response.resolve(
-      ok({
-        title: "Imported",
-        ingredients: [],
-        instructions: [],
-        servings: 1,
-        image: null,
-      }),
+it.each(["new", "draft"] as const)(
+  "does not replace a draft opened while a %s import was pending",
+  async (target) => {
+    const { result } = renderHook(useImportSnapshot, { wrapper: AppScopes });
+    const response =
+      deferred<Awaited<ReturnType<typeof commands.importRecipe>>>();
+    vi.mocked(commands.importRecipe).mockReturnValueOnce(response.promise);
+    let pending!: Promise<void>;
+    act(() => {
+      if (target === "draft") result.current.editor.openNew();
+      result.current.actions.open();
+      result.current.actions.setUrl("https://recipes.example/soup");
+      pending = result.current.actions.importRecipe(target);
+      result.current.editor.openNew();
+      result.current.editor.patchDraft({ title: "Keep me" });
+    });
+    const draft = result.current.draft;
+    await act(async () => {
+      response.resolve(
+        ok({
+          title: "Imported",
+          ingredients: [],
+          instructions: [],
+          servings: 1,
+          image: null,
+        }),
+      );
+      await pending;
+    });
+    expect(result.current.draft).toBe(draft);
+    expect(result.current.error).toBe(
+      target === "draft"
+        ? "The recipe changed while importing"
+        : "Close the current new recipe before importing another one",
     );
-    await pending;
-  });
-  expect(result.current.draft).toBe(draft);
-  expect(result.current.error).toBe(
-    target === "draft"
-      ? "The recipe changed while importing"
-      : "Close the current new recipe before importing another one",
-  );
-  expect(result.current.open).toBe(true);
-  expect(result.current.importing).toBe(false);
-});
+    expect(result.current.open).toBe(true);
+    expect(result.current.importing).toBe(false);
+  },
+);
 
 it.each([
   {

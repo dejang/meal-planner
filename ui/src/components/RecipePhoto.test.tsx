@@ -6,6 +6,15 @@ vi.mock("@tauri-apps/api/core", () => ({
   convertFileSrc: (id: string) => `image://${id}`,
 }));
 
+it("hides decorative photos and their placeholders from assistive technology", () => {
+  const view = render(<RecipePhoto recipeId="soup" alt="" />);
+  expect(screen.queryByRole("img")).toBeNull();
+  view.rerender(<RecipePhoto recipeId="soup" imageVersion="v1" alt="" />);
+  expect(screen.queryByRole("img")).toBeNull();
+  fireEvent.error(view.container.querySelector("img")!);
+  expect(screen.queryByRole("img")).toBeNull();
+});
+
 it("shows saved and draft photos, falling back on missing or failed images and retrying changed sources", () => {
   const view = render(
     <RecipePhoto recipeId="soup" imageVersion={null} alt="Soup" />,
