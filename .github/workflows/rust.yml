@@ -30,6 +30,30 @@ jobs:
       - run: pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.41.0
       - run: ./check.sh
 
+  ios:
+    name: Build iOS simulator app
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          targets: aarch64-apple-ios-sim
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tauri ios init --ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meal-planner-xcode-project
+          path: src-tauri/gen/apple/
+          if-no-files-found: error
+      - run: pnpm tauri ios build --target aarch64-sim
+
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}

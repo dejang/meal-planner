@@ -3,6 +3,7 @@
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
+    "types": ["vite/client", "node"],
     "moduleResolution": "Bundler",
     "paths": { "@/*": ["./src/*"] },
     "jsx": "react-jsx",
