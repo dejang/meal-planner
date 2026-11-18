@@ -30,8 +30,8 @@ Run `pnpm run check:fast` for workspace fmt, clippy and tests (including binding
 freshness), plus frontend typecheck, ESLint, Prettier and Vitest. `./check.sh` also
 runs ast-grep tests/scanning, a workspace build and a Tauri build.
 Install the prerequisites and frontend dependencies first. The full check requires
-`ast-grep` on PATH from `@ast-grep/cli@0.41.0`, matching CI; for example, install it
-with `pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.41.0`.
+`ast-grep` on PATH from `@ast-grep/cli@0.51.0`, matching CI; for example, install it
+with `pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.51.0`.
 
 ## iOS development
 

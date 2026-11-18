@@ -27,7 +27,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.41.0
+      - run: pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.51.0
       - run: ./check.sh
 
   ios:
