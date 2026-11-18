@@ -50,12 +50,24 @@ export function BottomDrawer({
     const element = dialog.current;
     if (!element) return;
     if (!open) {
-      if (element.open && sheet.current?.dataset.entered !== "true")
-        element.close();
       setEntered(false);
       setOffset(0);
       gesture.current = null;
-      return;
+      if (!element.open) return;
+      const animations = sheet.current?.getAnimations?.() ?? [];
+      if (!animations.length) {
+        element.close();
+        return;
+      }
+      let closing = true;
+      void Promise.allSettled(
+        animations.map((animation) => animation.finished),
+      ).then(() => {
+        if (closing) element.close();
+      });
+      return () => {
+        closing = false;
+      };
     }
     element.showModal();
     setFull(false);
@@ -184,6 +196,7 @@ export function BottomDrawer({
     [open, dragSlop, startDrag, moveDrag, finishDrag],
   );
 
+  const visible = open && entered;
   return (
     <dialog
       ref={dialog}
@@ -196,40 +209,32 @@ export function BottomDrawer({
         }
       }}
       onCancel={(event) => event.preventDefault()}
-      onClose={() => {
-        if (open) {
-          dialog.current?.showModal();
+      onClose={(event) => {
+        if (open && !event.currentTarget.open) {
+          event.currentTarget.showModal();
           onClose();
         }
       }}
     >
       <div
         className="drawer-scrim"
-        data-entered={entered}
+        data-entered={visible}
         aria-hidden="true"
         onClick={onClose}
       />
       <div
         ref={sheet}
         className="drawer-sheet"
-        data-entered={entered}
-        data-dragging={offset !== 0}
+        data-entered={visible}
+        data-dragging={open && offset !== 0}
         style={
           {
             "--drawer-rest": full ? "0px" : peekOffset,
-            transform: entered
+            transform: visible
               ? `translate3d(0, calc(var(--drawer-rest) + ${offset}px), 0)`
               : "translate3d(0, 100%, 0)",
           } as CSSProperties
         }
-        onTransitionEnd={(event) => {
-          if (
-            event.target === event.currentTarget &&
-            event.propertyName === "transform" &&
-            !open
-          )
-            dialog.current?.close();
-        }}
       >
         <button
           type="button"
