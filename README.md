@@ -35,18 +35,16 @@ with `pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.51.0`.
 
 ## iOS development
 
-On macOS, follow the [iOS setup instructions](src-tauri/gen/apple/README.md) to install
-Xcode, the simulator runtime, CocoaPods, XcodeGen and Rust iOS targets. The Xcode
-project is committed under `src-tauri/gen/apple`. From the repository root:
+On macOS, install Xcode, CocoaPods, XcodeGen and the Rust targets
+`aarch64-apple-ios` and `aarch64-apple-ios-sim`. The Xcode project is committed
+under `src-tauri/gen/apple`.
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm tauri ios dev                       # launch an installed simulator
-pnpm tauri ios build --target aarch64-sim # build for an Apple Silicon simulator
+pnpm tauri ios dev                         # run in a simulator
+pnpm tauri ios build --target aarch64      # build for a device
+xcrun devicectl device install app --device <id> \
+  "src-tauri/gen/apple/build/arm64/Meal Planner.ipa"
 ```
-
-For an Intel simulator use `--target x86_64`. For a device use `--target aarch64`
-and install the built app as described in the setup instructions.
 
 ## Desktop data and manual checks
 
