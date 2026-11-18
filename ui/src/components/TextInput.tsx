@@ -1,4 +1,4 @@
-import type { ComponentProps, TextareaHTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 
 export function TextInput({
   className = "",
@@ -10,6 +10,6 @@ export function TextInput({
 export function TextArea({
   className = "",
   ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: ComponentProps<"textarea">) {
   return <textarea {...props} className={`text-input ${className}`} />;
 }

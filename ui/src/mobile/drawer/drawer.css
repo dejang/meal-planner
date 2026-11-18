@@ -347,6 +347,107 @@
   border-color: var(--error);
 }
 
+.ingredient-matches {
+  display: grid;
+  gap: var(--space-mobile-xs);
+}
+
+.ingredient-matches-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-mobile-md);
+}
+
+.ingredient-matches h3 {
+  margin: 0;
+}
+
+.ingredient-matches-count {
+  color: var(--terracotta);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.ingredient-matches ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ingredient-matches li + li {
+  border-top: var(--hairline) solid var(--hairline-color);
+}
+
+.ingredient-matches-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-mobile-md);
+  row-gap: var(--space-mobile-xs);
+  width: 100%;
+  padding: var(--space-mobile-md) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.ingredient-matches-line {
+  grid-column: 1;
+  overflow-wrap: anywhere;
+  font-size: var(--text-mobile-ingredient);
+  line-height: var(--leading-mobile-body);
+}
+
+.ingredient-matches-found {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-mobile-body);
+}
+
+.ingredient-matches-flag {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding: var(--space-mobile-xs) var(--space-mobile-sm);
+  border: var(--hairline) solid currentColor;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-small);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ingredient-matches [data-state="check"] .ingredient-matches-flag {
+  color: var(--terracotta);
+}
+
+.ingredient-matches
+  [data-state="missing"]
+  :is(.ingredient-matches-flag, .ingredient-matches-found) {
+  color: var(--error);
+}
+
+.recipe-drawer-form .ingredient-matches {
+  margin-top: calc(var(--space-mobile-sm) - var(--space-mobile-lg));
+  padding: var(--space-mobile-sm) var(--space-mobile-gutter);
+  border: var(--hairline) solid var(--hairline-color);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+}
+
+.recipe-drawer-form .ingredient-matches h3 {
+  color: var(--muted);
+  font-size: var(--text-small);
+  font-weight: 500;
+}
+
+.recipe-drawer-form .ingredient-matches-row {
+  cursor: pointer;
+}
+
 @keyframes recipe-content-in {
   from {
     opacity: 0;

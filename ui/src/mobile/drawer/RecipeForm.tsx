@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button, ButtonVariant } from "@/components/Button";
 import { TextArea, TextInput } from "@/components/TextInput";
 import { RecipePhoto } from "@/components/RecipePhoto";
 import { NutritionLabel } from "@/components/NutritionLabel";
 import { Stepper } from "@/components/mobile/Stepper";
+import { IngredientMatches } from "@/mobile/drawer/IngredientMatches";
 import {
   useDraftRecipe,
   useEditorActions,
@@ -39,6 +40,7 @@ export default function RecipeForm() {
   const drawer = useDrawerActions();
   const recipeError = useRecipesError();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const ingredientsBox = useRef<HTMLTextAreaElement>(null);
   const hasPhoto =
     draft?.image.kind === "set" ||
     (draft?.image.kind === "keep" && draft.imageVersion !== null);
@@ -172,6 +174,7 @@ export default function RecipeForm() {
           <label>
             Ingredients
             <TextArea
+              ref={ingredientsBox}
               rows={7}
               placeholder="One ingredient per line"
               value={draft.ingredients}
@@ -181,6 +184,25 @@ export default function RecipeForm() {
               onBlur={editor.analyzeIngredients}
             />
           </label>
+          {draft.analysis?.ingredients.length ? (
+            <IngredientMatches
+              title="What Edamam found"
+              ingredients={draft.analysis.ingredients}
+              onSelect={(text) => {
+                const box = ingredientsBox.current;
+                if (!box) return;
+                let start = 0;
+                for (const line of box.value.split("\n")) {
+                  if (line.trim() === text.trim()) {
+                    box.focus();
+                    box.setSelectionRange(start, start + line.length);
+                    return;
+                  }
+                  start += line.length + 1;
+                }
+              }}
+            />
+          ) : null}
           <label>
             Cooking Instructions
             <TextArea

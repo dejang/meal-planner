@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RecipePhoto } from "@/components/RecipePhoto";
 import { NutritionLabel } from "@/components/NutritionLabel";
 import { DayPills } from "@/components/mobile/DayPills";
+import { IngredientMatches } from "@/mobile/drawer/IngredientMatches";
 import {
   useRecipe,
   useRecipesError,
@@ -62,35 +63,26 @@ export default function RecipeView({ recipeId }: { recipeId: string }) {
         {confirmed && <p role="status">Added to D{addedDay! + 1}</p>}
         {error && <p role="alert">{error}</p>}
       </section>
-      <section>
-        <h3>Ingredients</h3>
-        <ul className="recipe-drawer-ingredients">
-          {(recipe.analysis?.ingredients.length
-            ? recipe.analysis.ingredients
-            : recipe.ingredients
-                .split("\n")
-                .map((text) => ({ text, parsed: null }))
-          )
-            .filter((ingredient) => ingredient.text.trim())
-            .map((ingredient, index) => {
-              const detail = ingredient.parsed?.[0];
-              return (
+      {recipe.analysis?.ingredients.length ? (
+        <IngredientMatches
+          title="Ingredients"
+          ingredients={recipe.analysis.ingredients}
+        />
+      ) : (
+        <section>
+          <h3>Ingredients</h3>
+          <ul className="recipe-drawer-ingredients">
+            {recipe.ingredients
+              .split("\n")
+              .filter((line) => line.trim())
+              .map((line, index) => (
                 <li className="mobile-ingredient" key={index}>
-                  {detail ? (
-                    <>
-                      <span>{detail.food}</span>
-                      <span>
-                        {detail.quantity} {detail.measure ?? ""}
-                      </span>
-                    </>
-                  ) : (
-                    ingredient.text
-                  )}
+                  {line}
                 </li>
-              );
-            })}
-        </ul>
-      </section>
+              ))}
+          </ul>
+        </section>
+      )}
       <section>
         <h3>Cooking Instructions</h3>
         <ol className="recipe-drawer-steps">
