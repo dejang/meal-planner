@@ -1,119 +1,61 @@
-import { commands } from "@/test-support/ipc";
-import { render, screen } from "@testing-library/react";
+import { commands, ok } from "@/test-support/ipc";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import MobileShell from "@/mobile/MobileShell";
 import { AppScopes } from "@/test-support/scopes";
-import {
-  useDrawerActions,
-  useDrawerOpen,
-  useDrawerRecipeId,
-} from "@/stores/DrawerStore";
+import { analysis, recipe } from "@/test-support/fixtures";
 
-vi.mock("@/mobile/explorer", () => ({
-  default: function Explorer({ active }: { active: boolean }) {
-    const drawer = useDrawerActions();
-    return (
-      <>
-        <h1 data-active={active}>Meal Explorer</h1>
-        <button onClick={() => drawer.openRecipe("shared-recipe")}>
-          Explorer recipe
-        </button>
-      </>
-    );
-  },
-}));
-vi.mock("@/mobile/planner", () => ({
-  default: function Planner({ active }: { active: boolean }) {
-    const drawer = useDrawerActions();
-    return (
-      <>
-        <h1 data-active={active}>Weekly Plan</h1>
-        <button onClick={() => drawer.openRecipe("shared-recipe")}>
-          Planned recipe
-        </button>
-        <button onClick={() => drawer.openEdit("missing")}>Edit missing</button>
-      </>
-    );
-  },
-}));
-
-vi.mock("@/mobile/shopping", () => ({
-  default: ({ active }: { active: boolean }) => (
-    <h1 data-active={active}>Shopping fixture</h1>
-  ),
-}));
-vi.mock("@/mobile/settings", () => ({
-  default: ({ active }: { active: boolean }) => (
-    <h1 data-active={active}>Settings fixture</h1>
-  ),
-}));
-vi.mock("@/mobile/drawer", () => ({
-  default: function Drawer() {
-    const open = useDrawerOpen();
-    const recipeId = useDrawerRecipeId();
-    const drawer = useDrawerActions();
-    return (
-      <div role="dialog" aria-label="Drawer fixture" hidden={!open}>
-        <span>{recipeId}</span>
-        <button onClick={drawer.close}>Close fixture</button>
-      </div>
-    );
-  },
-}));
-
-it("switches all four screens while retaining panels and shares one recipe drawer across tabs", async () => {
+it("shares an Explorer plan addition with the planner, drawer and shopping list", async () => {
+  const soup = recipe({ analysis: analysis() });
+  vi.mocked(commands.listRecipes).mockResolvedValue(ok([soup]));
+  vi.mocked(commands.addToDay).mockResolvedValueOnce(
+    ok({ days: [[soup.id], [], [], [], [], []] }),
+  );
   const user = userEvent.setup();
   render(<MobileShell />, { wrapper: AppScopes });
   const explorer = screen.getByRole("region", { name: "Explorer" });
   explorer.scrollTop = 120;
-  await user.click(screen.getByRole("button", { name: "Explorer recipe" }));
-  const drawer = screen.getByRole("dialog", { name: "Drawer fixture" });
-  expect(drawer.textContent).toContain("shared-recipe");
-  await user.click(screen.getByRole("button", { name: "Close fixture" }));
-  for (const label of ["Weekly Plan", "Shop", "Settings", "Explorer"]) {
-    await user.click(screen.getByRole("button", { name: label }));
-    expect(
-      screen.getByRole("button", { name: label }).getAttribute("aria-current"),
-    ).toBe("page");
-    expect(
-      screen.getByRole("region", { name: label }).getAttribute("data-active"),
-    ).toBe("true");
-    expect(screen.getAllByRole("region")).toHaveLength(1);
-    expect(screen.getByRole("heading").getAttribute("data-active")).toBe(
-      "true",
-    );
-    expect(
-      screen
-        .getAllByRole("heading", { hidden: true })
-        .filter((heading) => heading.getAttribute("data-active") === "false"),
-    ).toHaveLength(3);
-  }
-  expect(screen.getByRole("region", { name: "Explorer" })).toBe(explorer);
-  expect(explorer.scrollTop).toBe(120);
+  await user.click(await screen.findByRole("button", { name: "Soup" }));
+  const drawer = screen.getByRole("dialog", { name: "Soup" });
+  vi.mocked(commands.shoppingList).mockResolvedValueOnce(
+    ok([{ food_id: "onion", name: "Onion", weight: 80 }]),
+  );
+  await user.click(within(drawer).getByRole("button", { name: "D1" }));
+  await within(drawer).findByText("Added to D1");
+  await user.click(within(drawer).getByRole("button", { name: "Close" }));
   await user.click(screen.getByRole("button", { name: "Weekly Plan" }));
-  await user.click(screen.getByRole("button", { name: "Planned recipe" }));
-  expect(screen.getByRole("dialog", { name: "Drawer fixture" })).toBe(drawer);
-  expect(screen.getAllByRole("dialog")).toHaveLength(1);
-  expect(screen.queryByRole("button", { name: "File" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Soup 100 kcal" }));
+  expect(screen.getByRole("dialog", { name: "Soup" })).toBe(drawer);
+  await user.click(within(drawer).getByRole("button", { name: "Close" }));
+  await user.click(screen.getByRole("button", { name: "Shop" }));
+  expect(screen.getByRole("row", { name: "Onion 80 g" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Settings" }));
+  expect(screen.getByRole("form", { name: "Edamam credentials" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Explorer" }));
+  expect(screen.getByRole("region", { name: "Explorer" }).scrollTop).toBe(120);
+  expect(screen.queryByRole("form", { name: "Edamam credentials" })).toBeNull();
 });
 
-it("surfaces and dismisses recipe load errors without an editor draft", async () => {
+it("surfaces a failed edit request and allows returning to the recipe", async () => {
+  vi.mocked(commands.listRecipes).mockResolvedValue(ok([recipe()]));
   vi.mocked(commands.getRecipe).mockResolvedValueOnce({
     status: "error",
     error: { kind: "not_found", detail: "Recipe no longer exists" },
   });
   const user = userEvent.setup();
   render(<MobileShell />, { wrapper: AppScopes });
-  await user.click(screen.getByRole("button", { name: "Weekly Plan" }));
-  await user.click(screen.getByRole("button", { name: "Edit missing" }));
-  expect(screen.getByRole("alert").textContent).toContain(
+  await user.click(await screen.findByRole("button", { name: "Soup" }));
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  const editor = screen.getByRole("dialog", { name: "Edit Recipe" });
+  expect(within(editor).getByRole("alert").textContent).toContain(
     "Recipe no longer exists",
   );
-  await user.click(screen.getByRole("button", { name: "Close fixture" }));
-  expect(screen.getByRole("alert").textContent).toContain(
-    "Recipe no longer exists",
+  await user.click(within(editor).getByRole("button", { name: "Cancel" }));
+  await user.click(
+    within(screen.getByRole("dialog", { name: "Soup" })).getByRole("button", {
+      name: "Close",
+    }),
   );
-  await user.click(screen.getByRole("button", { name: "Dismiss" }));
   expect(screen.queryByRole("alert")).toBeNull();
 });

@@ -7,6 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
+import { deferred } from "@/test-support/fixtures";
 import { BottomDrawer } from "@/components/mobile/BottomDrawer";
 
 it("opens with header and body and closes when its owner changes open", async () => {
@@ -38,16 +39,17 @@ it("opens with header and body and closes when its owner changes open", async ()
         requestAnimationFrame(() => requestAnimationFrame(resolve)),
       ),
   );
+  const exit = deferred<void>();
+  Object.assign(screen.getByRole("dialog").querySelector(".drawer-sheet")!, {
+    getAnimations: () => [{ finished: exit.promise }],
+  });
   rerender(
     <BottomDrawer open={false} title="Recipe" onClose={onClose}>
       <p>Ingredients</p>
     </BottomDrawer>,
   );
   expect(screen.getByRole("dialog")).toBeTruthy();
-  fireEvent.transitionEnd(
-    screen.getByRole("dialog").querySelector(".drawer-sheet")!,
-    { propertyName: "transform" },
-  );
+  exit.resolve();
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   expect(document.body.style.overflow).toBe("");
   expect(onClose).not.toHaveBeenCalled();
@@ -59,6 +61,23 @@ it("opens with header and body and closes when its owner changes open", async ()
   expect(screen.getByRole("dialog")).toBeTruthy();
   unmount();
   expect(document.body.style.overflow).toBe("");
+});
+
+it("ignores a queued native close after the owner reopens the drawer", async () => {
+  const onClose = vi.fn();
+  const props = { title: "Recipe", children: "Ingredients", onClose };
+  const { rerender } = render(<BottomDrawer {...props} open />);
+  const dialog = screen.getByRole("dialog") as HTMLDialogElement;
+  const closed = new Promise<Event>((resolve) =>
+    dialog.addEventListener("close", resolve, { once: true }),
+  );
+  rerender(<BottomDrawer {...props} open={false} />);
+  expect(dialog.open).toBe(false);
+  rerender(<BottomDrawer {...props} open title="Next recipe" />);
+  await closed;
+  expect(screen.getByRole("dialog", { name: "Next recipe" })).toBe(dialog);
+  expect(document.body.style.overflow).toBe("hidden");
+  expect(onClose).not.toHaveBeenCalled();
 });
 
 it.each(["handle", "body"])(
@@ -96,13 +115,12 @@ it.each(["handle", "body"])(
     );
     expect(sheet.getAttribute("data-dragging")).toBe("false");
     expect(sheet.getAttribute("data-entered")).toBe("false");
-    expect(dialog.open).toBe(true);
-    const handle = screen.getByRole("button", { name: "Expand drawer" });
+    expect(dialog.open).toBe(false);
+    const handle = dialog.querySelector("button")!;
     fireEvent.pointerDown(handle, { clientY: 100 });
     fireEvent.pointerMove(handle, { clientY: 140 });
     expect(sheet.getAttribute("data-dragging")).toBe("false");
     fireEvent.pointerUp(handle, { clientY: 140 });
-    fireEvent.transitionEnd(sheet, { propertyName: "transform" });
     await waitFor(() => expect(dialog.open).toBe(false));
     expect(document.body.style.overflow).toBe("");
     expect(onClose).not.toHaveBeenCalled();

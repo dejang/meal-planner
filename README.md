@@ -33,6 +33,21 @@ Install the prerequisites and frontend dependencies first. The full check requir
 `ast-grep` on PATH from `@ast-grep/cli@0.41.0`, matching CI; for example, install it
 with `pnpm add --global --allow-build=@ast-grep/cli @ast-grep/cli@0.41.0`.
 
+## iOS development
+
+On macOS, follow the [iOS setup instructions](src-tauri/gen/apple/README.md) to install
+Xcode, the simulator runtime, CocoaPods and Rust iOS targets. From the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm tauri ios init                      # generate the Xcode project once
+pnpm tauri ios dev                       # launch an installed simulator
+pnpm tauri ios build --target aarch64-sim # build for an Apple Silicon simulator
+```
+
+For an Intel simulator use `--target x86_64`. For a device use `--target aarch64`
+with the signing team configured as described in the setup instructions.
+
 ## Desktop data and manual checks
 
 For a fresh Tauri database on Linux without deleting existing data, first run
